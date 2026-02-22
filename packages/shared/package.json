@@ -1,0 +1,25 @@
+{
+  "name": "@studyflow/shared",
+  "version": "1.0.0",
+  "private": true,
+  "description": "StudyFlow 共享工具库",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings 0",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@studyflow/eslint-config": "workspace:*",
+    "@studyflow/typescript-config": "workspace:*",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  }
+}

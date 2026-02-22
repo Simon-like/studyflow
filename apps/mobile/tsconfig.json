@@ -1,0 +1,11 @@
+{
+  "extends": "@studyflow/typescript-config/react-native.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*", "*.js", "*.ts", "*.tsx"],
+  "exclude": ["node_modules", "android", "ios", "metro.config.js"]
+}

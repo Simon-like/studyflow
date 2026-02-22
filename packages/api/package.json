@@ -1,0 +1,30 @@
+{
+  "name": "@studyflow/api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "StudyFlow API 客户端",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings 0",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@studyflow/shared": "workspace:*",
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "@studyflow/eslint-config": "workspace:*",
+    "@studyflow/typescript-config": "workspace:*",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.4.21"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "studyflow",
+  "version": "1.0.0",
+  "description": "StudyFlow - 智能学习陪伴应用",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "type-check": "turbo run type-check",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "turbo run build --filter=docs^... && changeset publish"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.16.1",
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1",
+    "prettier": "^3.1.1",
+    "turbo": "^1.13.4"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

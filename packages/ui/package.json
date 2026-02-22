@@ -1,0 +1,36 @@
+{
+  "name": "@studyflow/ui",
+  "version": "1.0.0",
+  "private": true,
+  "description": "StudyFlow UI 组件库",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings 0",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@studyflow/shared": "workspace:*",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^2.2.0"
+  },
+  "devDependencies": {
+    "@studyflow/eslint-config": "workspace:*",
+    "@studyflow/typescript-config": "workspace:*",
+    "@types/react": "^18.2.45",
+    "react": "^18.2.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  }
+}
