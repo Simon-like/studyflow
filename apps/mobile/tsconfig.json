@@ -1,11 +1,18 @@
 {
-  "extends": "@studyflow/typescript-config/react-native.json",
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "strict": true,
+    "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": ["./src/*"],
+      "@studyflow/shared": ["../../packages/shared/src"],
+      "@studyflow/shared/*": ["../../packages/shared/src/*"],
+      "@studyflow/api": ["../../packages/api/src"],
+      "@studyflow/api/*": ["../../packages/api/src/*"]
+    },
+    "skipLibCheck": true
   },
-  "include": ["src/**/*", "*.js", "*.ts", "*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "android", "ios", "metro.config.js"]
 }

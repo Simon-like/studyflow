@@ -4,26 +4,35 @@ const path = require("path");
 // 获取默认配置
 const config = getDefaultConfig(__dirname);
 
-// Monorepo 配置
-const monorepoPackages = {
-  "@studyflow/ui": path.resolve(__dirname, "../../packages/ui"),
-  "@studyflow/shared": path.resolve(__dirname, "../../packages/shared"),
-  "@studyflow/api": path.resolve(__dirname, "../../packages/api"),
-};
+// 找到项目根目录和工作区根目录
+const projectRoot = __dirname;
+const workspaceRoot = path.resolve(projectRoot, "../..");
 
-// 添加额外的 node_modules 路径
+// ==================== 关键配置 1: 添加额外的 node_modules 路径 ====================
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, "node_modules"),
+  path.resolve(workspaceRoot, "node_modules"),
+];
+
+// ==================== 关键配置 2: 配置 workspace 包路径解析 ====================
 config.resolver.extraNodeModules = {
   ...config.resolver.extraNodeModules,
-  ...monorepoPackages,
+  // 添加 monorepo 中的共享包映射
+  "@studyflow/shared": path.resolve(workspaceRoot, "packages/shared"),
+  "@studyflow/api": path.resolve(workspaceRoot, "packages/api"),
+  "@studyflow/ui": path.resolve(workspaceRoot, "packages/ui"),
 };
 
-// 监视 packages 目录
-config.watchFolders = [path.resolve(__dirname, "../../packages")];
+// ==================== 关键配置 3: 监视 packages 目录的变化 ====================
+config.watchFolders = [path.resolve(workspaceRoot, "packages")];
 
-// 解决某些包的兼容问题
-config.resolver.sourceExts = ["jsx", "js", "ts", "tsx", "json", "cjs"];
-config.resolver.assetExts = config.resolver.assetExts.filter(
-  (ext) => ext !== "svg",
-);
+// ==================== 关键配置 4: 确保 Metro 能解析 TypeScript ====================
+config.resolver.sourceExts = ["ts", "tsx", "js", "jsx", "json", "cjs", "mjs"];
+
+// ==================== 关键配置 5: 启用新的包解析策略 ====================
+config.resolver.unstable_enablePackageExports = true;
+
+// ==================== 关键配置 6: 禁用可能导致问题的缓存 ====================
+config.resetCache = true;
 
 module.exports = config;

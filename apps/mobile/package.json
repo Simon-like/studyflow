@@ -1,5 +1,5 @@
 {
-  "name": "mobile",
+  "name": "@studyflow/mobile",
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
@@ -9,27 +9,23 @@
     "web": "expo start --web",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "type-check": "tsc --noEmit",
-    "test": "jest",
-    "clean": "rm -rf node_modules dist"
+    "clean": "rm -rf node_modules dist .expo"
   },
   "dependencies": {
-    "@react-navigation/bottom-tabs": "^7.14.0",
-    "@react-navigation/native": "^7.1.28",
-    "@react-navigation/native-stack": "^7.0.0",
-    "@react-native-async-storage/async-storage": "^2.0.0",
-    "@expo/vector-icons": "^14.0.0",
-    "zustand": "^5.0.0",
-    "expo": "~54.0.33",
-    "expo-status-bar": "~3.0.9",
-    "react": "19.1.0",
-    "react-native": "0.81.5",
-    "react-native-gesture-handler": "~2.28.0",
-    "react-native-reanimated": "~4.1.6",
-    "react-native-safe-area-context": "~5.6.2",
-    "react-native-screens": "~4.16.0"
+    "@studyflow/api": "workspace:*",
+    "@studyflow/shared": "workspace:*",
+    "expo": "~55.0.4",
+    "expo-status-bar": "~55.0.4",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-native": "0.83.2",
+    "react-native-web": "^0.21.2"
   },
   "devDependencies": {
-    "@types/react": "~19.1.0",
+    "@babel/core": "^7.20.0",
+    "@types/react": "~19.2.2",
+    "@types/react-native": "^0.73.0",
+    "babel-plugin-module-resolver": "^5.0.0",
     "typescript": "~5.9.2"
   },
   "private": true
