@@ -4,8 +4,8 @@ module.exports = {
     "./base.js",
     "plugin:react/recommended",
     "plugin:react-hooks/recommended",
-    "plugin:react-refresh/recommended",
   ],
+  plugins: ["react-refresh"],
   env: {
     browser: true,
   },
