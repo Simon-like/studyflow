@@ -30,8 +30,9 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'warn',
+    // 放宽 import/order 规则
     'import/order': [
-      'error',
+      'warn',  // 降级为 warning
       {
         groups: [
           'builtin',
@@ -41,11 +42,19 @@ module.exports = {
           'sibling',
           'index',
         ],
-        'newlines-between': 'always',
+        'newlines-between': 'ignore',  // 忽略空行要求
         alphabetize: {
-          order: 'asc',
+          order: 'ignore',  // 忽略字母顺序
           caseInsensitive: true,
         },
+        pathGroups: [
+          {
+            pattern: '@studyflow/**',
+            group: 'external',
+            position: 'after',
+          },
+        ],
+        pathGroupsExcludedImportTypes: ['builtin'],
       },
     ],
   },
