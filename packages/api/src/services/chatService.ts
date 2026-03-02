@@ -1,5 +1,6 @@
-import { http } from "../client/httpClient";
 import type { ApiResponse, ChatMessage } from "@studyflow/shared";
+
+import { http } from "../client/httpClient";
 
 export interface SendMessageRequest {
   content: string;

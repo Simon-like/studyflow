@@ -1,11 +1,12 @@
-import { http } from "../client/httpClient";
 import type {
   ApiResponse,
-  User,
   LoginRequest,
   RegisterRequest,
   TokenResponse,
+  User,
 } from "@studyflow/shared";
+
+import { http } from "../client/httpClient";
 
 export const authService = {
   // 登录
