@@ -12,7 +12,7 @@ concurrency:
 
 env:
   NODE_VERSION: 18
-  PNPM_VERSION: 8
+  PNPM_VERSION: 10.16.1
 
 jobs:
   # ========== 代码质量检查 ==========
