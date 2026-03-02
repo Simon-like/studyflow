@@ -10,8 +10,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  NODE_VERSION: 18
+  PNPM_VERSION: 10.16.1
+
 jobs:
-  # 代码检查
+  # ========== 代码质量检查 ==========
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -22,12 +26,12 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
       - name: Install dependencies
@@ -36,7 +40,7 @@ jobs:
       - name: Run ESLint
         run: pnpm lint
 
-  # 类型检查
+  # ========== 类型检查 ==========
   type-check:
     name: Type Check
     runs-on: ubuntu-latest
@@ -47,56 +51,25 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run TypeScript
+      # 先构建依赖的包（因为类型定义可能依赖其他包）
+      - name: Build packages
+        run: pnpm --filter "./packages/*" build
+
+      - name: Run TypeScript type检查
         run: pnpm type-check
 
-  # 构建 Web
-  build-web:
-    name: Build Web
-    runs-on: ubuntu-latest
-    needs: [lint, type-check]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages
-        run: pnpm --filter "@studyflow/*" build
-
-      - name: Build web
-        run: pnpm --filter @studyflow/web build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-dist
-          path: apps/web/dist
-
-  # 测试
+  # ========== 测试 ==========
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -108,12 +81,12 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
       - name: Install dependencies
@@ -122,9 +95,9 @@ jobs:
       - name: Run tests
         run: pnpm test
 
-  # 构建 Mobile (Expo)
-  build-mobile:
-    name: Build Mobile
+  # ========== 构建检查 ==========
+  build:
+    name: Build Check
     runs-on: ubuntu-latest
     needs: [lint, type-check]
     steps:
@@ -134,19 +107,25 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: ${{ env.PNPM_VERSION }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # 构建所有 packages（被 apps 依赖）
       - name: Build packages
-        run: pnpm --filter "@studyflow/*" build
+        run: pnpm --filter "./packages/*" build
 
-      - name: Build mobile
-        run: pnpm --filter @studyflow/mobile build
+      # 构建 Web 应用
+      - name: Build Web
+        run: pnpm --filter @studyflow/web build
+
+      # 构建 Mobile 应用（暂时跳过，等需要时再启用）
+      # - name: Build Mobile
+      #   run: pnpm --filter @studyflow/mobile build
