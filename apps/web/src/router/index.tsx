@@ -1,23 +1,14 @@
-import { createBrowserRouter, Navigate, RouteObject } from 'react-router-dom';
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
-
-import { MainLayout } from '@/layouts/MainLayout';
-import { AuthLayout } from '@/layouts/AuthLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { LoadingScreen } from '@/components/LoadingScreen';
+import { MainLayout } from '@/components/layout/MainLayout';
 
-// 懒加载页面
-const LoginPage = lazy(() => import('@/pages/Login'));
-const RegisterPage = lazy(() => import('@/pages/Register'));
-const DashboardPage = lazy(() => import('@/pages/Dashboard'));
-const TasksPage = lazy(() => import('@/pages/Tasks'));
-const StatsPage = lazy(() => import('@/pages/Stats'));
-const CompanionPage = lazy(() => import('@/pages/Companion'));
-const CommunityPage = lazy(() => import('@/pages/Community'));
-const ProfilePage = lazy(() => import('@/pages/Profile'));
-const SettingsPage = lazy(() => import('@/pages/Settings'));
+// Lazy load pages by module
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
+const DashboardPage = lazy(() => import('@/modules/dashboard/pages/DashboardPage'));
 
-// 包装组件，添加 Suspense
 const withSuspense = (Component: React.ComponentType) => (
   <Suspense fallback={<LoadingScreen />}>
     <Component />
@@ -25,22 +16,13 @@ const withSuspense = (Component: React.ComponentType) => (
 );
 
 export const router: ReturnType<typeof createBrowserRouter> = createBrowserRouter([
-  // 认证路由
   {
     path: '/auth',
-    element: <AuthLayout />,
     children: [
-      {
-        path: 'login',
-        element: withSuspense(LoginPage),
-      },
-      {
-        path: 'register',
-        element: withSuspense(RegisterPage),
-      },
+      { path: 'login', element: withSuspense(LoginPage) },
+      { path: 'register', element: withSuspense(RegisterPage) },
     ],
   },
-  // 受保护路由
   {
     path: '/',
     element: (
@@ -49,38 +31,8 @@ export const router: ReturnType<typeof createBrowserRouter> = createBrowserRoute
       </ProtectedRoute>
     ),
     children: [
-      {
-        index: true,
-        element: <Navigate to="/dashboard" replace />,
-      },
-      {
-        path: 'dashboard',
-        element: withSuspense(DashboardPage),
-      },
-      {
-        path: 'tasks',
-        element: withSuspense(TasksPage),
-      },
-      {
-        path: 'stats',
-        element: withSuspense(StatsPage),
-      },
-      {
-        path: 'companion',
-        element: withSuspense(CompanionPage),
-      },
-      {
-        path: 'community',
-        element: withSuspense(CommunityPage),
-      },
-      {
-        path: 'profile',
-        element: withSuspense(ProfilePage),
-      },
-      {
-        path: 'settings',
-        element: withSuspense(SettingsPage),
-      },
+      { index: true, element: <Navigate to="/dashboard" replace /> },
+      { path: 'dashboard', element: withSuspense(DashboardPage) },
     ],
   },
 ]);
