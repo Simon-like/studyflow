@@ -36,6 +36,7 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        timeout-minutes: 10
 
       - name: Run ESLint
         run: pnpm lint
@@ -61,6 +62,7 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        timeout-minutes: 10
 
       # 先构建依赖的包（因为类型定义可能依赖其他包）
       - name: Build packages
@@ -91,6 +93,7 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        timeout-minutes: 10
 
       - name: Run tests
         run: pnpm test
@@ -117,6 +120,7 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        timeout-minutes: 10
 
       # 构建所有 packages（被 apps 依赖）
       - name: Build packages

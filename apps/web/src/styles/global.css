@@ -15,26 +15,39 @@
     @apply font-body bg-cream text-charcoal-800;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  h1, h2, h3, h4, h5, h6 {
     @apply font-display;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center px-4 py-2.5 bg-coral text-white font-medium rounded-xl
+    @apply inline-flex items-center justify-center px-6 py-3 bg-coral text-white font-medium rounded-xl
            transition-all duration-200 hover:bg-coral-600 active:scale-95
            focus:outline-none focus:ring-2 focus:ring-coral/50
            disabled:opacity-50 disabled:pointer-events-none;
   }
 
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 bg-warm text-charcoal font-medium rounded-xl
+           transition-all duration-200 hover:bg-coral/10 active:scale-95
+           focus:outline-none focus:ring-2 focus:ring-coral/30
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-4 py-2 text-charcoal font-medium rounded-xl
+           transition-all duration-200 hover:bg-warm active:scale-95
+           focus:outline-none focus:ring-2 focus:ring-coral/20
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+
   .card {
     @apply bg-white rounded-2xl shadow-sm;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-coral hover:-translate-y-0.5;
   }
 
   .input {
@@ -43,11 +56,73 @@
            focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral
            disabled:bg-warm disabled:cursor-not-allowed;
   }
+
+  .input-error {
+    @apply border-red-400 focus:ring-red-200 focus:border-red-400;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-charcoal-700 mb-1.5;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-coral {
+    @apply badge bg-coral/10 text-coral;
+  }
+
+  .badge-sage {
+    @apply badge bg-sage/10 text-sage-700;
+  }
+
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+           text-stone hover:text-coral hover:bg-coral/5;
+  }
+
+  .sidebar-item.active {
+    @apply text-coral bg-coral/10 font-medium;
+  }
+
+  .tab-item {
+    @apply px-4 py-2 rounded-full text-sm font-medium transition-all duration-200
+           text-charcoal hover:bg-warm;
+  }
+
+  .tab-item.active {
+    @apply bg-coral text-white;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.6s ease-out forwards;
+  }
+
+  .gradient-coral {
+    @apply bg-gradient-to-br from-coral to-coral-300;
+  }
+
+  .gradient-sage {
+    @apply bg-gradient-to-br from-sage to-sage-600;
+  }
+
+  .glass {
+    @apply bg-white/80 backdrop-blur-md;
   }
 }
 
@@ -72,4 +147,29 @@
 /* 选中文字样式 */
 ::selection {
   @apply bg-coral/30;
+}
+
+/* 动画关键帧 */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 进度环样式 */
+.progress-ring {
+  transform: rotate(-90deg);
+}
+
+.progress-ring circle {
+  transition: stroke-dashoffset 0.5s ease;
 }
