@@ -1,122 +1,77 @@
-import React from "react";
-import { cn } from "../../utils/cn";
+import React, { ReactNode } from 'react';
+import { View, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { designSystem } from '../../theme/design-system';
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  padding?: "none" | "sm" | "md" | "lg";
-  shadow?: "none" | "sm" | "md" | "lg";
-  hover?: boolean;
+export interface CardProps {
+  children: ReactNode;
+  variant?: 'default' | 'hover' | 'elevated';
+  style?: ViewStyle;
+  contentStyle?: ViewStyle;
 }
 
-const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  (
-    {
-      className,
-      padding = "md",
-      shadow = "sm",
-      hover = false,
-      children,
-      ...props
-    },
-    ref,
-  ) => {
-    const paddingClasses = {
-      none: "",
-      sm: "p-3",
-      md: "p-4",
-      lg: "p-6",
-    };
+export const Card: React.FC<CardProps> = ({
+  children,
+  variant = 'default',
+  style,
+  contentStyle,
+}) => {
+  const cardStyles = [
+    styles.base,
+    styles.variants[variant],
+    style,
+  ];
 
-    const shadowClasses = {
-      none: "",
-      sm: "shadow-sm",
-      md: "shadow-md",
-      lg: "shadow-lg",
-    };
+  const contentStyles = [
+    styles.content,
+    contentStyle,
+  ];
 
-    return (
-      <div
-        ref={ref}
-        className={cn(
-          "bg-white rounded-2xl",
-          paddingClasses[padding],
-          shadowClasses[shadow],
-          hover &&
-            "transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5",
-          className,
-        )}
-        {...props}
-      >
+  return (
+    <View style={cardStyles}>
+      <View style={contentStyles}>
         {children}
-      </div>
-    );
-  },
-);
-
-Card.displayName = "Card";
-
-// Card Header
-interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  title?: string;
-  subtitle?: string;
-  action?: React.ReactNode;
-}
-
-const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
-  ({ className, title, subtitle, action, children, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={cn("flex items-start justify-between mb-4", className)}
-        {...props}
-      >
-        <div className="flex-1">
-          {title && (
-            <h3 className="text-lg font-semibold text-charcoal-800">{title}</h3>
-          )}
-          {subtitle && <p className="text-sm text-stone mt-1">{subtitle}</p>}
-          {children}
-        </div>
-        {action && <div className="flex-shrink-0 ml-4">{action}</div>}
-      </div>
-    );
-  },
-);
-
-CardHeader.displayName = "CardHeader";
-
-// Card Content
-const CardContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, children, ...props }, ref) => {
-  return (
-    <div ref={ref} className={cn("", className)} {...props}>
-      {children}
-    </div>
+      </View>
+    </View>
   );
+};
+
+const styles = StyleSheet.create({
+  base: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  variants: {
+    default: {},
+    hover: {
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 8,
+      },
+      shadowOpacity: 0.15,
+      shadowRadius: 24,
+      elevation: 8,
+    },
+    elevated: {
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 10,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 15,
+      elevation: 10,
+    },
+  },
+  content: {
+    padding: 16,
+  },
 });
-
-CardContent.displayName = "CardContent";
-
-// Card Footer
-const CardFooter = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, children, ...props }, ref) => {
-  return (
-    <div
-      ref={ref}
-      className={cn(
-        "flex items-center justify-between mt-4 pt-4 border-t border-mist/30",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-});
-
-CardFooter.displayName = "CardFooter";
-
-export { Card, CardHeader, CardContent, CardFooter };

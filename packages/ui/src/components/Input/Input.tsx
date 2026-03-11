@@ -1,72 +1,61 @@
-import React from "react";
-import { cn } from "../../utils/cn";
+import React, { forwardRef } from 'react';
+import { TextInput, StyleSheet, TextStyle, ViewStyle, TextInputProps } from 'react-native';
+import { designSystem } from '../../theme/design-system';
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  helperText?: string;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
+export interface InputProps extends Omit<TextInputProps, 'style'> {
+  variant?: 'default' | 'error';
+  style?: ViewStyle;
+  inputStyle?: TextStyle;
 }
 
-const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  (
-    {
-      className,
-      label,
-      error,
-      helperText,
-      leftIcon,
-      rightIcon,
-      disabled,
-      ...props
-    },
-    ref,
-  ) => {
-    return (
-      <div className="w-full">
-        {label && (
-          <label className="block text-sm font-medium text-charcoal-700 mb-1.5">
-            {label}
-          </label>
-        )}
-        <div className="relative">
-          {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-stone">
-              {leftIcon}
-            </div>
-          )}
-          <input
-            ref={ref}
-            className={cn(
-              "w-full px-4 py-3 bg-white border rounded-xl text-charcoal-800 placeholder:text-mist",
-              "transition-all duration-200",
-              "focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral",
-              "disabled:bg-warm disabled:cursor-not-allowed",
-              error && "border-error focus:ring-error/30 focus:border-error",
-              leftIcon && "pl-11",
-              rightIcon && "pr-11",
-              className,
-            )}
-            disabled={disabled}
-            {...props}
-          />
-          {rightIcon && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-stone">
-              {rightIcon}
-            </div>
-          )}
-        </div>
-        {error ? (
-          <p className="mt-1.5 text-sm text-error">{error}</p>
-        ) : helperText ? (
-          <p className="mt-1.5 text-sm text-stone">{helperText}</p>
-        ) : null}
-      </div>
-    );
+export const Input = forwardRef<TextInput, InputProps>(({
+  variant = 'default',
+  style,
+  inputStyle,
+  ...props
+}, ref) => {
+  const containerStyles = [
+    styles.base,
+    styles.variants[variant],
+    style,
+  ];
+
+  const inputStyles = [
+    styles.input,
+    inputStyle,
+  ];
+
+  return (
+    <TextInput
+      ref={ref}
+      style={containerStyles}
+      placeholderTextColor={designSystem.colors.stone}
+      {...props}
+    />
+  );
+});
+
+const styles = StyleSheet.create({
+  base: {
+    width: '100%',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderRadius: 12,
+    fontFamily: designSystem.fonts.body,
+    fontSize: 16,
+    color: designSystem.colors.charcoal,
   },
-);
-
-Input.displayName = "Input";
-
-export { Input };
+  variants: {
+    default: {
+      borderColor: designSystem.colors.mist,
+    },
+    error: {
+      borderColor: designSystem.colors.error,
+    },
+  },
+  input: {
+    flex: 1,
+  },
+});

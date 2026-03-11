@@ -72,6 +72,7 @@ export default {
           400: "#C9C5C1",
           500: "#B9B5B1",
         },
+        error: "#E57373",
       },
       fontFamily: {
         display: ["Outfit", "sans-serif"],
@@ -83,10 +84,14 @@ export default {
       },
       boxShadow: {
         coral: "0 8px 24px rgba(232, 168, 124, 0.15)",
+        soft: "0 2px 8px rgba(0, 0, 0, 0.05)",
+        medium: "0 4px 16px rgba(0, 0, 0, 0.1)",
+        strong: "0 8px 24px rgba(0, 0, 0, 0.15)",
       },
       animation: {
         float: "float 3s ease-in-out infinite",
         "pulse-soft": "pulse-soft 2s ease-in-out infinite",
+        "slide-up": "slide-up 0.6s ease-out forwards",
       },
       keyframes: {
         float: {
@@ -96,6 +101,10 @@ export default {
         "pulse-soft": {
           "0%, 100%": { opacity: "0.6" },
           "50%": { opacity: "1" },
+        },
+        "slide-up": {
+          "from": { opacity: "0", transform: "translateY(20px)" },
+          "to": { opacity: "1", transform: "translateY(0)" },
         },
       },
     },

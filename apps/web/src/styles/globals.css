@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: #fdf8f3;
+    --fg: #3d3d3d;
+    --muted: #8a8a8a;
+    --accent: #e8a87c;
+    --accent-light: #f5c9a8;
+    --card: #ffffff;
+    --border: #e8e4e0;
+    --sage: #9db5a0;
+  }
+
+  * {
+    @apply box-border;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply font-body bg-cream text-charcoal-800;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-4 py-2.5 bg-coral text-white font-medium rounded-xl
+           transition-all duration-200 hover:bg-coral-600 active:scale-95
+           focus:outline-none focus:ring-2 focus:ring-coral/50
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-4 py-2.5 bg-white text-charcoal border border-mist font-medium rounded-xl
+           transition-all duration-200 hover:bg-warm active:scale-95
+           focus:outline-none focus:ring-2 focus:ring-coral/30
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-4 py-2.5 bg-transparent text-charcoal font-medium rounded-xl
+           transition-all duration-200 hover:bg-warm active:scale-95
+           focus:outline-none focus:ring-2 focus:ring-coral/30
+           disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-sm;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 bg-white border border-mist rounded-xl text-charcoal-800 placeholder:text-mist
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral
+           disabled:bg-warm disabled:cursor-not-allowed;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-warm rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-mist rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-stone;
+}
+
+/* 选中文字样式 */
+::selection {
+  @apply bg-coral/30;
+}
+
+/* 动画 */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out forwards;
+}
+
+/* 减少动画 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
