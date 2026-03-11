@@ -60,6 +60,7 @@ export const colors = {
   secondaryDark: sage[400],
   background: neutral.cream,
   surface: neutral.white,
+  warm: neutral.warm,
   text: neutral.charcoal,
   textSecondary: neutral.stone,
   textMuted: neutral.mist,

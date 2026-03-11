@@ -6,15 +6,17 @@ import { AuthLayout } from '@/layouts/AuthLayout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { LoadingScreen } from '@/components/LoadingScreen';
 
-// 懒加载页面
-const LoginPage = lazy(() => import('@/pages/Login'));
-const RegisterPage = lazy(() => import('@/pages/Register'));
-const DashboardPage = lazy(() => import('@/pages/Dashboard'));
-const TasksPage = lazy(() => import('@/pages/Tasks'));
-const StatsPage = lazy(() => import('@/pages/Stats'));
-const CompanionPage = lazy(() => import('@/pages/Companion'));
-const CommunityPage = lazy(() => import('@/pages/Community'));
-const ProfilePage = lazy(() => import('@/pages/Profile'));
+// 懒加载页面 - 新的特征模块路径
+const LoginPage = lazy(() => import('@/features/auth/Login'));
+const RegisterPage = lazy(() => import('@/features/auth/Register'));
+const DashboardPage = lazy(() => import('@/features/dashboard'));
+const TasksPage = lazy(() => import('@/features/tasks'));
+const StatsPage = lazy(() => import('@/features/stats'));
+const CompanionPage = lazy(() => import('@/features/companion'));
+const CommunityPage = lazy(() => import('@/features/community'));
+const ProfilePage = lazy(() => import('@/features/profile'));
+
+// 保持旧的pages路径作为fallback（可选）
 const SettingsPage = lazy(() => import('@/pages/Settings'));
 
 // 包装组件，添加 Suspense
