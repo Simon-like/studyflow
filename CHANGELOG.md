@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **mobile**: 实现番茄钟计时器页面
 - **docs**: 新增 Git Commit 提交规范文档
 - **docs**: 新增 CI/CD 操作手册（新人指南）
+- **theme**: 创建 `@studyflow/theme` 包，统一跨平台设计系统
 
 ### Changed
 
@@ -26,13 +27,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **api**: 配置 ESM 模块支持
 - **web**: 修复路由文件扩展名（`.ts` → `.tsx`）
 - **web**: 创建基础页面和布局组件
+- **web**: 接入 `@studyflow/theme` 包，使用统一的 Tailwind 配置
 - **typescript-config**: 更新 React Native 配置，支持 ESM 模块
+- **monorepo**: 移除未使用的 `@studyflow/ui` 包依赖，简化架构
 
 ### Fixed
 
 - **ui**: 修复 Button 组件 `size` 类型不匹配问题
 - **api**: 修复 `@studyflow/shared` 类型导出缺失问题
 - **web**: 修复 CSS 导入路径错误
+
+### Deprecated
+
+- **ui**: `@studyflow/ui` 包标记为废弃，建议使用应用内组件或等待新的跨平台组件库
 
 ---
 

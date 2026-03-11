@@ -31,8 +31,8 @@ echo "🔨 Building shared packages..."
 pnpm --filter "@studyflow/typescript-config" build 2>/dev/null || true
 pnpm --filter "@studyflow/eslint-config" build 2>/dev/null || true
 pnpm --filter "@studyflow/shared" build
+pnpm --filter "@studyflow/theme" build
 pnpm --filter "@studyflow/api" build
-pnpm --filter "@studyflow/ui" build
 
 echo ""
 echo "✅ Setup complete!"

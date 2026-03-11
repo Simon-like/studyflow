@@ -6,7 +6,7 @@ import { RouterProvider } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
 import { router } from "./router";
-import "./styles/global.css";
+import "./styles/globals.css";
 
 // 创建 QueryClient
 const queryClient = new QueryClient({

@@ -20,7 +20,7 @@ config.resolver.extraNodeModules = {
   // 添加 monorepo 中的共享包映射
   "@studyflow/shared": path.resolve(workspaceRoot, "packages/shared"),
   "@studyflow/api": path.resolve(workspaceRoot, "packages/api"),
-  "@studyflow/ui": path.resolve(workspaceRoot, "packages/ui"),
+  "@studyflow/theme": path.resolve(workspaceRoot, "packages/theme"),
 };
 
 // ==================== 关键配置 3: 监视 packages 目录的变化 ====================

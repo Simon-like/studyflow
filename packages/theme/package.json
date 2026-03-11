@@ -1,0 +1,37 @@
+{
+  "name": "@studyflow/theme",
+  "version": "1.0.0",
+  "private": true,
+  "description": "StudyFlow 设计系统 - 跨平台主题配置",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist/**"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./adapters": {
+      "types": "./dist/adapters.d.ts",
+      "import": "./dist/adapters.mjs",
+      "require": "./dist/adapters.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings 0",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@studyflow/eslint-config": "workspace:*",
+    "@studyflow/typescript-config": "workspace:*",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  }
+}

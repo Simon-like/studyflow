@@ -1,6 +1,7 @@
 export const BUTTON_VARIANTS = {
   primary: 'bg-coral text-white hover:bg-coral-600 shadow-coral',
   secondary: 'bg-white text-charcoal border border-mist hover:bg-warm',
+  outline: 'bg-transparent text-charcoal border border-mist hover:bg-warm',
   ghost: 'bg-transparent text-stone hover:text-charcoal hover:bg-warm',
   danger: 'bg-red-500 text-white hover:bg-red-600',
 } as const;

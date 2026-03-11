@@ -6,14 +6,20 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
+    "build:packages": "turbo run build --filter=./packages/* --filter=!@studyflow/ui",
     "dev": "turbo run dev --parallel",
+    "dev:web": "turbo run dev --filter=@studyflow/web",
+    "dev:mobile": "turbo run dev --filter=@studyflow/mobile",
     "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix",
     "test": "turbo run test",
     "type-check": "turbo run type-check",
     "clean": "turbo run clean && rm -rf node_modules",
+    "clean:cache": "turbo run clean && rm -rf .turbo node_modules/.cache",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo run build --filter=docs^... && changeset publish"
+    "release": "turbo run build --filter=docs^... && changeset publish",
+    "setup": "bash tooling/scripts/setup.sh"
   },
   "keywords": [],
   "author": "",

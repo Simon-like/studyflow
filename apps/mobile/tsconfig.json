@@ -9,7 +9,9 @@
       "@studyflow/shared": ["../../packages/shared/src"],
       "@studyflow/shared/*": ["../../packages/shared/src/*"],
       "@studyflow/api": ["../../packages/api/src"],
-      "@studyflow/api/*": ["../../packages/api/src/*"]
+      "@studyflow/api/*": ["../../packages/api/src/*"],
+      "@studyflow/theme": ["../../packages/theme/src"],
+      "@studyflow/theme/*": ["../../packages/theme/src/*"]
     },
     "skipLibCheck": true
   },

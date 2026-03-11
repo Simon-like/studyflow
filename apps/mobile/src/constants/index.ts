@@ -1,20 +1,48 @@
 /**
  * 全局常量配置
+ * 
+ * 原则:
+ * 1. 应用通用的常量优先从 @studyflow/shared 导入
+ * 2. 仅在此定义移动端特有的常量
  */
 
-import { DEFAULT_FOCUS_DURATION } from '@studyflow/shared';
+import { 
+  DEFAULT_FOCUS_DURATION, 
+  DEFAULT_SHORT_BREAK_DURATION, 
+  DEFAULT_LONG_BREAK_DURATION,
+  POMODOROS_BEFORE_LONG_BREAK,
+  APP_NAME,
+  APP_VERSION 
+} from '@studyflow/shared';
+
+// 重新导出 shared 常量，方便组件使用
+export { 
+  DEFAULT_FOCUS_DURATION, 
+  DEFAULT_SHORT_BREAK_DURATION, 
+  DEFAULT_LONG_BREAK_DURATION,
+  POMODOROS_BEFORE_LONG_BREAK,
+  APP_NAME,
+  APP_VERSION 
+} from '@studyflow/shared';
 
 // 番茄钟配置
+// 使用 shared 包的基础配置，添加移动端特有的视觉配置
 export const POMODORO_CONFIG = {
+  // 视觉配置 (移动端特有)
   RADIUS: 90,
   get CIRCUMFERENCE() {
     return 2 * Math.PI * this.RADIUS;
   },
+  
+  // 业务配置 (来自 shared 包)
   DEFAULT_DURATION: DEFAULT_FOCUS_DURATION,
+  SHORT_BREAK: DEFAULT_SHORT_BREAK_DURATION,
+  LONG_BREAK: DEFAULT_LONG_BREAK_DURATION,
+  POMODOROS_BEFORE_LONG_BREAK,
+  
+  // 移动端特有的限制配置
   MIN_DURATION: 15 * 60,
   MAX_DURATION: 120 * 60,
-  SHORT_BREAK: 5 * 60,
-  LONG_BREAK: 15 * 60,
 } as const;
 
 // 时间格式化

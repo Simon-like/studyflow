@@ -4,14 +4,61 @@
 
 @layer base {
   :root {
-    --bg: #fdf8f3;
-    --fg: #3d3d3d;
-    --muted: #8a8a8a;
-    --accent: #e8a87c;
-    --accent-light: #f5c9a8;
-    --card: #ffffff;
-    --border: #e8e4e0;
-    --sage: #9db5a0;
+    /* 从 @studyflow/theme 生成的 CSS 变量 */
+    --color-coral-50: #FDF6F1;
+    --color-coral-100: #FAEBE0;
+    --color-coral-200: #F5D6C1;
+    --color-coral-300: #F0C1A2;
+    --color-coral-400: #EBAC83;
+    --color-coral-500: #E8A87C;
+    --color-coral-600: #D4956A;
+    --color-coral-700: #C08258;
+    --color-coral-800: #AB6F46;
+    --color-coral-900: #965C34;
+    --color-sage-50: #F4F7F4;
+    --color-sage-100: #E9EFE9;
+    --color-sage-200: #D3DFD4;
+    --color-sage-300: #BDCFBE;
+    --color-sage-400: #A7C0A9;
+    --color-sage-500: #9DB5A0;
+    --color-sage-600: #7A9A7E;
+    --color-sage-700: #5F7F63;
+    --color-sage-800: #456448;
+    --color-sage-900: #2A492D;
+    --color-white: #FFFFFF;
+    --color-cream: #FDF8F3;
+    --color-warm: #FAF5F0;
+    --color-light: #F0EBE6;
+    --color-mist: #C9C5C1;
+    --color-stone: #8A8A8A;
+    --color-charcoal: #3D3D3D;
+    --color-black: #1A1A1A;
+    --color-primary: #E8A87C;
+    --color-primary-light: #F5D6C1;
+    --color-primary-dark: #D4956A;
+    --color-secondary: #9DB5A0;
+    --color-secondary-dark: #7A9A7E;
+    --color-background: #FDF8F3;
+    --color-surface: #FFFFFF;
+    --color-surface-warm: #FAF5F0;
+    --color-text: #3D3D3D;
+    --color-text-secondary: #8A8A8A;
+    --color-text-muted: #C9C5C1;
+    --color-border: #C9C5C1;
+    --color-success: #81C784;
+    --color-warning: #FFB74D;
+    --color-error: #E57373;
+    --color-info: #64B5F6;
+    
+    /* 语义化变量 */
+    --bg: var(--color-background);
+    --fg: var(--color-text);
+    --muted: var(--color-text-secondary);
+    --accent: var(--color-primary);
+    --accent-light: var(--color-primary-light);
+    --card: var(--color-surface);
+    --border: var(--color-light);
+    --sage: var(--color-secondary);
   }
 
   * {
