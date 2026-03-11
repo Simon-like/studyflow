@@ -1,0 +1,243 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { IconProps } from './types';
+import { colors } from '../../../theme';
+
+export * from './types';
+
+// Home 图标
+function HomeIcon({ active, color }: { active?: boolean; color?: string }) {
+  const iconColor = color || (active ? colors.primary : colors.textSecondary);
+  return (
+    <View style={styles.iconContainer}>
+      <View style={[styles.homeRoof, { borderColor: iconColor }]} />
+      <View style={[styles.homeBody, { borderColor: iconColor, backgroundColor: active ? `${colors.primary}20` : 'transparent' }]} />
+    </View>
+  );
+}
+
+// 聊天图标
+function ChatIcon({ active, color }: { active?: boolean; color?: string }) {
+  const iconColor = color || (active ? colors.primary : colors.textSecondary);
+  return (
+    <View style={styles.iconContainer}>
+      <View style={[styles.chatBubble, { borderColor: iconColor }]} />
+      <View style={[styles.chatTail, { borderTopColor: iconColor }]} />
+    </View>
+  );
+}
+
+// 用户组图标
+function UsersIcon({ active, color }: { active?: boolean; color?: string }) {
+  const iconColor = color || (active ? colors.primary : colors.textSecondary);
+  return (
+    <View style={[styles.iconContainer, styles.usersContainer]}>
+      <View style={[styles.userDot, { borderColor: iconColor }]} />
+      <View style={[styles.userDot, { borderColor: iconColor }]} />
+    </View>
+  );
+}
+
+// 用户图标
+function UserIcon({ active, color }: { active?: boolean; color?: string }) {
+  const iconColor = color || (active ? colors.primary : colors.textSecondary);
+  return (
+    <View style={styles.iconContainer}>
+      <View style={[styles.userHead, { borderColor: iconColor }]} />
+      <View style={[styles.userBody, { borderColor: iconColor }]} />
+    </View>
+  );
+}
+
+// 播放图标
+function PlayIcon({ color = colors.surface }: { color?: string }) {
+  return (
+    <View style={[styles.playIcon, { borderLeftColor: color }]} />
+  );
+}
+
+// 暂停图标
+function PauseIcon({ color = colors.surface }: { color?: string }) {
+  return (
+    <View style={styles.pauseContainer}>
+      <View style={[styles.pauseBar, { backgroundColor: color }]} />
+      <View style={[styles.pauseBar, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
+// 检查图标
+function CheckIcon({ color = colors.success }: { color?: string }) {
+  return (
+    <View style={styles.iconContainer}>
+      <Text style={[styles.checkMark, { color }]}>✓</Text>
+    </View>
+  );
+}
+
+// 右箭头图标
+function ChevronRightIcon({ color = colors.textMuted }: { color?: string }) {
+  return (
+    <Text style={[styles.chevron, { color }]}>›</Text>
+  );
+}
+
+// 更多图标
+function MoreIcon({ color = colors.text }: { color?: string }) {
+  return (
+    <Text style={[styles.moreText, { color }]}>···</Text>
+  );
+}
+
+// 发送图标
+function SendIcon({ color = colors.surface }: { color?: string }) {
+  return (
+    <Text style={[styles.sendText, { color }]}>→</Text>
+  );
+}
+
+// 主组件
+export function Icon({ name, size = 24, color, active = false }: IconProps) {
+  const iconProps = { active, color };
+  
+  switch (name) {
+    case 'home':
+      return <HomeIcon {...iconProps} />;
+    case 'chat':
+      return <ChatIcon {...iconProps} />;
+    case 'users':
+      return <UsersIcon {...iconProps} />;
+    case 'user':
+      return <UserIcon {...iconProps} />;
+    case 'play':
+      return <PlayIcon color={color} />;
+    case 'pause':
+      return <PauseIcon color={color} />;
+    case 'check':
+      return <CheckIcon color={color} />;
+    case 'chevron-right':
+      return <ChevronRightIcon color={color} />;
+    case 'more':
+      return <MoreIcon color={color} />;
+    case 'send':
+      return <SendIcon color={color} />;
+    default:
+      return null;
+  }
+}
+
+// 预设图标组件（用于底部导航）
+export function HomeIconComponent({ active }: { active: boolean }) {
+  return <Icon name="home" active={active} />;
+}
+
+export function ChatIconComponent({ active }: { active: boolean }) {
+  return <Icon name="chat" active={active} />;
+}
+
+export function UsersIconComponent({ active }: { active: boolean }) {
+  return <Icon name="users" active={active} />;
+}
+
+export function UserIconComponent({ active }: { active: boolean }) {
+  return <Icon name="user" active={active} />;
+}
+
+const styles = StyleSheet.create({
+  iconContainer: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  homeRoof: {
+    width: 10,
+    height: 10,
+    borderWidth: 2,
+    transform: [{ rotate: '45deg' }],
+    marginBottom: 2,
+  },
+  homeBody: {
+    width: 14,
+    height: 10,
+    borderWidth: 2,
+    borderTopWidth: 0,
+  },
+  chatBubble: {
+    width: 20,
+    height: 14,
+    borderRadius: 8,
+    borderWidth: 2,
+  },
+  chatTail: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderTopWidth: 5,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    marginTop: -1,
+    marginLeft: -6,
+    alignSelf: 'flex-start',
+  },
+  usersContainer: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  userDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 2,
+  },
+  userHead: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    marginBottom: 2,
+  },
+  userBody: {
+    width: 18,
+    height: 8,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderBottomWidth: 0,
+  },
+  playIcon: {
+    width: 0,
+    height: 0,
+    borderTopWidth: 10,
+    borderBottomWidth: 10,
+    borderLeftWidth: 16,
+    borderTopColor: 'transparent',
+    borderBottomColor: 'transparent',
+    marginLeft: 4,
+  },
+  pauseContainer: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  pauseBar: {
+    width: 5,
+    height: 22,
+    borderRadius: 3,
+  },
+  checkMark: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  chevron: {
+    fontSize: 20,
+    fontWeight: '300',
+  },
+  moreText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  sendText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+});
