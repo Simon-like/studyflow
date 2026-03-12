@@ -13,4 +13,4 @@ export const BUTTON_SIZES = {
 } as const;
 
 export const BUTTON_BASE_CLASSES = 
-  'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed';
+  'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap';

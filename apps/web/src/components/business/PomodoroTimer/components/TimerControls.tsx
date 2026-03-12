@@ -24,7 +24,7 @@ export function TimerControls({
         </Button>
       )}
       {status === 'running' && (
-        <Button onClick={onPause} fullWidth>
+        <Button onClick={onPause} fullWidth className=''>
           暂停
         </Button>
       )}

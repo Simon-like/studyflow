@@ -50,7 +50,7 @@ export function TaskList({ tasks }: TaskListProps) {
           + 添加任务
         </Link>
       </div>
-      <div className="space-y-3">
+      <div className="space-y-3 flex flex-col gap-3">
         {tasks.map((task) => (
           <TaskItem key={task.id} task={task} />
         ))}

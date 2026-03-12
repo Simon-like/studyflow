@@ -43,7 +43,7 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={disabled}
       activeOpacity={0.8}
     >
-      <Text style={textStyles}>{title}</Text>
+      <Text style={textStyles} numberOfLines={1}>{title}</Text>
     </TouchableOpacity>
   );
 };

@@ -41,7 +41,7 @@ export function Button({
       ) : (
         <>
           {leftIcon}
-          <Text style={[styles.text, sizeStyle.text, variantStyle.text, textStyle]}>
+          <Text style={[styles.text, sizeStyle.text, variantStyle.text, textStyle]} numberOfLines={1}>
             {children}
           </Text>
           {rightIcon}
