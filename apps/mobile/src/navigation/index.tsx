@@ -2,12 +2,14 @@
  * 导航组件
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { TabBar } from './components/TabBar';
 import { TABS, TabKey } from './constants';
 import { colors } from '../theme';
+import { AuthProvider } from '../contexts/AuthContext';
+import { api } from '@studyflow/api';
 
 // 导入页面
 import HomeScreen from '../screens/Home';
@@ -28,6 +30,12 @@ export function Navigation() {
   const [activeTab, setActiveTab] = useState<TabKey>('home');
   const ActiveScreen = SCREENS[activeTab];
 
+  const handleLogout = useCallback(() => {
+    api.auth.logout().catch(() => {});
+    setIsAuthenticated(false);
+    setActiveTab('home');
+  }, []);
+
   // 未登录 → 显示登录/注册
   if (!isAuthenticated) {
     return (
@@ -39,21 +47,23 @@ export function Navigation() {
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
+    <AuthProvider logout={handleLogout}>
+      <View style={styles.container}>
+        <StatusBar style="dark" />
 
-      {/* 页面内容 */}
-      <View style={styles.content}>
-        <ActiveScreen />
+        {/* 页面内容 */}
+        <View style={styles.content}>
+          <ActiveScreen />
+        </View>
+
+        {/* 底部导航栏 */}
+        <TabBar
+          tabs={TABS}
+          activeTab={activeTab}
+          onTabPress={setActiveTab}
+        />
       </View>
-
-      {/* 底部导航栏 */}
-      <TabBar
-        tabs={TABS}
-        activeTab={activeTab}
-        onTabPress={setActiveTab}
-      />
-    </View>
+    </AuthProvider>
   );
 }
 
