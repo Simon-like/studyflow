@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { User } from "@studyflow/shared";
 import { STORAGE_KEYS } from "@studyflow/shared";
+import { api } from "@studyflow/api";
 
 interface AuthState {
   // 状态
@@ -26,7 +27,10 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user, isAuthenticated: !!user }),
       setAuthenticated: (value) => set({ isAuthenticated: value }),
       setLoading: (value) => set({ isLoading: value }),
-      logout: () => set({ user: null, isAuthenticated: false }),
+      logout: () => {
+        api.auth.logout().catch(() => {});
+        set({ user: null, isAuthenticated: false });
+      },
     }),
     {
       name: STORAGE_KEYS.USER,

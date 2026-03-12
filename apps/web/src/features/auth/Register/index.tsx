@@ -2,35 +2,7 @@ import { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { api } from '@studyflow/api';
-
-// 校验规则
-const validate = {
-  name: (v: string) => {
-    if (!v.trim()) return '请输入姓名';
-    if (v.trim().length < 2) return '姓名至少2个字符';
-    if (v.trim().length > 20) return '姓名不能超过20个字符';
-    return '';
-  },
-  account: (v: string) => {
-    if (!v.trim()) return '请输入手机号或邮箱';
-    const isPhone = /^1[3-9]\d{9}$/.test(v.trim());
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
-    if (!isPhone && !isEmail) return '请输入有效的手机号或邮箱';
-    return '';
-  },
-  password: (v: string) => {
-    if (!v) return '请输入密码';
-    if (v.length < 6) return '密码至少6位';
-    if (v.length > 32) return '密码不能超过32位';
-    if (!/[a-zA-Z]/.test(v) || !/\d/.test(v)) return '密码需包含字母和数字';
-    return '';
-  },
-  confirmPassword: (v: string, pw: string) => {
-    if (!v) return '请确认密码';
-    if (v !== pw) return '两次密码不一致';
-    return '';
-  },
-};
+import { authValidators } from '@studyflow/shared';
 
 interface FieldErrors {
   name?: string;
@@ -62,10 +34,10 @@ export default function RegisterPage() {
 
   const runValidation = useCallback(() => {
     const e: FieldErrors = {
-      name: validate.name(name),
-      account: validate.account(account),
-      password: validate.password(password),
-      confirmPassword: validate.confirmPassword(confirmPassword, password),
+      name: authValidators.name(name),
+      account: authValidators.account(account),
+      password: authValidators.password(password),
+      confirmPassword: authValidators.confirmPassword(confirmPassword, password),
     };
     setErrors(e);
     return !e.name && !e.account && !e.password && !e.confirmPassword;

@@ -18,7 +18,7 @@ import type {
   PaginatedData,
   PaginationParams,
 } from "@studyflow/shared";
-import { storage, STORAGE_KEYS, generateId } from "@studyflow/shared";
+import { STORAGE_KEYS } from "@studyflow/shared";
 import {
   TEST_ACCOUNT,
   MOCK_USER,
@@ -36,7 +36,38 @@ import type { CreateTaskRequest, UpdateTaskRequest } from "../services/taskServi
 import type { StartPomodoroRequest, StopPomodoroRequest } from "../services/pomodoroService";
 import type { SendMessageRequest } from "../services/chatService";
 
+// ==================== 安全 Storage 封装 ====================
+// localStorage 在 React Native 中不存在，做 try-catch 保护
+
+const safeStorage = {
+  set: (key: string, value: unknown) => {
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem(key, JSON.stringify(value));
+      }
+    } catch { /* noop */ }
+  },
+  get: <T>(key: string): T | null => {
+    try {
+      if (typeof localStorage !== "undefined") {
+        const v = localStorage.getItem(key);
+        return v ? JSON.parse(v) : null;
+      }
+    } catch { /* noop */ }
+    return null;
+  },
+  remove: (key: string) => {
+    try {
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem(key);
+      }
+    } catch { /* noop */ }
+  },
+};
+
 // ==================== 内存状态 ====================
+
+let currentUser: User | null = null;
 
 let registeredUsers: Array<{
   user: User;
@@ -54,10 +85,7 @@ type AuthLoginResponse = ApiResponse<{ user: User } & TokenResponse>;
 type AuthRegisterResponse = AuthLoginResponse;
 
 export const mockAuthService = {
-  login: async (data: {
-    username: string;
-    password: string;
-  }): Promise<AuthLoginResponse> => {
+  login: async (data: LoginRequest): Promise<AuthLoginResponse> => {
     await mockDelay();
 
     const found = registeredUsers.find(
@@ -72,19 +100,15 @@ export const mockAuthService = {
       throw { response: { status: 401, data: fail(401, "账号或密码错误") } };
     }
 
-    // 存储 token
-    storage.set(STORAGE_KEYS.TOKEN, MOCK_TOKENS.accessToken);
-    storage.set(STORAGE_KEYS.REFRESH_TOKEN, MOCK_TOKENS.refreshToken);
-    storage.set(STORAGE_KEYS.USER, found.user);
+    currentUser = found.user;
+    safeStorage.set(STORAGE_KEYS.TOKEN, MOCK_TOKENS.accessToken);
+    safeStorage.set(STORAGE_KEYS.REFRESH_TOKEN, MOCK_TOKENS.refreshToken);
+    safeStorage.set(STORAGE_KEYS.USER, found.user);
 
     return ok({ user: found.user, ...MOCK_TOKENS });
   },
 
-  register: async (data: {
-    username: string;
-    password: string;
-    nickname?: string;
-  }): Promise<AuthRegisterResponse> => {
+  register: async (data: RegisterRequest): Promise<AuthRegisterResponse> => {
     await mockDelay();
 
     // 检查唯一性
@@ -100,12 +124,12 @@ export const mockAuthService = {
       };
     }
 
-    const isEmail = data.username.includes("@");
+    const isEmailAddr = data.username.includes("@");
     const newUser: User = {
       id: genId(),
       username: data.username,
-      email: isEmail ? data.username : "",
-      phone: isEmail ? "" : data.username,
+      email: isEmailAddr ? data.username : (data.email || ""),
+      phone: isEmailAddr ? (data.phone || "") : data.username,
       nickname: data.nickname || data.username.split("@")[0],
       avatar: "",
       focusDuration: 1500,
@@ -117,9 +141,10 @@ export const mockAuthService = {
 
     registeredUsers.push({ user: newUser, password: data.password });
 
-    storage.set(STORAGE_KEYS.TOKEN, MOCK_TOKENS.accessToken);
-    storage.set(STORAGE_KEYS.REFRESH_TOKEN, MOCK_TOKENS.refreshToken);
-    storage.set(STORAGE_KEYS.USER, newUser);
+    currentUser = newUser;
+    safeStorage.set(STORAGE_KEYS.TOKEN, MOCK_TOKENS.accessToken);
+    safeStorage.set(STORAGE_KEYS.REFRESH_TOKEN, MOCK_TOKENS.refreshToken);
+    safeStorage.set(STORAGE_KEYS.USER, newUser);
 
     return ok({ user: newUser, ...MOCK_TOKENS });
   },
@@ -131,15 +156,16 @@ export const mockAuthService = {
 
   logout: async (): Promise<ApiResponse<void>> => {
     await mockDelay(200);
-    storage.remove(STORAGE_KEYS.TOKEN);
-    storage.remove(STORAGE_KEYS.REFRESH_TOKEN);
-    storage.remove(STORAGE_KEYS.USER);
+    currentUser = null;
+    safeStorage.remove(STORAGE_KEYS.TOKEN);
+    safeStorage.remove(STORAGE_KEYS.REFRESH_TOKEN);
+    safeStorage.remove(STORAGE_KEYS.USER);
     return ok(undefined as unknown as void);
   },
 
   getCurrentUser: async (): Promise<ApiResponse<User>> => {
     await mockDelay(300);
-    const user = storage.get<User>(STORAGE_KEYS.USER);
+    const user = currentUser || safeStorage.get<User>(STORAGE_KEYS.USER);
     if (!user) {
       throw { response: { status: 401, data: fail(401, "未登录") } };
     }
@@ -346,7 +372,6 @@ export const mockChatService = {
   ): Promise<ApiResponse<ChatMessage>> => {
     await mockDelay(800);
 
-    // 保存用户消息
     const userMsg: ChatMessage = {
       id: genId(),
       sessionId: "session-001",
@@ -357,7 +382,6 @@ export const mockChatService = {
     };
     chatMessages.push(userMsg);
 
-    // 生成 AI 回复
     const reply: ChatMessage = {
       id: genId(),
       sessionId: "session-001",

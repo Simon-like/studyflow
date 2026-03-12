@@ -2,21 +2,7 @@ import { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { api, TEST_ACCOUNT } from '@studyflow/api';
-
-// 校验
-const validateField = {
-  account: (v: string) => {
-    if (!v.trim()) return '请输入手机号或邮箱';
-    const isPhone = /^1[3-9]\d{9}$/.test(v.trim());
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
-    if (!isPhone && !isEmail) return '请输入有效的手机号或邮箱';
-    return '';
-  },
-  password: (v: string) => {
-    if (!v) return '请输入密码';
-    return '';
-  },
-};
+import { authValidators } from '@studyflow/shared';
 
 interface FieldErrors {
   account?: string;
@@ -44,8 +30,8 @@ export default function LoginPage() {
 
   const runValidation = useCallback(() => {
     const e: FieldErrors = {
-      account: validateField.account(account),
-      password: validateField.password(password),
+      account: authValidators.account(account),
+      password: authValidators.loginPassword(password),
     };
     setErrors(e);
     return !e.account && !e.password;

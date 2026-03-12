@@ -1,4 +1,4 @@
-// 导出客户端
+// 导出客户端（httpClient 已兼容 Metro/RN）
 export * from "./client/httpClient";
 
 // 导出真实服务

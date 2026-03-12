@@ -46,6 +46,10 @@ export default defineConfig({
       },
     },
   },
+  define: {
+    // 让共享包中的 process.env.VITE_API_BASE_URL 能被 Vite 正确替换
+    "process.env.VITE_API_BASE_URL": JSON.stringify(process.env.VITE_API_BASE_URL ?? ""),
+  },
   build: {
     outDir: "dist",
     sourcemap: true,

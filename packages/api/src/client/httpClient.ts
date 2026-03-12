@@ -64,7 +64,9 @@ const createHttpClient = (baseURL: string): AxiosInstance => {
           storage.remove(STORAGE_KEYS.TOKEN);
           storage.remove(STORAGE_KEYS.REFRESH_TOKEN);
           storage.remove(STORAGE_KEYS.USER);
-          window.location.href = "/login";
+          if (typeof window !== "undefined" && window.location) {
+            window.location.href = "/login";
+          }
           return Promise.reject(refreshError);
         }
       }
@@ -76,9 +78,14 @@ const createHttpClient = (baseURL: string): AxiosInstance => {
   return client;
 };
 
-// 默认客户端（使用环境变量）
+// 默认 API 地址
+// Vite 项目通过 define 注入 process.env.VITE_API_BASE_URL
+// React Native 通过 babel 的 transform-inline-environment-variables 或直接使用默认值
+const DEFAULT_BASE_URL = "http://localhost:8080";
+
+// 默认客户端
 export const httpClient = createHttpClient(
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080",
+  (typeof process !== "undefined" && process.env?.VITE_API_BASE_URL) || DEFAULT_BASE_URL,
 );
 
 // 创建自定义客户端
