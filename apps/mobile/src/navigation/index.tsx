@@ -13,6 +13,7 @@ import { api } from '@studyflow/api';
 
 // 导入页面
 import HomeScreen from '../screens/Home';
+import TasksScreen from '../screens/Tasks';
 import CompanionScreen from '../screens/Companion';
 import CommunityScreen from '../screens/Community';
 import ProfileScreen from '../screens/Profile';
@@ -20,6 +21,7 @@ import AuthModule from '../screens/Auth';
 
 const SCREENS: Record<TabKey, React.ComponentType> = {
   home: HomeScreen,
+  tasks: TasksScreen,
   companion: CompanionScreen,
   community: CommunityScreen,
   profile: ProfileScreen,

@@ -57,6 +57,10 @@ export const taskService = {
   toggleStatus: (id: string) =>
     http.patch<ApiResponse<Task>>(API_ENDPOINTS.TASK.TOGGLE(id)),
 
+  // 开始任务（设置为 in_progress，同时确保只有一个任务进行中）
+  startTask: (id: string) =>
+    http.post<ApiResponse<Task>>(API_ENDPOINTS.TASK.START(id)),
+
   // 获取任务进度统计
   getProgress: (period?: StatsPeriod) =>
     http.get<ApiResponse<TaskProgress>>(API_ENDPOINTS.TASK.PROGRESS, {

@@ -84,6 +84,7 @@ export default function DashboardPage() {
         onReorder={reorderTasks}
         onRefresh={refetch}
         isPomodoroRunning={status === 'running'}
+        onPausePomodoro={onPause}
         onResetPomodoro={onStop}
       />
     </div>

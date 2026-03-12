@@ -49,6 +49,7 @@ export const API_ENDPOINTS = {
     UPDATE: (id: string) => `/api/v1/tasks/${id}`,
     DELETE: (id: string) => `/api/v1/tasks/${id}`,
     TOGGLE: (id: string) => `/api/v1/tasks/${id}/toggle`,
+    START: (id: string) => `/api/v1/tasks/${id}/start`,
     PROGRESS: "/api/v1/tasks/progress",
     REORDER: "/api/v1/tasks/reorder",
   },

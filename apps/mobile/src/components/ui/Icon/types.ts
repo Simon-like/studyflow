@@ -9,7 +9,8 @@ export type IconName =
   | 'check' 
   | 'chevron-right'
   | 'more'
-  | 'send';
+  | 'send'
+  | 'tasks';
 
 export interface IconProps {
   name: IconName;

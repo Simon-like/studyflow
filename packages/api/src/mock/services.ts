@@ -284,11 +284,43 @@ export const mockTaskService = {
       throw { response: { status: 404, data: fail(404, "任务不存在") } };
 
     const currentStatus = tasks[idx].status;
-    const newStatus = currentStatus === "completed" ? "todo" : "completed";
+    let newStatus: Task['status'];
+    
+    if (currentStatus === "completed") {
+      newStatus = "todo";
+    } else if (currentStatus === "in_progress") {
+      newStatus = "completed";
+    } else {
+      // todo -> completed (点击完成)
+      newStatus = "completed";
+    }
 
     tasks[idx] = {
       ...tasks[idx],
       status: newStatus,
+      updatedAt: new Date().toISOString(),
+    };
+    return ok(tasks[idx]);
+  },
+
+  // 设置任务为进行中 (POST /api/v1/tasks/{id}/start)
+  startTask: async (id: string): Promise<ApiResponse<Task>> => {
+    await mockDelay(200);
+    const idx = tasks.findIndex((t) => t.id === id);
+    if (idx === -1)
+      throw { response: { status: 404, data: fail(404, "任务不存在") } };
+
+    // 先将所有其他 in_progress 任务重置为 todo
+    tasks.forEach((task, i) => {
+      if (task.status === "in_progress" && i !== idx) {
+        tasks[i] = { ...task, status: "todo", updatedAt: new Date().toISOString() };
+      }
+    });
+
+    // 设置当前任务为 in_progress
+    tasks[idx] = {
+      ...tasks[idx],
+      status: "in_progress",
       updatedAt: new Date().toISOString(),
     };
     return ok(tasks[idx]);

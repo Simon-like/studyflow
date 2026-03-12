@@ -91,6 +91,7 @@ export default function HomeScreen() {
         onRefresh={refresh}
         onReorder={reorderTasks}
         isPomodoroRunning={pomodoro.isRunning}
+        onPausePomodoro={pomodoro.pause}
         onResetPomodoro={pomodoro.stop}
       />
     </ScreenContainer>

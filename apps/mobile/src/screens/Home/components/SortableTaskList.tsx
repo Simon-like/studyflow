@@ -5,39 +5,20 @@ import {
   StyleSheet,
   ActivityIndicator,
   TouchableOpacity,
-  Modal,
-  Dimensions,
+  ScrollView,
 } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  runOnJS,
-  type SharedValue,
-} from 'react-native-reanimated';
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from 'react-native-gesture-handler';
-import type { Task } from '@studyflow/shared';
+import type { Task, TaskPriority } from '@studyflow/shared';
 import { TaskCard } from '../../../components/business/TaskCard';
 import { SectionHeader } from '../../../components/layout/SectionHeader';
+import { Modal, ConfirmModal } from '../../../components/ui/Modal';
 import { colors, radius, spacing, fontWeight } from '../../../theme';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const TASK_ITEM_HEIGHT = 72; // 任务项高度（包括 margin）
-
-interface SortableTaskItemProps {
-  task: Task;
-  index: number;
-  isFirst: boolean;
-  isDragging: boolean;
-  onToggle: () => void;
-  onDragStart: () => void;
-  onDragEnd: (fromIndex: number, toIndex: number) => void;
-  positions: SharedValue<number[]>;
-}
+// 优先级配置
+const PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: string; bgColor: string }> = {
+  high: { label: '高优先级', color: colors.error, bgColor: colors.error + '15' },
+  medium: { label: '中优先级', color: colors.warning, bgColor: colors.warning + '15' },
+  low: { label: '低优先级', color: colors.success, bgColor: colors.success + '15' },
+};
 
 // 将 Task 状态映射为 TaskCard 状态
 type TaskCardStatus = 'active' | 'completed' | 'todo';
@@ -58,98 +39,6 @@ function formatTaskSubtitle(task: Task): string {
   return parts.join(' · ');
 }
 
-function SortableTaskItem({
-  task,
-  index,
-  isFirst,
-  isDragging,
-  onToggle,
-  onDragStart,
-  onDragEnd,
-  positions,
-}: SortableTaskItemProps) {
-  const translateY = useSharedValue(0);
-  const isActive = useSharedValue(false);
-  const itemHeight = TASK_ITEM_HEIGHT;
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: translateY.value }],
-      zIndex: isActive.value ? 100 : 1,
-      elevation: isActive.value ? 10 : 1,
-      opacity: isDragging && !isActive.value ? 0.5 : 1,
-    };
-  });
-
-  const panGesture = Gesture.Pan()
-    .activateAfterLongPress(200) // 长按 200ms 后激活拖拽
-    .onStart(() => {
-      isActive.value = true;
-      runOnJS(onDragStart)();
-    })
-    .onUpdate((event) => {
-      translateY.value = event.translationY;
-
-      // 计算目标位置
-      const newIndex = Math.round(
-        (event.translationY + index * itemHeight) / itemHeight
-      );
-      const clampedIndex = Math.max(0, Math.min(newIndex, positions.value.length - 1));
-
-      if (clampedIndex !== index) {
-        // 更新其他项目的位置
-        const newPositions = [...positions.value];
-        const [removed] = newPositions.splice(index, 1);
-        newPositions.splice(clampedIndex, 0, removed);
-        positions.value = newPositions;
-      }
-    })
-    .onEnd(() => {
-      isActive.value = false;
-      translateY.value = withSpring(0);
-
-      // 计算最终位置
-      const finalIndex = Math.round(translateY.value / itemHeight) + index;
-      const clampedFinalIndex = Math.max(
-        0,
-        Math.min(finalIndex, positions.value.length - 1)
-      );
-
-      if (clampedFinalIndex !== index) {
-        runOnJS(onDragEnd)(index, clampedFinalIndex);
-      }
-    });
-
-  return (
-    <GestureDetector gesture={panGesture}>
-      <Animated.View style={[styles.taskItem, animatedStyle]}>
-        <View style={styles.taskContainer}>
-          {/* 拖拽指示器 */}
-          <View style={styles.dragHandle}>
-            <View style={styles.dragIndicator} />
-            {isFirst && task.status !== 'completed' && (
-              <View style={styles.firstTaskBadge}>
-                <Text style={styles.firstTaskText}>专注</Text>
-              </View>
-            )}
-          </View>
-
-          {/* 任务卡片 */}
-          <View style={styles.taskCardWrapper}>
-            <TaskCard
-              id={task.id}
-              title={task.title}
-              subtitle={formatTaskSubtitle(task)}
-              status={getTaskCardStatus(task)}
-              onToggle={onToggle}
-            />
-          </View>
-        </View>
-      </Animated.View>
-    </GestureDetector>
-  );
-}
-
 interface SortableTaskListProps {
   tasks: Task[];
   isLoading?: boolean;
@@ -159,6 +48,7 @@ interface SortableTaskListProps {
   onRefresh?: () => void;
   onReorder?: (tasks: Task[]) => Promise<void>;
   isPomodoroRunning?: boolean;
+  onPausePomodoro?: () => void;
   onResetPomodoro?: () => void;
 }
 
@@ -170,74 +60,90 @@ export function SortableTaskList({
   onAddTask,
   onRefresh,
   onReorder,
-  isPomodoroRunning,
-  onResetPomodoro,
 }: SortableTaskListProps) {
   const [items, setItems] = useState<Task[]>(tasks);
-  const [isDragging, setIsDragging] = useState(false);
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [pendingReorder, setPendingReorder] = useState<Task[] | null>(null);
-  const positions = useSharedValue<number[]>(tasks.map((_, i) => i));
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showTaskDetail, setShowTaskDetail] = useState(false);
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
+  const [pendingCompleteTaskId, setPendingCompleteTaskId] = useState<string | null>(null);
 
   // 同步外部 tasks 变化
   if (JSON.stringify(items.map((t) => t.id)) !== JSON.stringify(tasks.map((t) => t.id))) {
     setItems(tasks);
-    positions.value = tasks.map((_, i) => i);
   }
 
   const completedCount = items.filter((t) => t.status === 'completed').length;
 
-  const handleDragStart = useCallback(() => {
-    setIsDragging(true);
+  // 打开任务详情
+  const handleTaskPress = useCallback((task: Task) => {
+    setSelectedTask(task);
+    setShowTaskDetail(true);
   }, []);
 
-  const handleDragEnd = useCallback(
-    (fromIndex: number, toIndex: number) => {
-      setIsDragging(false);
+  // 关闭任务详情
+  const handleCloseTaskDetail = useCallback(() => {
+    setShowTaskDetail(false);
+    setSelectedTask(null);
+  }, []);
 
-      if (fromIndex === toIndex) return;
-
-      // 检查是否正在移动第一个任务且番茄钟正在运行
-      const firstTask = items[0];
-      const isMovingFirstTask = fromIndex === 0 || toIndex === 0;
-      
-      if (isMovingFirstTask && isPomodoroRunning && firstTask?.status === 'in_progress') {
-        // 保存待执行的排序
-        const newItems = [...items];
-        const [movedItem] = newItems.splice(fromIndex, 1);
-        newItems.splice(toIndex, 0, movedItem);
-        setPendingReorder(newItems);
-        setShowResetConfirm(true);
-        return;
-      }
-
-      // 直接执行排序
-      const newItems = [...items];
-      const [movedItem] = newItems.splice(fromIndex, 1);
-      newItems.splice(toIndex, 0, movedItem);
-      setItems(newItems);
-      onReorder?.(newItems);
-    },
-    [items, isPomodoroRunning, onReorder]
-  );
-
-  const handleConfirmReset = () => {
-    onResetPomodoro?.();
-    if (pendingReorder) {
-      setItems(pendingReorder);
-      onReorder?.(pendingReorder);
+  // 请求完成任务（显示确认对话框）
+  const handleToggleRequest = useCallback((taskId: string) => {
+    const task = items.find((t) => t.id === taskId);
+    if (task && task.status !== 'completed') {
+      // 只有未完成的任务才需要确认
+      setPendingCompleteTaskId(taskId);
+      setShowCompleteConfirm(true);
+    } else {
+      // 已完成的任务直接切换（重新打开）
+      onToggleTask(taskId);
     }
-    setShowResetConfirm(false);
-    setPendingReorder(null);
-  };
+  }, [items, onToggleTask]);
 
-  const handleCancelReset = () => {
-    setShowResetConfirm(false);
-    setPendingReorder(null);
-    // 恢复原始顺序
-    setItems(tasks);
-    positions.value = tasks.map((_, i) => i);
-  };
+  // 确认完成任务
+  const handleConfirmComplete = useCallback(() => {
+    if (pendingCompleteTaskId) {
+      onToggleTask(pendingCompleteTaskId);
+    }
+    setShowCompleteConfirm(false);
+    setPendingCompleteTaskId(null);
+  }, [pendingCompleteTaskId, onToggleTask]);
+
+  // 取消完成任务
+  const handleCancelComplete = useCallback(() => {
+    setShowCompleteConfirm(false);
+    setPendingCompleteTaskId(null);
+  }, []);
+
+  // 上移任务
+  const handleMoveUp = useCallback(() => {
+    if (!selectedTask) return;
+    const index = items.findIndex((t) => t.id === selectedTask.id);
+    if (index <= 0) return;
+
+    const newItems = [...items];
+    [newItems[index - 1], newItems[index]] = [newItems[index], newItems[index - 1]];
+    setItems(newItems);
+    onReorder?.(newItems);
+    setSelectedTask(newItems[index - 1]);
+  }, [selectedTask, items, onReorder]);
+
+  // 下移任务
+  const handleMoveDown = useCallback(() => {
+    if (!selectedTask) return;
+    const index = items.findIndex((t) => t.id === selectedTask.id);
+    if (index >= items.length - 1) return;
+
+    const newItems = [...items];
+    [newItems[index], newItems[index + 1]] = [newItems[index + 1], newItems[index]];
+    setItems(newItems);
+    onReorder?.(newItems);
+    setSelectedTask(newItems[index + 1]);
+  }, [selectedTask, items, onReorder]);
+
+  // 获取选中任务的索引
+  const selectedTaskIndex = selectedTask ? items.findIndex((t) => t.id === selectedTask.id) : -1;
+  const canMoveUp = selectedTaskIndex > 0;
+  const canMoveDown = selectedTaskIndex >= 0 && selectedTaskIndex < items.length - 1;
 
   // 加载状态
   if (isLoading) {
@@ -271,49 +177,115 @@ export function SortableTaskList({
   }
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      {/* 番茄钟重置确认弹窗 */}
+    <View style={styles.container}>
+      {/* 完成任务确认弹窗 */}
+      <ConfirmModal
+        visible={showCompleteConfirm}
+        onClose={handleCancelComplete}
+        onConfirm={handleConfirmComplete}
+        title="完成任务"
+        message="确定要完成这个任务吗？"
+        confirmText="完成"
+        cancelText="取消"
+      />
+
+      {/* 任务详情弹窗 */}
       <Modal
-        visible={showResetConfirm}
-        transparent
-        animationType="fade"
-        onRequestClose={handleCancelReset}
+        visible={showTaskDetail}
+        onClose={handleCloseTaskDetail}
+        title="任务详情"
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalIcon}>
-              <Text style={styles.modalIconText}>⚠️</Text>
+        {selectedTask && (
+          <ScrollView style={styles.detailContent} showsVerticalScrollIndicator={false}>
+            {/* 任务名称 */}
+            <View style={styles.detailSection}>
+              <Text style={styles.detailLabel}>任务名称</Text>
+              <Text style={styles.detailTitle}>{selectedTask.title}</Text>
             </View>
-            <Text style={styles.modalTitle}>当前任务正在专注中</Text>
-            <Text style={styles.modalDesc}>
-              重新排序任务将会重置当前番茄钟进度，是否继续？
-            </Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonCancel]}
-                onPress={handleCancelReset}
+
+            {/* 任务详情/描述 */}
+            {selectedTask.description && (
+              <View style={styles.detailSection}>
+                <Text style={styles.detailLabel}>任务详情</Text>
+                <Text style={styles.detailDescription}>{selectedTask.description}</Text>
+              </View>
+            )}
+
+            {/* 重要性标签 */}
+            <View style={styles.detailSection}>
+              <Text style={styles.detailLabel}>优先级</Text>
+              <View
+                style={[
+                  styles.priorityBadge,
+                  { backgroundColor: PRIORITY_CONFIG[selectedTask.priority].bgColor },
+                ]}
               >
-                <Text style={styles.modalButtonCancelText}>取消</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonConfirm]}
-                onPress={handleConfirmReset}
-              >
-                <Text style={styles.modalButtonConfirmText}>重置并继续</Text>
-              </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.priorityText,
+                    { color: PRIORITY_CONFIG[selectedTask.priority].color },
+                  ]}
+                >
+                  {PRIORITY_CONFIG[selectedTask.priority].label}
+                </Text>
+              </View>
             </View>
-          </View>
-        </View>
+
+            {/* 分类 */}
+            {selectedTask.category && (
+              <View style={styles.detailSection}>
+                <Text style={styles.detailLabel}>分类</Text>
+                <Text style={styles.detailText}>{selectedTask.category}</Text>
+              </View>
+            )}
+
+            {/* 预计番茄数 */}
+            <View style={styles.detailSection}>
+              <Text style={styles.detailLabel}>预计番茄数</Text>
+              <Text style={styles.detailText}>
+                {selectedTask.estimatedPomodoros} 个番茄
+              </Text>
+            </View>
+
+            {/* 已完成番茄数 */}
+            <View style={styles.detailSection}>
+              <Text style={styles.detailLabel}>已完成番茄数</Text>
+              <Text style={styles.detailText}>
+                {selectedTask.completedPomodoros} 个番茄
+              </Text>
+            </View>
+
+            {/* 排序控制 */}
+            <View style={styles.detailSection}>
+              <Text style={styles.detailLabel}>任务排序</Text>
+              <View style={styles.sortButtons}>
+                <TouchableOpacity
+                  style={[styles.sortButton, !canMoveUp && styles.sortButtonDisabled]}
+                  onPress={handleMoveUp}
+                  disabled={!canMoveUp}
+                >
+                  <Text style={[styles.sortButtonText, !canMoveUp && styles.sortButtonTextDisabled]}>
+                    ↑ 上移
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.sortButton, !canMoveDown && styles.sortButtonDisabled]}
+                  onPress={handleMoveDown}
+                  disabled={!canMoveDown}
+                >
+                  <Text style={[styles.sortButtonText, !canMoveDown && styles.sortButtonTextDisabled]}>
+                    ↓ 下移
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        )}
       </Modal>
 
       <SectionHeader
         title="今日任务"
-        right={
-          <View style={styles.headerRight}>
-            <Text style={styles.dragHint}>长按拖动排序</Text>
-            <Text style={styles.progress}>{completedCount}/{items.length} 已完成</Text>
-          </View>
-        }
+        right={<Text style={styles.progress}>{completedCount}/{items.length} 已完成</Text>}
       />
 
       {items.length === 0 ? (
@@ -324,17 +296,15 @@ export function SortableTaskList({
         </View>
       ) : (
         <View style={styles.taskList}>
-          {items.map((task, index) => (
-            <SortableTaskItem
+          {items.map((task) => (
+            <TaskCard
               key={task.id}
-              task={task}
-              index={index}
-              isFirst={index === 0}
-              isDragging={isDragging}
-              onToggle={() => onToggleTask(task.id)}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              positions={positions}
+              id={task.id}
+              title={task.title}
+              subtitle={formatTaskSubtitle(task)}
+              status={getTaskCardStatus(task)}
+              onPress={() => handleTaskPress(task)}
+              onToggle={() => handleToggleRequest(task.id)}
             />
           ))}
         </View>
@@ -343,7 +313,7 @@ export function SortableTaskList({
       <TouchableOpacity style={styles.addButton} onPress={onAddTask} activeOpacity={0.7}>
         <Text style={styles.addText}>+ 添加新任务</Text>
       </TouchableOpacity>
-    </GestureHandlerRootView>
+    </View>
   );
 }
 
@@ -353,60 +323,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     marginBottom: spacing.xl,
   },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  dragHint: {
-    fontSize: 11,
-    color: colors.primary,
-    backgroundColor: colors.primary + '15',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.sm,
-  },
   progress: {
     fontSize: 13,
     color: colors.textSecondary,
-  },
-  taskList: {
-    minHeight: 100,
-  },
-  taskItem: {
-    marginBottom: spacing.md,
-  },
-  taskContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  dragHandle: {
-    width: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dragIndicator: {
-    width: 4,
-    height: 20,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-  },
-  firstTaskBadge: {
-    position: 'absolute',
-    top: -8,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: radius.sm,
-  },
-  firstTaskText: {
-    fontSize: 8,
-    color: colors.white,
-    fontWeight: fontWeight.bold,
-  },
-  taskCardWrapper: {
-    flex: 1,
   },
   loadingContainer: {
     paddingVertical: spacing.xl,
@@ -429,6 +348,9 @@ const styles = StyleSheet.create({
   emptyDesc: {
     fontSize: 13,
     color: colors.textSecondary,
+  },
+  taskList: {
+    minHeight: 100,
   },
   addButton: {
     borderWidth: 2,
@@ -457,73 +379,64 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: fontWeight.semibold,
   },
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.xl,
+  // Detail Modal Styles
+  detailContent: {
+    maxHeight: 400,
   },
-  modalContent: {
-    backgroundColor: colors.white,
-    borderRadius: radius['2xl'],
-    padding: spacing.xl,
-    width: '100%',
-    maxWidth: 320,
-    alignItems: 'center',
+  detailSection: {
+    marginBottom: spacing.lg,
   },
-  modalIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.warning + '15',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.md,
+  detailLabel: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+    fontWeight: fontWeight.medium,
   },
-  modalIconText: {
-    fontSize: 28,
-  },
-  modalTitle: {
-    fontSize: 17,
+  detailTitle: {
+    fontSize: 16,
     fontWeight: fontWeight.semibold,
     color: colors.text,
-    marginBottom: spacing.xs,
-    textAlign: 'center',
+    lineHeight: 22,
   },
-  modalDesc: {
+  detailDescription: {
     fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.lg,
+    color: colors.text,
     lineHeight: 20,
   },
-  modalButtons: {
+  detailText: {
+    fontSize: 14,
+    color: colors.text,
+  },
+  priorityBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.md,
+  },
+  priorityText: {
+    fontSize: 12,
+    fontWeight: fontWeight.medium,
+  },
+  sortButtons: {
     flexDirection: 'row',
     gap: spacing.md,
-    width: '100%',
   },
-  modalButton: {
+  sortButton: {
     flex: 1,
+    backgroundColor: colors.primary + '15',
     paddingVertical: spacing.md,
     borderRadius: radius.lg,
     alignItems: 'center',
   },
-  modalButtonCancel: {
+  sortButtonDisabled: {
     backgroundColor: colors.warm,
   },
-  modalButtonCancelText: {
-    fontSize: 15,
+  sortButtonText: {
+    fontSize: 14,
     fontWeight: fontWeight.medium,
-    color: colors.textSecondary,
+    color: colors.primary,
   },
-  modalButtonConfirm: {
-    backgroundColor: colors.primary,
-  },
-  modalButtonConfirmText: {
-    fontSize: 15,
-    fontWeight: fontWeight.semibold,
-    color: colors.white,
+  sortButtonTextDisabled: {
+    color: colors.textMuted,
   },
 });

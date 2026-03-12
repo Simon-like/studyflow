@@ -96,6 +96,20 @@ function SendIcon({ color = colors.surface }: { color?: string }) {
   );
 }
 
+// 任务/清单图标
+function TasksIcon({ active, color }: { active?: boolean; color?: string }) {
+  const iconColor = color || (active ? colors.primary : colors.textSecondary);
+  return (
+    <View style={styles.iconContainer}>
+      <View style={[styles.taskBox, { borderColor: iconColor }]}>
+        <View style={[styles.taskCheck, { borderColor: iconColor }]} />
+        <View style={[styles.taskLine, { backgroundColor: iconColor }]} />
+        <View style={[styles.taskLineShort, { backgroundColor: iconColor }]} />
+      </View>
+    </View>
+  );
+}
+
 // 主组件
 export function Icon({ name, size = 24, color, active = false }: IconProps) {
   const iconProps = { active, color };
@@ -121,6 +135,8 @@ export function Icon({ name, size = 24, color, active = false }: IconProps) {
       return <MoreIcon color={color} />;
     case 'send':
       return <SendIcon color={color} />;
+    case 'tasks':
+      return <TasksIcon {...iconProps} />;
     default:
       return null;
   }
@@ -239,5 +255,36 @@ const styles = StyleSheet.create({
   sendText: {
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  taskBox: {
+    width: 20,
+    height: 22,
+    borderWidth: 2,
+    borderRadius: 4,
+    padding: 2,
+    justifyContent: 'center',
+    gap: 3,
+  },
+  taskCheck: {
+    width: 6,
+    height: 6,
+    borderWidth: 1.5,
+    borderRadius: 2,
+    position: 'absolute',
+    left: 3,
+    top: 4,
+  },
+  taskLine: {
+    width: 8,
+    height: 1.5,
+    marginLeft: 9,
+    marginTop: 1,
+    borderRadius: 1,
+  },
+  taskLineShort: {
+    width: 5,
+    height: 1.5,
+    marginLeft: 9,
+    borderRadius: 1,
   },
 });

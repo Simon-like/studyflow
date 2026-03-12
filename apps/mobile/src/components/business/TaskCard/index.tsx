@@ -8,7 +8,7 @@ export * from './types';
 export function TaskCard({ title, subtitle, status, onPress, onToggle }: TaskCardProps) {
   const isDone = status === 'completed';
   const isActive = status === 'active';
-  
+
   return (
     <TouchableOpacity
       style={[
@@ -18,25 +18,31 @@ export function TaskCard({ title, subtitle, status, onPress, onToggle }: TaskCar
       onPress={onPress}
       activeOpacity={0.8}
     >
+      {/* 复选框 - 阻止事件冒泡 */}
       <TouchableOpacity
         style={[
           styles.checkbox,
           isDone && styles.checkboxDone,
           isActive && styles.checkboxActive,
         ]}
-        onPress={onToggle}
+        onPress={(e) => {
+          // 阻止事件冒泡，防止触发卡片的 onPress
+          e.stopPropagation();
+          onToggle?.();
+        }}
         activeOpacity={0.7}
       >
         {isDone && <Text style={styles.checkMark}>✓</Text>}
       </TouchableOpacity>
-      
-      <View style={styles.textContainer}>
+
+      {/* 文本内容区域 - 点击也会触发 onPress */}
+      <View style={styles.textContainer} pointerEvents="none">
         <Text style={[styles.title, isDone && styles.titleDone]}>
           {title}
         </Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
       </View>
-      
+
       {isActive && <Text style={styles.activeTag}>进行中</Text>}
     </TouchableOpacity>
   );
