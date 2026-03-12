@@ -1,75 +1,172 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
-import { Button } from '@/components/ui';
+import { api } from '@studyflow/api';
+
+// 校验规则
+const validate = {
+  name: (v: string) => {
+    if (!v.trim()) return '请输入姓名';
+    if (v.trim().length < 2) return '姓名至少2个字符';
+    if (v.trim().length > 20) return '姓名不能超过20个字符';
+    return '';
+  },
+  account: (v: string) => {
+    if (!v.trim()) return '请输入手机号或邮箱';
+    const isPhone = /^1[3-9]\d{9}$/.test(v.trim());
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+    if (!isPhone && !isEmail) return '请输入有效的手机号或邮箱';
+    return '';
+  },
+  password: (v: string) => {
+    if (!v) return '请输入密码';
+    if (v.length < 6) return '密码至少6位';
+    if (v.length > 32) return '密码不能超过32位';
+    if (!/[a-zA-Z]/.test(v) || !/\d/.test(v)) return '密码需包含字母和数字';
+    return '';
+  },
+  confirmPassword: (v: string, pw: string) => {
+    if (!v) return '请确认密码';
+    if (v !== pw) return '两次密码不一致';
+    return '';
+  },
+};
+
+interface FieldErrors {
+  name?: string;
+  account?: string;
+  password?: string;
+  confirmPassword?: string;
+}
+
+function FormField({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="text-sm text-stone font-medium">{label}</label>
+      {children}
+      {error && <p className="text-xs text-red-500 mt-1 ml-1">{error}</p>}
+    </div>
+  );
+}
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const { setAuthenticated } = useAuthStore();
+  const { setUser, setAuthenticated } = useAuthStore();
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [account, setAccount] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [serverError, setServerError] = useState('');
+
+  const runValidation = useCallback(() => {
+    const e: FieldErrors = {
+      name: validate.name(name),
+      account: validate.account(account),
+      password: validate.password(password),
+      confirmPassword: validate.confirmPassword(confirmPassword, password),
+    };
+    setErrors(e);
+    return !e.name && !e.account && !e.password && !e.confirmPassword;
+  }, [name, account, password, confirmPassword]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setServerError('');
+    if (!runValidation()) return;
+
     setIsLoading(true);
-    // Simulate registration
-    await new Promise((r) => setTimeout(r, 1000));
-    setAuthenticated(true);
-    navigate('/dashboard');
+    try {
+      const res = await api.auth.register({
+        username: account,
+        password,
+        nickname: name,
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data = res.data as any;
+      if (data?.user) {
+        setUser(data.user);
+      }
+      setAuthenticated(true);
+      navigate('/dashboard');
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      setServerError(error?.response?.data?.message || '注册失败，请重试');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const inputBase = 'w-full mt-2 px-4 py-3 bg-warm rounded-xl text-charcoal placeholder-mist focus:outline-none focus:ring-2 focus:ring-coral/40 border-[1.5px]';
+  const inputNormal = `${inputBase} border-transparent`;
+  const inputError = `${inputBase} border-red-400`;
 
   return (
     <>
-      <h2 className="font-display text-xl font-bold text-charcoal mb-2">创建账号</h2>
-      <p className="text-stone text-sm mb-6">开启你的高效学习之旅</p>
+      <h2 className="font-display text-2xl font-bold text-charcoal mb-2">创建账号</h2>
+      <p className="text-stone mb-8">开启你的高效学习之旅</p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-charcoal mb-1.5">姓名</label>
+      {serverError && (
+        <div className="bg-red-50 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">
+          {serverError}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4 flex flex-col gap-4" noValidate>
+        <FormField label="姓名" error={errors.name}>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-4 py-3 bg-warm rounded-xl text-charcoal focus:outline-none focus:ring-2 focus:ring-coral/40 transition-all text-sm"
+            className={errors.name ? inputError : inputNormal}
             placeholder="你的姓名"
-            required
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-charcoal mb-1.5">邮箱</label>
+        </FormField>
+        <FormField label="手机号/邮箱" error={errors.account}>
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 bg-warm rounded-xl text-charcoal focus:outline-none focus:ring-2 focus:ring-coral/40 transition-all text-sm"
-            placeholder="your@email.com"
-            required
+            type="text"
+            value={account}
+            onChange={(e) => setAccount(e.target.value)}
+            className={errors.account ? inputError : inputNormal}
+            placeholder="请输入"
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-charcoal mb-1.5">密码</label>
+        </FormField>
+        <FormField label="密码" error={errors.password}>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 bg-warm rounded-xl text-charcoal focus:outline-none focus:ring-2 focus:ring-coral/40 transition-all text-sm"
-            placeholder="••••••••"
-            required
+            className={errors.password ? inputError : inputNormal}
+            placeholder="至少6位，包含字母和数字"
           />
-        </div>
-
-        <Button type="submit" fullWidth isLoading={isLoading} className="mt-2">
-          注册
-        </Button>
+        </FormField>
+        <FormField label="确认密码" error={errors.confirmPassword}>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className={errors.confirmPassword ? inputError : inputNormal}
+            placeholder="请再次输入密码"
+          />
+        </FormField>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-coral text-white font-semibold py-3 rounded-xl shadow-lg hover:bg-coral-600 transition-colors disabled:opacity-50"
+        >
+          {isLoading ? '注册中...' : '注册'}
+        </button>
       </form>
 
-      <p className="text-center text-sm text-stone mt-6">
-        已有账号？{' '}
-        <Link to="/auth/login" className="text-coral hover:underline">
-          立即登录
-        </Link>
+      <p className="text-xs text-stone text-center mt-4">
+        注册即表示同意<span className="text-coral cursor-pointer">《服务条款》</span>和<span className="text-coral cursor-pointer">《隐私政策》</span>
+      </p>
+
+      <p className="text-center text-stone text-sm mt-6">
+        已有账号？
+        <Link to="/auth/login" className="text-coral font-semibold cursor-pointer">立即登录</Link>
       </p>
     </>
   );

@@ -6,6 +6,18 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./mock": {
+      "import": "./src/mock/index.ts",
+      "require": "./dist/mock/index.js",
+      "types": "./dist/mock/index.d.ts"
+    }
+  },
   "sideEffects": false,
   "files": [
     "dist/**"

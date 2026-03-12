@@ -10,11 +10,11 @@ export default function StatsPage() {
     useStats();
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-10 max-w-6xl mx-auto">
       <StatsHeader period={period} onPeriodChange={setPeriod} />
       <OverviewCards />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <WeeklyChart data={chartData} maxValue={maxPomodoros} />
         <SubjectDistribution data={subjectData} />
       </div>

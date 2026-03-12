@@ -8,7 +8,7 @@ interface FeedTabProps {
 
 export function FeedTab({ posts, onLike }: FeedTabProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {posts.map((post) => (
         <PostCard key={post.id} {...post} onLike={onLike} />
       ))}

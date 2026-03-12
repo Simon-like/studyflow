@@ -10,13 +10,13 @@ export default function SettingsPage() {
   const [darkMode, setDarkMode] = useState(false);
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-charcoal mb-6">设置</h1>
+    <div className="p-10 max-w-5xl mx-auto">
+      <h1 className="text-2xl font-bold text-charcoal mb-8">设置</h1>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* 账户设置 */}
-        <Card className="p-6">
-          <div className="flex items-center gap-3 mb-4">
+        <Card className="p-7">
+          <div className="flex items-center gap-4 mb-5">
             <div className="w-10 h-10 bg-coral/10 rounded-lg flex items-center justify-center">
               <User className="w-5 h-5 text-coral" />
             </div>
@@ -42,8 +42,8 @@ export default function SettingsPage() {
         </Card>
 
         {/* 通知设置 */}
-        <Card className="p-6">
-          <div className="flex items-center gap-3 mb-4">
+        <Card className="p-7">
+          <div className="flex items-center gap-4 mb-5">
             <div className="w-10 h-10 bg-sage/20 rounded-lg flex items-center justify-center">
               <Bell className="w-5 h-5 text-sage" />
             </div>
@@ -70,8 +70,8 @@ export default function SettingsPage() {
         </Card>
 
         {/* 外观设置 */}
-        <Card className="p-6">
-          <div className="flex items-center gap-3 mb-4">
+        <Card className="p-7">
+          <div className="flex items-center gap-4 mb-5">
             <div className="w-10 h-10 bg-warm rounded-lg flex items-center justify-center">
               <Moon className="w-5 h-5 text-charcoal" />
             </div>
@@ -98,8 +98,8 @@ export default function SettingsPage() {
         </Card>
 
         {/* 隐私与安全 */}
-        <Card className="p-6">
-          <div className="flex items-center gap-3 mb-4">
+        <Card className="p-7">
+          <div className="flex items-center gap-4 mb-5">
             <div className="w-10 h-10 bg-coral/10 rounded-lg flex items-center justify-center">
               <Shield className="w-5 h-5 text-coral" />
             </div>

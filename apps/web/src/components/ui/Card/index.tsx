@@ -26,7 +26,7 @@ export function Card({
 
 export function CardHeader({ title, subtitle, action }: CardHeaderProps) {
   return (
-    <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center justify-between mb-5">
       <div>
         <h2 className="font-semibold text-charcoal">{title}</h2>
         {subtitle && <p className="text-stone text-xs mt-0.5">{subtitle}</p>}

@@ -43,7 +43,7 @@ function TaskItem({ task }: { task: TodayTask }) {
 
 export function TaskList({ tasks }: TaskListProps) {
   return (
-    <div className="mt-6 bg-white rounded-3xl p-6 shadow-soft">
+    <div className="mt-8 bg-white rounded-3xl p-6 shadow-soft">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-semibold text-charcoal">今日任务</h2>
         <Link to="/tasks" className="text-coral text-sm font-medium hover:text-coral-700">

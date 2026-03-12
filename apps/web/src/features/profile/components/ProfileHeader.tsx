@@ -9,7 +9,7 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ displayName, avatar }: ProfileHeaderProps) {
   return (
-    <div className="bg-gradient-to-r from-coral/20 via-warm to-cream rounded-3xl p-6 mb-6">
+    <div className="bg-gradient-to-r from-coral/20 via-warm to-cream rounded-3xl p-8 mb-8">
       <div className="flex items-start gap-5">
         <div className="relative flex-shrink-0">
           <Avatar name={displayName} size="xl" color="bg-coral" className="shadow-coral" />

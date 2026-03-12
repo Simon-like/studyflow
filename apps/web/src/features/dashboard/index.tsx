@@ -20,11 +20,11 @@ export default function DashboardPage() {
   } = useDashboardTimer();
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="p-10 max-w-6xl mx-auto">
       <WelcomeHeader displayName={displayName} />
       <StatsStrip stats={weeklyStats} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Pomodoro Timer */}
         <div className="lg:col-span-2">
           <Card padding="lg">

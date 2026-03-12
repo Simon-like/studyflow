@@ -8,7 +8,7 @@ interface MonthlyHeatmapProps {
 
 export function MonthlyHeatmap({ data }: MonthlyHeatmapProps) {
   return (
-    <Card className="mt-6">
+    <Card className="mt-8">
       <CardHeader title="本月打卡热图" />
       <HeatMap data={data} />
     </Card>

@@ -15,9 +15,9 @@ export default function CommunityPage() {
   }));
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-10 max-w-5xl mx-auto">
       <CommunityHeader />
-      <Tabs items={tabItems} activeKey={activeTab} onChange={setActiveTab} className="mb-6" />
+      <Tabs items={tabItems} activeKey={activeTab} onChange={setActiveTab} className="mb-8" />
 
       {activeTab === 'feed' ? (
         <FeedTab posts={posts} onLike={toggleLike} />

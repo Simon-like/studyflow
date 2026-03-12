@@ -25,7 +25,7 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-10 max-w-5xl mx-auto">
       <TaskHeader onAddClick={modal.open} />
 
       <TaskSearchFilter
@@ -37,7 +37,7 @@ export default function TasksPage() {
       />
 
       {/* Task List */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {tasks.length === 0 ? (
           <EmptyState
             icon={

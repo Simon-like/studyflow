@@ -7,7 +7,7 @@ interface ProfileStatsProps {
 
 export function ProfileStats({ stats }: ProfileStatsProps) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
       {stats.map((stat) => {
         const Icon = stat.icon;
         const bgClass = stat.color === 'coral' ? 'bg-coral/10' : 'bg-sage/10';

@@ -14,7 +14,7 @@ export function StatsHeader({ period, onPeriodChange }: StatsHeaderProps) {
   }));
 
   return (
-    <div className="flex items-center justify-between mb-8">
+    <div className="flex items-center justify-between mb-10">
       <div>
         <h1 className="font-display text-2xl font-bold text-charcoal">学习统计</h1>
         <p className="text-stone text-sm mt-0.5">了解你的学习习惯，持续优化效率</p>

@@ -50,7 +50,7 @@ export function MainLayout() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -73,7 +73,7 @@ export function MainLayout() {
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-mist/20 space-y-1">
+        <div className="p-4 border-t border-mist/20 space-y-1.5">
           <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-stone hover:bg-warm transition-all">
             <Bell className="w-5 h-5" />
             通知中心

@@ -2,7 +2,7 @@ import { MoreVertical } from 'lucide-react';
 
 export function ChatHeader() {
   return (
-    <div className="flex items-center gap-4 px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-mist/20">
+    <div className="flex items-center gap-4 px-8 py-5 bg-white/80 backdrop-blur-sm border-b border-mist/20">
       <div className="relative">
         <div className="w-12 h-12 bg-gradient-to-br from-coral to-coral-300 rounded-full flex items-center justify-center shadow-coral animate-pulse-soft">
           <span className="text-white font-bold text-lg">知</span>

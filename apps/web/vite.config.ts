@@ -34,6 +34,7 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "@studyflow/shared": path.resolve(__dirname, "../../packages/shared/src/index.ts"),
+      "@studyflow/api": path.resolve(__dirname, "../../packages/api/src/index.ts"),
     },
   },
   server: {

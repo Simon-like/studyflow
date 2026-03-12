@@ -7,7 +7,7 @@ interface WelcomeHeaderProps {
 
 export function WelcomeHeader({ displayName }: WelcomeHeaderProps) {
   return (
-    <div className="flex items-center justify-between mb-8">
+    <div className="flex items-center justify-between mb-10">
       <div>
         <p className="text-stone text-sm">今天也要加油哦</p>
         <h1 className="font-display text-3xl font-bold text-charcoal">

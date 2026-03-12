@@ -11,8 +11,8 @@ export function ChatInput({ value, onChange, onSend, onKeyDown }: ChatInputProps
   const canSend = value.trim().length > 0;
 
   return (
-    <div className="px-6 pb-6 pt-2">
-      <div className="bg-white rounded-2xl p-3 shadow-medium flex items-center gap-3">
+    <div className="px-8 pb-6 pt-2">
+      <div className="bg-white rounded-2xl p-4 shadow-medium flex items-center gap-3">
         <button className="w-10 h-10 bg-warm rounded-xl flex items-center justify-center flex-shrink-0 hover:bg-mist/30 transition-all">
           <Mic className="w-5 h-5 text-stone" />
         </button>
