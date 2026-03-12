@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.studyflow.app"
@@ -30,6 +32,11 @@
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "plugins": []
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "9423e226-7d93-4ed8-aee6-48ef1b96965e"
+      }
+    }
   }
 }

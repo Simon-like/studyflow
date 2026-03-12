@@ -29,6 +29,7 @@ export const colors = {
   secondaryDark: mobileTokens.colors.secondaryDark,
   background: mobileTokens.colors.background,
   surface: mobileTokens.colors.surface,
+  white: mobileTokens.colors.surface, // 别名：白色/表面色
   warm: mobileTokens.colors.surfaceWarm,
   text: mobileTokens.colors.text,
   textSecondary: mobileTokens.colors.textSecondary,

@@ -9,6 +9,8 @@ import type {
   ApiResponse,
   User,
   Task,
+  TaskProgress,
+  TodayStats,
   TokenResponse,
   LoginRequest,
   RegisterRequest,
@@ -17,6 +19,7 @@ import type {
   SocialPost,
   PaginatedData,
   PaginationParams,
+  ReorderTasksRequest,
 } from "@studyflow/shared";
 import { STORAGE_KEYS } from "@studyflow/shared";
 import {
@@ -206,10 +209,20 @@ export const mockTaskService = {
 
   getTodayTasks: async (): Promise<ApiResponse<Task[]>> => {
     await mockDelay(300);
+    // 返回未完成任务 + 今天刚完成的任务
     const active = tasks.filter(
       (t) => t.status === "todo" || t.status === "in_progress",
     );
-    return ok(active);
+    // 排序：in_progress > todo，同状态下 high > medium > low
+    const sorted = active.sort((a, b) => {
+      const statusOrder = { in_progress: 0, todo: 1, completed: 2, abandoned: 3 };
+      const priorityOrder = { high: 0, medium: 1, low: 2 };
+      if (statusOrder[a.status] !== statusOrder[b.status]) {
+        return statusOrder[a.status] - statusOrder[b.status];
+      }
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
+    return ok(sorted);
   },
 
   getTask: async (id: string): Promise<ApiResponse<Task>> => {
@@ -263,22 +276,80 @@ export const mockTaskService = {
     return ok(undefined as unknown as void, "删除成功");
   },
 
-  completeTask: async (id: string): Promise<ApiResponse<Task>> => {
-    await mockDelay();
+  // 快速切换任务状态 (PATCH /api/v1/tasks/{id}/toggle)
+  toggleStatus: async (id: string): Promise<ApiResponse<Task>> => {
+    await mockDelay(200);
     const idx = tasks.findIndex((t) => t.id === id);
     if (idx === -1)
       throw { response: { status: 404, data: fail(404, "任务不存在") } };
 
+    const currentStatus = tasks[idx].status;
+    const newStatus = currentStatus === "completed" ? "todo" : "completed";
+
     tasks[idx] = {
       ...tasks[idx],
-      status: "completed",
+      status: newStatus,
       updatedAt: new Date().toISOString(),
     };
     return ok(tasks[idx]);
   },
+
+  // 获取任务进度统计 (GET /api/v1/tasks/progress)
+  getProgress: async (period?: string): Promise<ApiResponse<TaskProgress>> => {
+    await mockDelay(300);
+    const total = tasks.length;
+    const completed = tasks.filter((t) => t.status === "completed").length;
+    const inProgress = tasks.filter((t) => t.status === "in_progress").length;
+    const todo = tasks.filter((t) => t.status === "todo").length;
+
+    // 按分类统计
+    const categoryMap = new Map<string, { total: number; completed: number }>();
+    tasks.forEach((t) => {
+      const cat = t.category || "未分类";
+      const existing = categoryMap.get(cat) || { total: 0, completed: 0 };
+      existing.total++;
+      if (t.status === "completed") existing.completed++;
+      categoryMap.set(cat, existing);
+    });
+
+    const byCategory = Array.from(categoryMap.entries()).map(([category, stats]) => ({
+      category,
+      ...stats,
+    }));
+
+    return ok({
+      total,
+      completed,
+      inProgress,
+      todo,
+      completionRate: total > 0 ? Math.round((completed / total) * 100 * 10) / 10 : 0,
+      byCategory,
+    });
+  },
+
+  // 更新任务排序 (POST /api/v1/tasks/reorder)
+  reorderTasks: async (data: ReorderTasksRequest): Promise<ApiResponse<Task[]>> => {
+    await mockDelay(200);
+    
+    // 更新任务的 order 字段
+    data.taskOrders.forEach(({ id, order }) => {
+      const task = tasks.find((t) => t.id === id);
+      if (task) {
+        task.order = order;
+      }
+    });
+    
+    // 按 order 排序返回
+    const sortedTasks = [...tasks].sort((a, b) => (a.order || 0) - (b.order || 0));
+    return ok(sortedTasks);
+  },
 };
 
 // ==================== Pomodoro Mock ====================
+
+// 模拟今日统计数据
+let todayPomodoroCount = 3;
+let todayFocusMinutes = 75;
 
 export const mockPomodoroService = {
   start: async (
@@ -306,10 +377,11 @@ export const mockPomodoroService = {
     return ok(record);
   },
 
+  // 增强版 stop：返回 PomodoroSettlement（结算摘要）
   stop: async (
     id: string,
     data: StopPomodoroRequest,
-  ): Promise<ApiResponse<PomodoroRecord>> => {
+  ): Promise<ApiResponse<import("@studyflow/shared").PomodoroSettlement>> => {
     await mockDelay();
     const idx = pomodoroRecords.findIndex((r) => r.id === id);
     if (idx === -1)
@@ -318,15 +390,53 @@ export const mockPomodoroService = {
     const now = new Date();
     const start = new Date(pomodoroRecords[idx].startTime);
     const actualDuration = Math.floor((now.getTime() - start.getTime()) / 1000);
+    const isCompleted = data.status === "completed";
 
+    // 更新记录
     pomodoroRecords[idx] = {
       ...pomodoroRecords[idx],
-      status: data.status === "completed" ? "completed" : "stopped",
+      status: isCompleted ? "completed" : "stopped",
       endTime: now.toISOString(),
       actualDuration,
       abandonReason: data.abandonReason,
     };
-    return ok(pomodoroRecords[idx]);
+
+    const record = pomodoroRecords[idx];
+    let updatedTask: Task | null = null;
+
+    // 如果完成且有关联任务，更新任务进度
+    if (isCompleted && record.taskId) {
+      const taskIdx = tasks.findIndex((t) => t.id === record.taskId);
+      if (taskIdx !== -1) {
+        tasks[taskIdx] = {
+          ...tasks[taskIdx],
+          completedPomodoros: tasks[taskIdx].completedPomodoros + 1,
+          status: tasks[taskIdx].status === "todo" ? "in_progress" : tasks[taskIdx].status,
+          updatedAt: now.toISOString(),
+        };
+        updatedTask = tasks[taskIdx];
+      }
+    }
+
+    // 更新今日统计
+    if (isCompleted) {
+      todayPomodoroCount++;
+      todayFocusMinutes += Math.floor(actualDuration / 60);
+    }
+
+    // 构建结算摘要
+    const settlement: import("@studyflow/shared").PomodoroSettlement = {
+      record,
+      task: updatedTask,
+      todayStats: {
+        focusMinutes: todayFocusMinutes,
+        completedPomodoros: todayPomodoroCount,
+        completedTasks: tasks.filter((t) => t.status === "completed").length,
+        streakDays: 7,
+      },
+    };
+
+    return ok(settlement);
   },
 
   getHistory: async (
@@ -336,12 +446,14 @@ export const mockPomodoroService = {
     return ok(paginate(pomodoroRecords, params));
   },
 
-  getTodayStats: async () => {
+  // 获取今日统计 (TodayStats 格式)
+  getTodayStats: async (): Promise<ApiResponse<TodayStats>> => {
     await mockDelay(300);
     return ok({
-      totalPomodoros: 3,
-      totalFocusTime: 4500,
-      completedTasks: 1,
+      focusMinutes: todayFocusMinutes,
+      completedPomodoros: todayPomodoroCount,
+      completedTasks: tasks.filter((t) => t.status === "completed").length,
+      streakDays: 7,
     });
   },
 
@@ -479,26 +591,81 @@ export const mockCommunityService = {
 
 // ==================== Stats Mock ====================
 
+import type { 
+  OverviewStats, 
+  DailyStat, 
+  SubjectStat, 
+  DashboardSummary 
+} from "@studyflow/shared";
+
 export const mockStatsService = {
+  // 获取总览统计
   getOverview: async (
-    _period?: string,
-  ): Promise<ApiResponse<typeof MOCK_OVERVIEW_STATS>> => {
+    period?: string,
+  ): Promise<ApiResponse<OverviewStats>> => {
     await mockDelay(400);
-    return ok(MOCK_OVERVIEW_STATS);
+    const stats: OverviewStats = {
+      ...MOCK_OVERVIEW_STATS,
+      focusMinutes: MOCK_OVERVIEW_STATS.totalFocusMinutes,
+      completedPomodoros: MOCK_OVERVIEW_STATS.completedPomodoros,
+      completedTasks: MOCK_OVERVIEW_STATS.completedTasks,
+      streakDays: MOCK_OVERVIEW_STATS.streakDays,
+    };
+    return ok(stats);
   },
 
-  getDailyStats: async (
-    _startDate?: string,
-    _endDate?: string,
-  ): Promise<ApiResponse<typeof MOCK_DAILY_STATS>> => {
+  // 获取每日学习数据 (用于柱状图/热力图)
+  getDaily: async (
+    startDate?: string,
+    endDate?: string,
+  ): Promise<ApiResponse<DailyStat[]>> => {
     await mockDelay(400);
-    return ok(MOCK_DAILY_STATS);
+    // 转换为 DailyStat 格式
+    const dailyStats: DailyStat[] = MOCK_DAILY_STATS.map((d) => ({
+      date: d.date,
+      focusMinutes: d.focusMinutes,
+      pomodoros: d.pomodoros,
+      tasks: d.tasks,
+    }));
+    return ok(dailyStats);
   },
 
-  getSubjectStats: async (
-    _period?: string,
-  ): Promise<ApiResponse<typeof MOCK_SUBJECT_STATS>> => {
+  // 获取学科分布统计
+  getSubjects: async (
+    period?: string,
+  ): Promise<ApiResponse<SubjectStat[]>> => {
     await mockDelay(300);
-    return ok(MOCK_SUBJECT_STATS);
+    const subjectStats: SubjectStat[] = MOCK_SUBJECT_STATS.map((s) => ({
+      category: s.category,
+      focusMinutes: s.focusMinutes,
+      percentage: s.percentage,
+    }));
+    return ok(subjectStats);
+  },
+
+  // 获取 Dashboard 聚合数据
+  getDashboardSummary: async (): Promise<ApiResponse<DashboardSummary>> => {
+    await mockDelay(500);
+    const todayTasks = tasks.filter(
+      (t) => t.status === "todo" || t.status === "in_progress"
+    );
+    
+    const summary: DashboardSummary = {
+      todayStats: {
+        focusMinutes: todayFocusMinutes,
+        completedPomodoros: todayPomodoroCount,
+        completedTasks: tasks.filter((t) => t.status === "completed").length,
+        streakDays: 7,
+      },
+      weeklyStats: {
+        totalPomodoros: 36,
+        totalFocusHours: 15,
+        completionRate: 89,
+        streakDays: 7,
+      },
+      todayTasks: todayTasks.slice(0, 5),
+      activePomodoro: pomodoroRecords.find((r) => r.status === "running") || null,
+    };
+    return ok(summary);
   },
 };

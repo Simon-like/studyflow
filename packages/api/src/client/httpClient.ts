@@ -6,6 +6,13 @@ import axios, {
 } from "axios";
 import { storage, STORAGE_KEYS } from "@studyflow/shared";
 
+// 声明 process 以避免在浏览器环境中报错
+declare const process: {
+  env?: {
+    VITE_API_BASE_URL?: string;
+  };
+} | undefined;
+
 // 创建 axios 实例
 const createHttpClient = (baseURL: string): AxiosInstance => {
   const client = axios.create({
@@ -84,9 +91,18 @@ const createHttpClient = (baseURL: string): AxiosInstance => {
 const DEFAULT_BASE_URL = "http://localhost:8080";
 
 // 默认客户端
-export const httpClient = createHttpClient(
-  (typeof process !== "undefined" && process.env?.VITE_API_BASE_URL) || DEFAULT_BASE_URL,
-);
+const getBaseUrl = () => {
+  try {
+    if (typeof process !== "undefined" && process.env?.VITE_API_BASE_URL) {
+      return process.env.VITE_API_BASE_URL;
+    }
+  } catch {
+    // 在浏览器环境中 process 可能不存在
+  }
+  return DEFAULT_BASE_URL;
+};
+
+export const httpClient = createHttpClient(getBaseUrl());
 
 // 创建自定义客户端
 export { createHttpClient };

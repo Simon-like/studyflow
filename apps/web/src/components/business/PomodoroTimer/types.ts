@@ -1,4 +1,4 @@
-export type TimerStatus = 'idle' | 'running' | 'paused';
+export type TimerStatus = 'idle' | 'running' | 'paused' | 'completed';
 
 export interface PomodoroTimerProps {
   status: TimerStatus;

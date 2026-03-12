@@ -5,11 +5,21 @@ import { useDashboardTimer, useDashboardData } from './hooks';
 import { WelcomeHeader } from './components/WelcomeHeader';
 import { StatsStrip } from './components/StatsStrip';
 import { WeeklySummary } from './components/WeeklySummary';
-import { TaskList } from './components/TaskList';
+import { SortableTaskList } from './components/SortableTaskList';
 import { WEEKLY_STATS } from './constants';
 
 export default function DashboardPage() {
-  const { displayName, todayTasks, weeklyStats } = useDashboardData();
+  const { 
+    displayName, 
+    todayTasks, 
+    weeklyStats, 
+    isLoading, 
+    error, 
+    toggleTask,
+    reorderTasks,
+    refetch 
+  } = useDashboardData();
+  
   const {
     status,
     timeRemaining,
@@ -19,10 +29,21 @@ export default function DashboardPage() {
     onStop,
   } = useDashboardTimer();
 
+  // 获取当前活跃任务用于番茄钟显示（排序后的第一个未完成任务）
+  const activeTask = todayTasks.find(t => t.status === 'in_progress') || 
+                     todayTasks.find(t => t.status !== 'completed') || 
+                     todayTasks[0];
+  
+  const taskTitle = activeTask?.title || '专注学习';
+  const taskSubtitle = activeTask?.category ? `${activeTask.category}` : '选择任务开始专注';
+  const taskProgress = activeTask 
+    ? `${activeTask.completedPomodoros}/${activeTask.estimatedPomodoros} 番茄`
+    : '0/0 番茄';
+
   return (
     <div className="p-10 max-w-6xl mx-auto">
       <WelcomeHeader displayName={displayName} />
-      <StatsStrip stats={weeklyStats} />
+      <StatsStrip stats={weeklyStats} isLoading={isLoading} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Pomodoro Timer */}
@@ -39,9 +60,9 @@ export default function DashboardPage() {
             <PomodoroTimer
               status={status}
               timeRemaining={timeRemaining}
-              taskTitle="考研数学复习"
-              taskSubtitle="第三章 · 线性代数"
-              taskProgress="2/4 番茄"
+              taskTitle={taskTitle}
+              taskSubtitle={taskSubtitle}
+              taskProgress={taskProgress}
               onStart={onStart}
               onPause={onPause}
               onResume={onResume}
@@ -55,7 +76,16 @@ export default function DashboardPage() {
       </div>
 
       {/* Today's Tasks */}
-      <TaskList tasks={todayTasks} />
+      <SortableTaskList 
+        tasks={todayTasks} 
+        isLoading={isLoading}
+        error={error}
+        onToggleTask={toggleTask}
+        onReorder={reorderTasks}
+        onRefresh={refetch}
+        isPomodoroRunning={status === 'running'}
+        onResetPomodoro={onStop}
+      />
     </div>
   );
 }

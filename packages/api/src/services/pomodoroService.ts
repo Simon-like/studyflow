@@ -2,9 +2,12 @@ import { http } from "../client/httpClient";
 import type {
   ApiResponse,
   PomodoroRecord,
+  PomodoroSettlement,
+  TodayStats,
   PaginatedData,
   PaginationParams,
 } from "@studyflow/shared";
+import { API_ENDPOINTS } from "@studyflow/shared";
 
 export interface StartPomodoroRequest {
   taskId?: string;
@@ -17,43 +20,35 @@ export interface StopPomodoroRequest {
   abandonReason?: string;
 }
 
+export interface WeeklyDailyStat {
+  date: string;
+  pomodoros: number;
+  focusTime: number;
+}
+
 export const pomodoroService = {
   // 开始番茄钟
   start: (data: StartPomodoroRequest) =>
-    http.post<ApiResponse<PomodoroRecord>>("/api/v1/pomodoro/start", data),
+    http.post<ApiResponse<PomodoroRecord>>(API_ENDPOINTS.POMODORO.START, data),
 
-  // 停止番茄钟
+  // 停止番茄钟 (增强版，返回结算摘要)
   stop: (id: string, data: StopPomodoroRequest) =>
-    http.post<ApiResponse<PomodoroRecord>>(`/api/v1/pomodoro/${id}/stop`, data),
+    http.post<ApiResponse<PomodoroSettlement>>(API_ENDPOINTS.POMODORO.STOP(id), data),
 
   // 获取历史记录
   getHistory: (params?: PaginationParams) =>
     http.get<ApiResponse<PaginatedData<PomodoroRecord>>>(
-      "/api/v1/pomodoro/history",
-      {
-        params,
-      },
+      API_ENDPOINTS.POMODORO.HISTORY,
+      { params }
     ),
 
-  // 获取今日统计
+  // 获取今日统计 (用于 Dashboard StatsStrip)
   getTodayStats: () =>
-    http.get<
-      ApiResponse<{
-        totalPomodoros: number;
-        totalFocusTime: number;
-        completedTasks: number;
-      }>
-    >("/api/v1/pomodoro/stats/today"),
+    http.get<ApiResponse<TodayStats>>(API_ENDPOINTS.POMODORO.TODAY_STATS),
 
-  // 获取周统计
+  // 获取周统计 (用于周报/柱状图)
   getWeeklyStats: () =>
-    http.get<
-      ApiResponse<{
-        dailyStats: Array<{
-          date: string;
-          pomodoros: number;
-          focusTime: number;
-        }>;
-      }>
-    >("/api/v1/pomodoro/stats/weekly"),
+    http.get<ApiResponse<{ dailyStats: WeeklyDailyStat[] }>>(
+      API_ENDPOINTS.POMODORO.WEEKLY_STATS
+    ),
 };

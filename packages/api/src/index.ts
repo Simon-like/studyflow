@@ -6,10 +6,11 @@ export { authService } from "./services/authService";
 export { taskService } from "./services/taskService";
 export { pomodoroService } from "./services/pomodoroService";
 export { chatService } from "./services/chatService";
+export { statsService } from "./services/statsService";
 
 // 导出服务类型
 export type { CreateTaskRequest, UpdateTaskRequest } from "./services/taskService";
-export type { StartPomodoroRequest, StopPomodoroRequest } from "./services/pomodoroService";
+export type { StartPomodoroRequest, StopPomodoroRequest, WeeklyDailyStat } from "./services/pomodoroService";
 export type { SendMessageRequest, GeneratePlanRequest } from "./services/chatService";
 
 // 导出 Mock 服务 + 测试账号
@@ -29,6 +30,7 @@ import { authService } from "./services/authService";
 import { taskService } from "./services/taskService";
 import { pomodoroService } from "./services/pomodoroService";
 import { chatService } from "./services/chatService";
+import { statsService } from "./services/statsService";
 import {
   mockAuthService,
   mockTaskService,
@@ -49,7 +51,7 @@ export function createApi(useMock = true) {
     pomodoro: useMock ? mockPomodoroService : pomodoroService,
     chat: useMock ? mockChatService : chatService,
     community: mockCommunityService,
-    stats: mockStatsService,
+    stats: useMock ? mockStatsService : statsService,
   };
 }
 

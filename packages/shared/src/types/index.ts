@@ -31,6 +31,7 @@ export interface Task {
   dueDate?: string;
   parentId?: string;
   subtasks?: Task[];
+  order?: number; // 任务排序序号
   createdAt: string;
   updatedAt: string;
 }
@@ -133,4 +134,88 @@ export interface PaginatedData<T> {
   page: number;
   size: number;
   totalPages: number;
+}
+
+// ==================== Dashboard 相关类型 ====================
+
+export interface TodayStats {
+  focusMinutes: number;
+  completedPomodoros: number;
+  completedTasks: number;
+  streakDays: number;
+}
+
+export interface WeeklyOverview {
+  totalPomodoros: number;
+  totalFocusHours: number;
+  completionRate: number;
+  streakDays: number;
+}
+
+export interface DashboardSummary {
+  todayStats: TodayStats;
+  weeklyStats: WeeklyOverview;
+  todayTasks: Task[];
+  activePomodoro: PomodoroRecord | null;
+}
+
+// ==================== 番茄钟结算类型 ====================
+
+export interface PomodoroSettlement {
+  record: PomodoroRecord;
+  task: Task | null;
+  todayStats: TodayStats;
+}
+
+// ==================== 统计相关类型 ====================
+
+export interface OverviewStats extends TodayStats {
+  compareLastPeriod: {
+    focusMinutes: string;  // 如 "+15%"
+    pomodoros: string;
+    tasks: string;
+  };
+}
+
+export interface DailyStat {
+  date: string;           // "2026-03-12"
+  focusMinutes: number;
+  pomodoros: number;
+  tasks: number;
+}
+
+export interface SubjectStat {
+  category: string;
+  focusMinutes: number;
+  percentage: number;
+}
+
+// ==================== 任务进度类型 ====================
+
+export interface TaskProgress {
+  total: number;
+  completed: number;
+  inProgress: number;
+  todo: number;
+  completionRate: number;
+  byCategory: Array<{
+    category: string;
+    total: number;
+    completed: number;
+  }>;
+}
+
+// ==================== 时间周期类型 ====================
+
+export type StatsPeriod = 'today' | 'week' | 'month' | 'year';
+
+// ==================== 任务排序类型 ====================
+
+export interface TaskOrderItem {
+  id: string;
+  order: number;
+}
+
+export interface ReorderTasksRequest {
+  taskOrders: TaskOrderItem[];
 }

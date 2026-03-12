@@ -1,22 +1,45 @@
 /**
  * Home 页面
  * 番茄钟 + 任务管理
+ * 与 Web Dashboard 数据架构保持一致
  */
 
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { SectionHeader } from '../../components/layout/SectionHeader';
 import { Card } from '../../components/ui/Card';
 import { PomodoroTimer } from '../../components/business/PomodoroTimer';
-import { WelcomeHeader, StatsRow, TaskList } from './components';
+import { WelcomeHeader, StatsRow, SortableTaskList } from './components';
 import { useHomeScreen } from './hooks';
-import { CURRENT_TASK } from './constants';
 import { colors, spacing } from '../../theme';
 import { POMODORO_CONFIG } from '../../constants';
 
 export default function HomeScreen() {
-  const { tasks, stats, pomodoro, toggleTask, addTask, viewStats } = useHomeScreen();
+  const { 
+    tasks, 
+    stats, 
+    todayStats,
+    isLoading, 
+    error,
+    pomodoro, 
+    toggleTask, 
+    reorderTasks,
+    addTask, 
+    viewStats,
+    refresh 
+  } = useHomeScreen();
+  
+  // 获取当前活跃任务用于番茄钟显示（排序后的第一个未完成任务）
+  const activeTask = tasks.find(t => t.status === 'in_progress') || 
+                     tasks.find(t => t.status !== 'completed') || 
+                     tasks[0];
+  
+  const taskTitle = activeTask?.title || '专注学习';
+  const taskSubtitle = activeTask?.category || '选择任务开始专注';
+  const pomodoroCount = activeTask 
+    ? `${activeTask.completedPomodoros}/${activeTask.estimatedPomodoros}`
+    : '0/0';
   
   return (
     <ScreenContainer>
@@ -39,10 +62,10 @@ export default function HomeScreen() {
             totalTime={POMODORO_CONFIG.DEFAULT_DURATION}
             isRunning={pomodoro.isRunning}
             isPaused={pomodoro.isPaused}
-            taskTitle={CURRENT_TASK.title}
-            taskSubtitle={CURRENT_TASK.subtitle}
-            taskEmoji={CURRENT_TASK.emoji}
-            pomodoroCount={CURRENT_TASK.pomodoroCount}
+            taskTitle={taskTitle}
+            taskSubtitle={taskSubtitle}
+            taskEmoji="📖"
+            pomodoroCount={pomodoroCount}
             onStart={pomodoro.start}
             onPause={pomodoro.pause}
             onResume={pomodoro.resume}
@@ -52,19 +75,27 @@ export default function HomeScreen() {
       </View>
       
       {/* 统计行 */}
-      <StatsRow stats={stats} />
+      <StatsRow 
+        stats={stats} 
+        isLoading={isLoading}
+        todayStats={todayStats}
+      />
       
       {/* 任务列表 */}
-      <TaskList
+      <SortableTaskList
         tasks={tasks}
+        isLoading={isLoading}
+        error={error}
         onToggleTask={toggleTask}
         onAddTask={addTask}
+        onRefresh={refresh}
+        onReorder={reorderTasks}
+        isPomodoroRunning={pomodoro.isRunning}
+        onResetPomodoro={pomodoro.stop}
       />
     </ScreenContainer>
   );
 }
-
-import { Text } from 'react-native';
 
 const styles = StyleSheet.create({
   timerCardContainer: {

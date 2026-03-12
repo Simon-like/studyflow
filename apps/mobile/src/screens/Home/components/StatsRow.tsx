@@ -1,29 +1,52 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Card } from '../../../components/ui/Card';
 import { StatItem } from '../../../components/business/StatItem';
 import { colors, spacing } from '../../../theme';
-import { DEFAULT_STATS } from '../constants';
-
-const STATS_CONFIG = [
-  { key: 'todayPomodoros', label: '今日番茄' },
-  { key: 'completedTasks', label: '完成任务' },
-  { key: 'streakDays', label: '连续天数' },
-] as const;
+import type { TodayStats } from '../types';
 
 interface StatsRowProps {
-  stats?: typeof DEFAULT_STATS;
+  stats?: {
+    todayPomodoros: number;
+    completedTasks: string;
+    streakDays: string;
+  };
+  todayStats?: TodayStats | null;
+  isLoading?: boolean;
 }
 
-export function StatsRow({ stats = DEFAULT_STATS }: StatsRowProps) {
+export function StatsRow({ stats, todayStats, isLoading }: StatsRowProps) {
+  // 优先使用 todayStats（来自 API），否则使用 stats（本地计算）
+  
+  if (isLoading) {
+    return (
+      <Card variant="default" style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={colors.primary} />
+        </View>
+      </Card>
+    );
+  }
+  
+  // 从 todayStats 或 stats 获取值
+  const todayPomodoros = todayStats?.completedPomodoros ?? stats?.todayPomodoros ?? 0;
+  const completedTasks = `${todayStats?.completedTasks ?? 0}/${todayStats?.completedPomodoros ?? 0}`;
+  const streakDays = `${todayStats?.streakDays ?? stats?.streakDays ?? '0'}天`;
+  
+  const statItems = [
+    { label: '今日番茄', value: String(todayPomodoros) },
+    { label: '完成任务', value: completedTasks },
+    { label: '连续天数', value: streakDays },
+  ];
+  
   return (
     <Card variant="default" style={styles.container}>
-      {STATS_CONFIG.map((config, index) => (
-        <React.Fragment key={config.key}>
+      {statItems.map((item, index) => (
+        <React.Fragment key={item.label}>
           {index > 0 && <View style={styles.divider} />}
           <StatItem 
-            label={config.label} 
-            value={String(stats[config.key])} 
+            label={item.label} 
+            value={item.value}
           />
         </React.Fragment>
       ))}
@@ -37,6 +60,12 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.lg,
     marginTop: spacing.md,
     padding: spacing.md,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
   },
   divider: {
     width: 1,

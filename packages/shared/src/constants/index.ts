@@ -42,15 +42,29 @@ export const API_ENDPOINTS = {
     PROFILE: "/api/v1/user/profile",
     UPDATE: "/api/v1/user/update",
   },
-  POMODORO: {
-    START: "/api/v1/pomodoro/start",
-    STOP: "/api/v1/pomodoro/stop",
-    HISTORY: "/api/v1/pomodoro/history",
-  },
   TASK: {
     LIST: "/api/v1/tasks",
+    TODAY: "/api/v1/tasks/today",
     CREATE: "/api/v1/tasks",
     UPDATE: (id: string) => `/api/v1/tasks/${id}`,
     DELETE: (id: string) => `/api/v1/tasks/${id}`,
+    TOGGLE: (id: string) => `/api/v1/tasks/${id}/toggle`,
+    PROGRESS: "/api/v1/tasks/progress",
+    REORDER: "/api/v1/tasks/reorder",
+  },
+  POMODORO: {
+    START: "/api/v1/pomodoro/start",
+    STOP: (id: string) => `/api/v1/pomodoro/${id}/stop`,
+    HISTORY: "/api/v1/pomodoro/history",
+    TODAY_STATS: "/api/v1/pomodoro/stats/today",
+    WEEKLY_STATS: "/api/v1/pomodoro/stats/weekly",
+  },
+  STATS: {
+    OVERVIEW: "/api/v1/stats/overview",
+    DAILY: "/api/v1/stats/daily",
+    SUBJECTS: "/api/v1/stats/subjects",
+  },
+  DASHBOARD: {
+    SUMMARY: "/api/v1/dashboard/summary",
   },
 } as const;
