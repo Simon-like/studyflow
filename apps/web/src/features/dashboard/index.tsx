@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PomodoroTimer } from '@/components/business';
 import { Card, CardHeader } from '@/components/ui';
@@ -7,6 +8,9 @@ import { StatsStrip } from './components/StatsStrip';
 import { WeeklySummary } from './components/WeeklySummary';
 import { SortableTaskList } from './components/SortableTaskList';
 import { WEEKLY_STATS } from './constants';
+import { api } from '@studyflow/api';
+import type { Task } from '@studyflow/shared';
+import toast from 'react-hot-toast';
 
 export default function DashboardPage() {
   const { 
@@ -20,6 +24,9 @@ export default function DashboardPage() {
     refetch 
   } = useDashboardData();
   
+  // 选中的任务（用于番茄钟专注）
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  
   const {
     status,
     timeRemaining,
@@ -29,16 +36,85 @@ export default function DashboardPage() {
     onStop,
   } = useDashboardTimer();
 
-  // 获取当前活跃任务用于番茄钟显示（排序后的第一个未完成任务）
-  const activeTask = todayTasks.find(t => t.status === 'in_progress') || 
-                     todayTasks.find(t => t.status !== 'completed') || 
-                     todayTasks[0];
+  // 获取当前显示的任务（优先显示选中的任务）
+  const displayTask = selectedTask || 
+                      todayTasks.find(t => t.status === 'in_progress') || 
+                      todayTasks.find(t => t.status !== 'completed') || 
+                      todayTasks[0];
   
-  const taskTitle = activeTask?.title || '专注学习';
-  const taskSubtitle = activeTask?.category ? `${activeTask.category}` : '选择任务开始专注';
-  const taskProgress = activeTask 
-    ? `${activeTask.completedPomodoros}/${activeTask.estimatedPomodoros} 番茄`
-    : '0/0 番茄';
+  const hasTasks = todayTasks.length > 0;
+  const taskTitle = displayTask?.title || '自由任务';
+  const taskSubtitle = displayTask?.category || (hasTasks ? '点击任务开始专注' : '专注当下，提升效率');
+  const taskProgress = displayTask
+    ? `${displayTask.completedPomodoros}/${displayTask.estimatedPomodoros} 番茄`
+    : '自由模式';
+
+  // 选择任务
+  const handleSelectTask = useCallback((task: Task) => {
+    setSelectedTask(task);
+    toast.success(`已选择任务：${task.title}`);
+  }, []);
+
+  // 开始/暂停（合一）
+  const handleToggleTimer = useCallback(async () => {
+    if (status === 'running') {
+      onPause();
+    } else if (status === 'paused') {
+      onResume();
+    } else {
+      // 开始新番茄钟
+      // 如果没有手动选择任务，自动选择当前显示的任务
+      const taskToStart = selectedTask || displayTask;
+      if (taskToStart && taskToStart.status !== 'completed') {
+        try {
+          setSelectedTask(taskToStart);
+          await api.task.startTask(taskToStart.id);
+          await refetch();
+        } catch (err) {
+          console.error('Failed to start task:', err);
+        }
+      }
+      onStart();
+    }
+  }, [status, selectedTask, displayTask, onStart, onPause, onResume, refetch]);
+
+  // 提前完成任务
+  const handleCompleteTask = useCallback(async () => {
+    if (!selectedTask) {
+      toast.error('请先选择一个任务');
+      return;
+    }
+    if (selectedTask.status === 'completed') {
+      toast('该任务已完成', { icon: 'ℹ️' });
+      return;
+    }
+    
+    try {
+      await api.task.toggleStatus(selectedTask.id);
+      await refetch();
+      toast.success('任务已完成！');
+      // 清除选中状态
+      setSelectedTask(null);
+      // 停止番茄钟
+      onStop();
+    } catch (err) {
+      console.error('Failed to complete task:', err);
+      toast.error('完成任务失败');
+    }
+  }, [selectedTask, onStop, refetch]);
+
+  // 重新计时
+  const handleResetTimer = useCallback(() => {
+    onStop();
+    toast.success('计时已重置');
+  }, [onStop]);
+
+  // 放弃任务（转为自由模式）
+  const handleAbandonTask = useCallback(() => {
+    setSelectedTask(null);
+    onStop();
+    toast.success('已切换到自由模式');
+  }, [onStop]);
 
   return (
     <div className="p-10 max-w-6xl mx-auto">
@@ -63,10 +139,10 @@ export default function DashboardPage() {
               taskTitle={taskTitle}
               taskSubtitle={taskSubtitle}
               taskProgress={taskProgress}
-              onStart={onStart}
-              onPause={onPause}
-              onResume={onResume}
-              onStop={onStop}
+              onToggleTimer={handleToggleTimer}
+              onCompleteTask={handleCompleteTask}
+              onResetTimer={handleResetTimer}
+              onAbandonTask={handleAbandonTask}
             />
           </Card>
         </div>
@@ -78,11 +154,13 @@ export default function DashboardPage() {
       {/* Today's Tasks */}
       <SortableTaskList 
         tasks={todayTasks} 
+        selectedTaskId={selectedTask?.id}
         isLoading={isLoading}
         error={error}
         onToggleTask={toggleTask}
         onReorder={reorderTasks}
         onRefresh={refetch}
+        onSelectTask={handleSelectTask}
         isPomodoroRunning={status === 'running'}
         onPausePomodoro={onPause}
         onResetPomodoro={onStop}

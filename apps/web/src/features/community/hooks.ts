@@ -8,6 +8,10 @@ export function useCommunity() {
   const [activeTab, setActiveTab] = useState<CommunityTab>('feed');
   const groups = GROUPS;
 
+  const handleTabChange = useCallback((key: string) => {
+    setActiveTab(key as CommunityTab);
+  }, []);
+
   const toggleLike = useCallback((id: string) => {
     setPosts((prev) =>
       prev.map((p) =>
@@ -27,7 +31,7 @@ export function useCommunity() {
     posts,
     groups,
     activeTab,
-    setActiveTab,
+    setActiveTab: handleTabChange,
     toggleLike,
     joinGroup,
   };

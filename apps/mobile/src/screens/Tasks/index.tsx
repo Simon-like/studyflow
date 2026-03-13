@@ -11,14 +11,14 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Modal,
 } from 'react-native';
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { SectionHeader } from '../../components/layout/SectionHeader';
 import { TaskCard } from '../../components/business/TaskCard';
+import { Modal as AppModal } from '../../components/ui/Modal';
 import { colors, radius, spacing, fontWeight, shadows } from '../../theme';
 import { api } from '@studyflow/api';
-import type { Task } from '@studyflow/shared';
+import type { Task, TaskPriority } from '@studyflow/shared';
 
 type FilterStatus = 'all' | 'todo' | 'in_progress' | 'completed';
 
@@ -28,6 +28,9 @@ export default function TasksScreen() {
   const [filter, setFilter] = useState<FilterStatus>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
+  const [newTaskPriority, setNewTaskPriority] = useState<TaskPriority>('medium');
+  const [newTaskPomodoros, setNewTaskPomodoros] = useState(1);
   const [newTaskCategory, setNewTaskCategory] = useState('');
 
   // 获取任务列表
@@ -50,11 +53,16 @@ export default function TasksScreen() {
     try {
       const response = await api.task.createTask({
         title: newTaskTitle.trim(),
-        category: newTaskCategory.trim() || '未分类',
-        estimatedPomodoros: 1,
+        description: newTaskDescription.trim() || undefined,
+        priority: newTaskPriority,
+        estimatedPomodoros: newTaskPomodoros,
+        category: newTaskCategory.trim() || undefined,
       });
       setTasks((prev) => [response.data, ...prev]);
       setNewTaskTitle('');
+      setNewTaskDescription('');
+      setNewTaskPriority('medium');
+      setNewTaskPomodoros(1);
       setNewTaskCategory('');
       setShowAddModal(false);
     } catch (err) {
@@ -96,7 +104,7 @@ export default function TasksScreen() {
       onPress={() => setFilter(status)}
       activeOpacity={0.8}
     >
-      <Text style={[styles.filterTabText, filter === status && styles.filterTabTextActive]}>
+      <Text style={[styles.filterTabText, filter === status && styles.filterTabTextActive]} numberOfLines={1}>
         {label}
       </Text>
       <View style={[styles.filterCount, filter === status && styles.filterCountActive]}>
@@ -162,54 +170,125 @@ export default function TasksScreen() {
       </ScrollView>
 
       {/* 添加任务弹窗 */}
-      <Modal
+      <AppModal
         visible={showAddModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowAddModal(false)}
+        onClose={() => {
+          setShowAddModal(false);
+          setNewTaskTitle('');
+          setNewTaskDescription('');
+          setNewTaskPriority('medium');
+          setNewTaskPomodoros(1);
+          setNewTaskCategory('');
+        }}
+        title="新建任务"
+        footer={
+          <View style={styles.modalButtons}>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.modalButtonCancel]}
+              onPress={() => {
+                setShowAddModal(false);
+                setNewTaskTitle('');
+                setNewTaskDescription('');
+                setNewTaskPriority('medium');
+                setNewTaskPomodoros(1);
+                setNewTaskCategory('');
+              }}
+            >
+              <Text style={styles.modalButtonCancelText}>取消</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalButton, styles.modalButtonConfirm, !newTaskTitle.trim() && { opacity: 0.5 }]}
+              onPress={handleAddTask}
+              disabled={!newTaskTitle.trim()}
+            >
+              <Text style={styles.modalButtonConfirmText}>添加</Text>
+            </TouchableOpacity>
+          </View>
+        }
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>新建任务</Text>
-            
-            <TextInput
-              style={styles.input}
-              placeholder="任务名称"
-              placeholderTextColor={colors.textMuted}
-              value={newTaskTitle}
-              onChangeText={setNewTaskTitle}
-              autoFocus
-            />
-            
-            <TextInput
-              style={styles.input}
-              placeholder="分类（可选）"
-              placeholderTextColor={colors.textMuted}
-              value={newTaskCategory}
-              onChangeText={setNewTaskCategory}
-            />
-
-            <View style={styles.modalButtons}>
+        <View>
+          <Text style={styles.inputLabel}>任务名称</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="输入任务名称"
+            placeholderTextColor={colors.textMuted}
+            value={newTaskTitle}
+            onChangeText={setNewTaskTitle}
+            autoFocus
+            returnKeyType="next"
+          />
+          <Text style={[styles.inputLabel, { marginTop: spacing.md }]}>任务描述</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="简要描述任务内容"
+            placeholderTextColor={colors.textMuted}
+            value={newTaskDescription}
+            onChangeText={setNewTaskDescription}
+            returnKeyType="next"
+          />
+          <Text style={[styles.inputLabel, { marginTop: spacing.md }]}>优先级</Text>
+          <View style={styles.prioritySelector}>
+            {([
+              { key: 'high' as TaskPriority, label: '高', color: '#E53E3E', bg: '#E53E3E15' },
+              { key: 'medium' as TaskPriority, label: '中', color: '#DD6B20', bg: '#DD6B2015' },
+              { key: 'low' as TaskPriority, label: '低', color: '#38A169', bg: '#38A16915' },
+            ]).map((p) => (
               <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonCancel]}
-                onPress={() => {
-                  setShowAddModal(false);
-                  setNewTaskTitle('');
-                  setNewTaskCategory('');
-                }}
+                key={p.key}
+                style={[
+                  styles.priorityOption,
+                  { borderColor: p.color },
+                  newTaskPriority === p.key && { backgroundColor: p.bg },
+                ]}
+                onPress={() => setNewTaskPriority(p.key)}
+                activeOpacity={0.7}
               >
-                <Text style={styles.modalButtonCancelText}>取消</Text>
+                <Text
+                  style={[
+                    styles.priorityOptionText,
+                    { color: newTaskPriority === p.key ? p.color : colors.textSecondary },
+                  ]}
+                >
+                  {p.label}优先级
+                </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonConfirm]}
-                onPress={handleAddTask}
-              >
-                <Text style={styles.modalButtonConfirmText}>添加</Text>
-              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.formRow}>
+            <View style={styles.formHalf}>
+              <Text style={[styles.inputLabel, { marginTop: spacing.md }]}>预估番茄数</Text>
+              <View style={styles.pomodoroStepper}>
+                <TouchableOpacity
+                  style={styles.stepperBtn}
+                  onPress={() => setNewTaskPomodoros((v) => Math.max(1, v - 1))}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.stepperBtnText}>-</Text>
+                </TouchableOpacity>
+                <Text style={styles.stepperValue}>{newTaskPomodoros}</Text>
+                <TouchableOpacity
+                  style={styles.stepperBtn}
+                  onPress={() => setNewTaskPomodoros((v) => Math.min(20, v + 1))}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.stepperBtnText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={styles.formHalf}>
+              <Text style={[styles.inputLabel, { marginTop: spacing.md }]}>分类 (可选)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="如：高等数学"
+                placeholderTextColor={colors.textMuted}
+                value={newTaskCategory}
+                onChangeText={setNewTaskCategory}
+                returnKeyType="done"
+              />
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
     </ScreenContainer>
   );
 }
@@ -244,34 +323,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
     gap: spacing.sm,
-    paddingBottom: spacing.md,
+    paddingBottom: spacing.lg,
+    paddingTop: spacing.xs,
   },
   filterTab: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.lg,
-    backgroundColor: colors.warm,
+    gap: 6,
+    height: 40,
+    width: 100,
+    borderRadius: radius.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
   },
   filterTabActive: {
-    backgroundColor: colors.primary + '15',
+    backgroundColor: colors.primary + '12',
+    borderColor: colors.primary + '40',
   },
   filterTabText: {
     fontSize: 14,
     fontWeight: fontWeight.medium,
     color: colors.textSecondary,
+    textAlign: 'center',
+    flex: 1,
   },
   filterTabTextActive: {
     color: colors.primary,
     fontWeight: fontWeight.semibold,
   },
   filterCount: {
-    minWidth: 20,
+    width: 20,
     height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.warm,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
@@ -280,9 +367,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   filterCountText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: fontWeight.medium,
-    color: colors.textSecondary,
+    color: colors.textMuted,
   },
   filterCountTextActive: {
     color: colors.white,
@@ -313,27 +400,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
   },
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.xl,
-  },
-  modalContent: {
-    backgroundColor: colors.white,
-    borderRadius: radius['2xl'],
-    padding: spacing.xl,
-    width: '100%',
-    maxWidth: 320,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-    marginBottom: spacing.lg,
-    textAlign: 'center',
+  // Form styles
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: fontWeight.medium,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
   },
   input: {
     borderWidth: 1,
@@ -343,12 +415,61 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     fontSize: 15,
     color: colors.text,
-    marginBottom: spacing.md,
+    backgroundColor: colors.warm,
+  },
+  prioritySelector: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  priorityOption: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+    alignItems: 'center',
+  },
+  priorityOptionText: {
+    fontSize: 13,
+    fontWeight: fontWeight.medium,
+  },
+  formRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  formHalf: {
+    flex: 1,
+  },
+  pomodoroStepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    backgroundColor: colors.warm,
+    overflow: 'hidden',
+  },
+  stepperBtn: {
+    width: 40,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepperBtnText: {
+    fontSize: 18,
+    fontWeight: fontWeight.medium,
+    color: colors.primary,
+  },
+  stepperValue: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 15,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
   },
   modalButtons: {
     flexDirection: 'row',
     gap: spacing.md,
-    marginTop: spacing.sm,
+    paddingTop: spacing.md,
   },
   modalButton: {
     flex: 1,

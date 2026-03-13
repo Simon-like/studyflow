@@ -1,5 +1,10 @@
 import { Clock, Target, Flame, Award } from 'lucide-react';
-import type { Achievement, StudyGoal, WeeklyActivityData } from '@/types';
+import type { Achievement, StudyGoal } from '@/types';
+
+interface WeeklyActivityData {
+  day: string;
+  hours: number;
+}
 
 export const ACHIEVEMENTS: Achievement[] = [
   { id: '1', icon: '⚡', title: '专注达人', description: '连续专注30分钟', color: 'coral', unlocked: true },

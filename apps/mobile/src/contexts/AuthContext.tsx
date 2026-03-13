@@ -1,25 +1,41 @@
 /**
  * 认证上下文
- * 提供 logout 等认证操作给所有子页面
+ * 
+ * 提供完整的认证状态管理：
+ * 1. 登录状态
+ * 2. 用户信息
+ * 3. 登录/登出方法
+ * 4. 双 token 自动刷新
  */
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useAuthToken } from '../hooks/useAuthToken';
+import type { User } from '../utils/tokenStorage';
 
 interface AuthContextValue {
-  logout: () => void;
+  // 状态
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: User | null;
+  
+  // 方法
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshAccessToken: () => Promise<boolean>;
+  getValidAccessToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({
-  children,
-  logout,
-}: {
-  children: React.ReactNode;
-  logout: () => void;
-}) {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const auth = useAuthToken();
+
   return (
-    <AuthContext.Provider value={{ logout }}>
+    <AuthContext.Provider value={auth}>
       {children}
     </AuthContext.Provider>
   );
@@ -32,3 +48,6 @@ export function useAuth(): AuthContextValue {
   }
   return ctx;
 }
+
+// 导出类型
+export type { User };

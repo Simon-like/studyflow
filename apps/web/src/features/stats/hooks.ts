@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import type { Period } from './types';
 import { WEEK_DATA, SUBJECT_DATA, generateMonthHeatmap } from './constants';
 
@@ -17,9 +17,13 @@ export function useStats() {
 
   const heatmapData = useMemo(() => generateMonthHeatmap(), []);
 
+  const handlePeriodChange = useCallback((key: string) => {
+    setPeriod(key as Period);
+  }, []);
+
   return {
     period,
-    setPeriod,
+    setPeriod: handlePeriodChange,
     chartData,
     maxPomodoros,
     subjectData: SUBJECT_DATA,

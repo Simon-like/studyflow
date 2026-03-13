@@ -20,6 +20,14 @@ export {
   calculateProgress,
 } from '@studyflow/shared';
 
+// Token 存储（双 token 持久化）
+export {
+  tokenStorage,
+  TOKEN_KEYS,
+  type TokenData,
+  type User,
+} from './tokenStorage';
+
 /**
  * 格式化秒数为 mm:ss 格式
  * (移动端专用版本，用于番茄钟显示)

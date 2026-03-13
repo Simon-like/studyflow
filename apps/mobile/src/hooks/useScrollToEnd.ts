@@ -7,12 +7,12 @@ import { useRef, useCallback } from 'react';
 import { ScrollView } from 'react-native';
 
 interface UseScrollToEndReturn {
-  scrollViewRef: React.RefObject<ScrollView>;
+  scrollViewRef: React.RefObject<ScrollView | null>;
   scrollToEnd: (animated?: boolean) => void;
 }
 
 export function useScrollToEnd(): UseScrollToEndReturn {
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ScrollView | null>(null);
   
   const scrollToEnd = useCallback((animated = true) => {
     setTimeout(() => {

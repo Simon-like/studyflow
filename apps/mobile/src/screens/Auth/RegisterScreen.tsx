@@ -1,5 +1,9 @@
 /**
  * 注册页面
+ * 
+ * 使用双 Token 认证：
+ * - 注册成功后自动登录
+ * - 使用 AuthContext 管理登录状态
  */
 
 import React from 'react';
@@ -11,27 +15,55 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { colors, spacing, radius, fontSize, fontWeight, shadows } from '../../theme';
 import { FormInput } from './components';
 import { useRegisterForm } from './hooks';
 import { Button } from '../../components/ui/Button';
+import { useAuth } from '../../contexts/AuthContext';
+import { api } from '@studyflow/api';
 
 interface RegisterScreenProps {
-  onRegister: () => void;
   onGoLogin: () => void;
 }
 
-export function RegisterScreen({ onRegister, onGoLogin }: RegisterScreenProps) {
+export function RegisterScreen({ onGoLogin }: RegisterScreenProps) {
+  const { login } = useAuth();
   const {
     name, setName,
     account, setAccount,
     password, setPassword,
     confirmPassword, setConfirmPassword,
-    isLoading,
+    isLoading, setIsLoading,
     errors,
-    handleSubmit,
-  } = useRegisterForm(onRegister);
+    handleSubmit: validateAndSubmit,
+  } = useRegisterForm();
+
+  const handleSubmit = async () => {
+    if (!validateAndSubmit()) return;
+    
+    setIsLoading(true);
+    try {
+      // 1. 先注册
+      await api.auth.register({ 
+        username: account, 
+        password, 
+        nickname: name 
+      });
+      
+      // 2. 注册成功后自动登录（使用双 token）
+      await login(account, password);
+      // 登录成功由 AuthContext 自动处理状态更新
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      const msg = error?.response?.data?.message || '注册失败，请重试';
+      Alert.alert('注册失败', msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView

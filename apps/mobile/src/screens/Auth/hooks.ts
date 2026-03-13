@@ -1,11 +1,12 @@
 /**
  * Auth 页面 hooks
+ * 
+ * 表单验证逻辑（与认证逻辑分离）
+ * 认证逻辑由 useAuth hook 处理
  */
 
 import { useState, useCallback } from 'react';
-import { api } from '@studyflow/api';
 import { authValidators } from '@studyflow/shared';
-import { Alert } from 'react-native';
 
 interface FieldErrors {
   name?: string;
@@ -14,7 +15,11 @@ interface FieldErrors {
   confirmPassword?: string;
 }
 
-export function useLoginForm(onSuccess: () => void) {
+/**
+ * 登录表单 hook
+ * 仅处理表单状态和验证
+ */
+export function useLoginForm() {
   const [account, setAccount] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -29,33 +34,29 @@ export function useLoginForm(onSuccess: () => void) {
     return !e.account && !e.password;
   }, [account, password]);
 
-  const handleSubmit = useCallback(async () => {
-    if (!validate()) return;
-    setIsLoading(true);
-    try {
-      await api.auth.login({ username: account, password });
-      onSuccess();
-    } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const error = err as any;
-      const msg = error?.response?.data?.message || '登录失败，请重试';
-      Alert.alert('登录失败', msg);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [validate, account, password, onSuccess]);
+  const handleSubmit = useCallback((): boolean => {
+    return validate();
+  }, [validate]);
+
+  const setLoading = useCallback((loading: boolean) => {
+    setIsLoading(loading);
+  }, []);
 
   return {
     account, setAccount,
     password, setPassword,
     isLoading,
+    setLoading,
     errors,
     setErrors,
     handleSubmit,
   };
 }
 
-export function useRegisterForm(onSuccess: () => void) {
+/**
+ * 注册表单 hook
+ */
+export function useRegisterForm() {
   const [name, setName] = useState('');
   const [account, setAccount] = useState('');
   const [password, setPassword] = useState('');
@@ -74,31 +75,27 @@ export function useRegisterForm(onSuccess: () => void) {
     return !e.name && !e.account && !e.password && !e.confirmPassword;
   }, [name, account, password, confirmPassword]);
 
-  const handleSubmit = useCallback(async () => {
-    if (!validate()) return;
-    setIsLoading(true);
-    try {
-      await api.auth.register({ username: account, password, nickname: name });
-      onSuccess();
-    } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const error = err as any;
-      const msg = error?.response?.data?.message || '注册失败，请重试';
-      Alert.alert('注册失败', msg);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [validate, name, account, password, onSuccess]);
+  const handleSubmit = useCallback((): boolean => {
+    return validate();
+  }, [validate]);
+
+  const resetForm = useCallback(() => {
+    setName('');
+    setAccount('');
+    setPassword('');
+    setConfirmPassword('');
+    setErrors({});
+  }, []);
 
   return {
     name, setName,
     account, setAccount,
     password, setPassword,
     confirmPassword, setConfirmPassword,
-    isLoading,
-    errors,
-    setErrors,
+    isLoading, setIsLoading,
+    errors, setErrors,
     handleSubmit,
+    resetForm,
   };
 }
 

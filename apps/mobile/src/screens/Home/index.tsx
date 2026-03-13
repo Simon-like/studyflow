@@ -18,28 +18,20 @@ import { POMODORO_CONFIG } from '../../constants';
 export default function HomeScreen() {
   const { 
     tasks, 
+    selectedTask,
+    setSelectedTask,
     stats, 
     todayStats,
     isLoading, 
     error,
     pomodoro, 
+    taskStatus,
     toggleTask, 
     reorderTasks,
     addTask, 
     viewStats,
     refresh 
   } = useHomeScreen();
-  
-  // 获取当前活跃任务用于番茄钟显示（排序后的第一个未完成任务）
-  const activeTask = tasks.find(t => t.status === 'in_progress') || 
-                     tasks.find(t => t.status !== 'completed') || 
-                     tasks[0];
-  
-  const taskTitle = activeTask?.title || '专注学习';
-  const taskSubtitle = activeTask?.category || '选择任务开始专注';
-  const pomodoroCount = activeTask 
-    ? `${activeTask.completedPomodoros}/${activeTask.estimatedPomodoros}`
-    : '0/0';
   
   return (
     <ScreenContainer>
@@ -60,16 +52,15 @@ export default function HomeScreen() {
           <PomodoroTimer
             timeLeft={pomodoro.timeLeft}
             totalTime={POMODORO_CONFIG.DEFAULT_DURATION}
-            isRunning={pomodoro.isRunning}
-            isPaused={pomodoro.isPaused}
-            taskTitle={taskTitle}
-            taskSubtitle={taskSubtitle}
+            status={pomodoro.status}
+            taskTitle={taskStatus.title}
+            taskSubtitle={taskStatus.subtitle}
             taskEmoji="📖"
-            pomodoroCount={pomodoroCount}
-            onStart={pomodoro.start}
-            onPause={pomodoro.pause}
-            onResume={pomodoro.resume}
-            onStop={pomodoro.stop}
+            pomodoroCount={taskStatus.count}
+            onToggleTimer={pomodoro.toggleTimer}
+            onCompleteTask={pomodoro.completeTask}
+            onResetTimer={pomodoro.resetTimer}
+            onAbandonTask={pomodoro.abandonTask}
           />
         </Card>
       </View>
@@ -84,15 +75,17 @@ export default function HomeScreen() {
       {/* 任务列表 */}
       <SortableTaskList
         tasks={tasks}
+        selectedTaskId={selectedTask?.id}
         isLoading={isLoading}
         error={error}
         onToggleTask={toggleTask}
         onAddTask={addTask}
         onRefresh={refresh}
         onReorder={reorderTasks}
-        isPomodoroRunning={pomodoro.isRunning}
-        onPausePomodoro={pomodoro.pause}
-        onResetPomodoro={pomodoro.stop}
+        onSelectTask={setSelectedTask}
+        isPomodoroRunning={pomodoro.status === 'running'}
+        onPausePomodoro={() => {}}
+        onResetPomodoro={pomodoro.resetTimer}
       />
     </ScreenContainer>
   );

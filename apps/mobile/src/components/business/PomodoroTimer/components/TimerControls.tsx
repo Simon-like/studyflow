@@ -1,37 +1,70 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors, radius, spacing } from '../../../../theme';
+import { colors, radius, spacing, fontWeight } from '../../../../theme';
+import type { TimerStatus } from '../types';
 
 interface TimerControlsProps {
-  isRunning: boolean;
-  isPaused: boolean;
-  onMainAction: () => void;
-  onStop: () => void;
-  onSkip?: () => void;
+  status: TimerStatus;
+  onToggleTimer: () => void;
+  onCompleteTask: () => void;
+  onResetTimer: () => void;
+  onAbandonTask: () => void;
 }
 
 export function TimerControls({
-  isRunning,
-  isPaused,
-  onMainAction,
-  onStop,
-  onSkip,
+  status,
+  onToggleTimer,
+  onCompleteTask,
+  onResetTimer,
+  onAbandonTask,
 }: TimerControlsProps) {
-  const showPlay = !isRunning || isPaused;
-  
+  const isRunning = status === 'running';
+  const isPaused = status === 'paused';
+  const isIdle = status === 'idle';
+
+  const showPlay = !isRunning;
+
   return (
     <View style={styles.container}>
+      {/* 第一行：完成、重置、放弃 */}
+      <View style={styles.secondaryRow}>
+        {/* 提前完成任务 */}
+        <TouchableOpacity 
+          style={[styles.secondaryButton, isIdle && styles.secondaryButtonDisabled]} 
+          onPress={onCompleteTask}
+          disabled={isIdle}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.secondaryIcon, isIdle && styles.secondaryIconDisabled]}>✓</Text>
+          <Text style={[styles.secondaryText, isIdle && styles.secondaryTextDisabled]}>完成</Text>
+        </TouchableOpacity>
+
+        {/* 重新计时 */}
+        <TouchableOpacity 
+          style={styles.secondaryButton} 
+          onPress={onResetTimer}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.secondaryIcon}>↺</Text>
+          <Text style={styles.secondaryText}>重置</Text>
+        </TouchableOpacity>
+
+        {/* 放弃任务 */}
+        <TouchableOpacity 
+          style={[styles.secondaryButton, isIdle && styles.secondaryButtonDisabled]} 
+          onPress={onAbandonTask}
+          disabled={isIdle}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.secondaryIcon, isIdle && styles.secondaryIconDisabled]}>✕</Text>
+          <Text style={[styles.secondaryText, isIdle && styles.secondaryTextDisabled]}>放弃</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 主操作：开始/暂停 */}
       <TouchableOpacity 
-        style={styles.secondaryButton} 
-        onPress={onStop}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.secondaryIcon}>↺</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={styles.primaryButton} 
-        onPress={onMainAction}
+        style={[styles.primaryButton, isRunning && styles.primaryButtonPaused]} 
+        onPress={onToggleTimer}
         activeOpacity={0.8}
       >
         {showPlay ? (
@@ -42,14 +75,9 @@ export function TimerControls({
             <View style={styles.pauseBar} />
           </View>
         )}
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={styles.secondaryButton} 
-        onPress={onSkip}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.secondaryIcon}>⏭</Text>
+        <Text style={styles.primaryButtonText}>
+          {isRunning ? '暂停' : isPaused ? '继续' : '开始'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -57,55 +85,87 @@ export function TimerControls({
 
 const styles = StyleSheet.create({
   container: {
+    width: '100%',
+    gap: spacing.md,
+  },
+  // 次要操作行
+  secondaryRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.lg,
+    gap: spacing.md,
   },
+  secondaryButton: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.warm,
+    minWidth: 70,
+  },
+  secondaryButtonDisabled: {
+    opacity: 0.4,
+  },
+  secondaryIcon: {
+    fontSize: 18,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  secondaryIconDisabled: {
+    color: colors.textMuted,
+  },
+  secondaryText: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    fontWeight: fontWeight.medium,
+  },
+  secondaryTextDisabled: {
+    color: colors.textMuted,
+  },
+  // 主操作按钮
   primaryButton: {
-    width: 64,
-    height: 64,
-    borderRadius: radius.xl,
-    backgroundColor: colors.primary,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    borderRadius: radius.xl,
+    backgroundColor: colors.primary,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
     elevation: 6,
+    alignSelf: 'center',
   },
-  secondaryButton: {
-    width: 52,
-    height: 52,
-    borderRadius: radius.lg,
-    backgroundColor: colors.warm,
-    alignItems: 'center',
-    justifyContent: 'center',
+  primaryButtonPaused: {
+    backgroundColor: colors.warning,
+    shadowColor: colors.warning,
+  },
+  primaryButtonText: {
+    fontSize: 16,
+    fontWeight: fontWeight.semibold,
+    color: colors.white,
   },
   playIcon: {
     width: 0,
     height: 0,
-    borderTopWidth: 10,
-    borderBottomWidth: 10,
-    borderLeftWidth: 16,
+    borderTopWidth: 8,
+    borderBottomWidth: 8,
+    borderLeftWidth: 14,
     borderTopColor: 'transparent',
     borderBottomColor: 'transparent',
-    borderLeftColor: colors.surface,
-    marginLeft: 4,
+    borderLeftColor: colors.white,
+    marginLeft: 2,
   },
   pauseContainer: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 4,
   },
   pauseBar: {
-    width: 5,
-    height: 22,
-    backgroundColor: colors.surface,
-    borderRadius: 3,
-  },
-  secondaryIcon: {
-    fontSize: 20,
-    color: colors.textSecondary,
+    width: 4,
+    height: 16,
+    backgroundColor: colors.white,
+    borderRadius: 2,
   },
 });

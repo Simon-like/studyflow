@@ -28,12 +28,11 @@ export interface HomeScreenActions {
 
 export interface HomeScreenPomodoro {
   timeLeft: number;
-  isRunning: boolean;
-  isPaused: boolean;
-  start: () => void;
-  pause: () => void;
-  resume: () => void;
-  stop: () => void;
+  status: 'idle' | 'running' | 'paused' | 'completed';
+  toggleTimer: () => void;
+  completeTask: () => Promise<void>;
+  resetTimer: () => void;
+  abandonTask: () => void;
 }
 
 export function useHomeScreen() {
@@ -43,6 +42,9 @@ export function useHomeScreen() {
   const [weeklyStats, setWeeklyStats] = useState<WeeklyOverview | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  
+  // 选中的任务（用于番茄钟专注）
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   // 获取今日任务列表
   const fetchTodayTasks = useCallback(async () => {
@@ -126,12 +128,13 @@ export function useHomeScreen() {
       const updatedTask = response.data;
       
       // 如果任务变为已完成，从今日任务列表中移除
-      // 因为今日任务只显示 todo/in_progress + 今天刚完成的
       if (updatedTask.status === 'completed') {
-        // 乐观移除：立即从列表中删除
         setTasks((prev) => prev.filter((t) => t.id !== taskId));
-        
-        // 刷新统计数据和任务列表（获取最新状态）
+        // 如果选中的是这个任务，清除选中状态
+        if (selectedTask?.id === taskId) {
+          setSelectedTask(null);
+        }
+        // 刷新统计数据和任务列表
         await Promise.all([
           fetchTodayStats(),
           fetchTodayTasks(),
@@ -144,20 +147,17 @@ export function useHomeScreen() {
       }
     } catch (err) {
       console.error('Failed to toggle task:', err);
-      // 发生错误时重新加载任务列表
       await fetchTodayTasks();
     }
-  }, [fetchTodayTasks, fetchTodayStats]);
+  }, [fetchTodayTasks, fetchTodayStats, selectedTask]);
 
   // 添加新任务（导航到任务页面）
   const addTask = useCallback(() => {
-    // TODO: 导航到任务创建页面或显示添加任务弹窗
     console.log('Navigate to add task');
   }, []);
 
   // 查看统计（导航到统计页面）
   const viewStats = useCallback(() => {
-    // TODO: 导航到统计页面
     console.log('Navigate to stats');
   }, []);
 
@@ -169,22 +169,77 @@ export function useHomeScreen() {
   // 更新任务排序
   const reorderTasks = useCallback(async (newTasks: Task[]) => {
     try {
-      // 乐观更新本地状态
       setTasks(newTasks);
-      
-      // 调用 API 保存排序
       const taskOrders = newTasks.map((task, index) => ({
         id: task.id,
         order: index,
       }));
-      
       await api.task.reorderTasks({ taskOrders });
     } catch (err) {
       console.error('Failed to reorder tasks:', err);
-      // 发生错误时重新获取任务列表
       await fetchTodayTasks();
     }
   }, [fetchTodayTasks]);
+
+  // ========== 番茄钟操作 ==========
+
+  // 开始/暂停（合一）
+  const toggleTimer = useCallback(async () => {
+    if (pomodoro.isRunning) {
+      pomodoro.pause();
+    } else if (pomodoro.isPaused) {
+      pomodoro.resume();
+    } else {
+      // 开始新番茄钟
+      // 如果没有手动选择任务，自动选择第一个可用任务
+      const taskToStart = selectedTask ||
+        tasks.find(t => t.status === 'in_progress') ||
+        tasks.find(t => t.status !== 'completed');
+      if (taskToStart && taskToStart.status !== 'completed') {
+        try {
+          setSelectedTask(taskToStart);
+          await api.task.startTask(taskToStart.id);
+          await fetchTodayTasks();
+        } catch (err) {
+          console.error('Failed to start task:', err);
+        }
+      }
+      pomodoro.start();
+    }
+  }, [pomodoro, selectedTask, tasks, fetchTodayTasks]);
+
+  // 提前完成任务
+  const completeTask = useCallback(async () => {
+    if (!selectedTask) {
+      console.log('No task selected');
+      return;
+    }
+    if (selectedTask.status === 'completed') {
+      console.log('Task already completed');
+      return;
+    }
+    
+    try {
+      await api.task.toggleStatus(selectedTask.id);
+      await fetchTodayTasks();
+      await fetchTodayStats();
+      setSelectedTask(null);
+      pomodoro.stop();
+    } catch (err) {
+      console.error('Failed to complete task:', err);
+    }
+  }, [selectedTask, pomodoro, fetchTodayTasks, fetchTodayStats]);
+
+  // 重新计时
+  const resetTimer = useCallback(() => {
+    pomodoro.reset();
+  }, [pomodoro]);
+
+  // 放弃任务（转为自由模式）
+  const abandonTask = useCallback(() => {
+    setSelectedTask(null);
+    pomodoro.stop();
+  }, [pomodoro]);
 
   // 格式化统计数据供 UI 使用
   const stats = {
@@ -193,8 +248,44 @@ export function useHomeScreen() {
     streakDays: `${todayStats?.streakDays || 0}天`,
   };
 
+  // 获取显示的任务状态
+  const getTaskStatus = useCallback(() => {
+    if (selectedTask) {
+      return {
+        title: selectedTask.title,
+        subtitle: selectedTask.category || '专注模式',
+        count: `${selectedTask.completedPomodoros}/${selectedTask.estimatedPomodoros}`,
+      };
+    }
+    const inProgressTask = tasks.find(t => t.status === 'in_progress');
+    if (inProgressTask) {
+      return {
+        title: inProgressTask.title,
+        subtitle: inProgressTask.category || '专注模式',
+        count: `${inProgressTask.completedPomodoros}/${inProgressTask.estimatedPomodoros}`,
+      };
+    }
+    const firstTask = tasks.find(t => t.status !== 'completed');
+    if (firstTask) {
+      return {
+        title: firstTask.title,
+        subtitle: firstTask.category || '点击任务开始专注',
+        count: `${firstTask.completedPomodoros}/${firstTask.estimatedPomodoros}`,
+      };
+    }
+    return {
+      title: '自由任务',
+      subtitle: '专注当下，提升效率',
+      count: '自由模式',
+    };
+  }, [selectedTask, tasks]);
+
+  const taskStatus = getTaskStatus();
+
   return {
     tasks,
+    selectedTask,
+    setSelectedTask,
     stats,
     todayStats,
     weeklyStats,
@@ -202,13 +293,13 @@ export function useHomeScreen() {
     error,
     pomodoro: {
       timeLeft: pomodoro.timeLeft,
-      isRunning: pomodoro.isRunning,
-      isPaused: pomodoro.isPaused,
-      start: pomodoro.start,
-      pause: pomodoro.pause,
-      resume: pomodoro.resume,
-      stop: pomodoro.stop,
+      status: pomodoro.status,
+      toggleTimer,
+      completeTask,
+      resetTimer,
+      abandonTask,
     },
+    taskStatus,
     toggleTask,
     reorderTasks,
     addTask,

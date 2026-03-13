@@ -8,6 +8,7 @@ import {
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { colors, radius, spacing, shadows, fontWeight } from '../../../theme';
 
@@ -60,7 +61,9 @@ export function Modal({
                 )}
 
                 {/* Body */}
-                <View style={styles.body}>{children}</View>
+                <ScrollView style={styles.body} showsVerticalScrollIndicator={false} bounces={false}>
+                  {children}
+                </ScrollView>
 
                 {/* Footer */}
                 {footer && <View style={styles.footer}>{footer}</View>}
@@ -140,7 +143,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing['3xl'],
   },
   keyboardView: {
     width: '100%',
@@ -150,7 +154,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: radius['2xl'],
     width: '100%',
-    maxHeight: '80%',
+    maxHeight: '85%',
+    overflow: 'hidden',
     ...shadows.lg,
   },
   header: {
@@ -181,7 +186,10 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.medium,
   },
   body: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
+    flexShrink: 1,
   },
   footer: {
     padding: spacing.lg,

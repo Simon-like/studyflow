@@ -111,7 +111,7 @@ export const MOCK_TASKS: Task[] = [
     priority: "medium",
     estimatedPomodoros: 2,
     completedPomodoros: 1,
-    status: "in_progress",
+    status: "todo",
     createdAt: "2026-03-11T14:00:00Z",
     updatedAt: "2026-03-12T09:00:00Z",
   },

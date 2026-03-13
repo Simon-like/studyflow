@@ -36,7 +36,7 @@ export function TaskSearchFilter({
           className="w-full pl-10 pr-4 py-2.5 bg-white border border-mist rounded-xl text-charcoal placeholder-mist focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral transition-all text-sm"
         />
       </div>
-      <Tabs items={tabItems} activeKey={filter} onChange={onFilterChange} />
+      <Tabs items={tabItems} activeKey={filter} onChange={(key) => onFilterChange(key as TaskFilter)} />
     </div>
   );
 }

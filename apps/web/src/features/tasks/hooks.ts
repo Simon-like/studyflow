@@ -7,6 +7,10 @@ export function useTasks() {
   const [filter, setFilter] = useState<TaskFilter>('all');
   const [search, setSearch] = useState('');
 
+  const handleFilterChange = useCallback((key: string) => {
+    setFilter(key as TaskFilter);
+  }, []);
+
   const filteredTasks = useMemo(() => {
     return tasks.filter((t) => {
       const matchFilter = filter === 'all' || t.status === filter;
@@ -46,7 +50,7 @@ export function useTasks() {
     setTasks((prev) =>
       prev.map((t) =>
         t.id === id
-          ? { ...t, status: t.status === 'completed' ? 'todo' : 'completed' }
+          ? { ...t, status: (t.status === 'completed' ? 'todo' : 'completed') as TaskStatus }
           : t
       )
     );
@@ -60,7 +64,7 @@ export function useTasks() {
     tasks: filteredTasks,
     counts,
     filter,
-    setFilter,
+    setFilter: handleFilterChange,
     search,
     setSearch,
     addTask,

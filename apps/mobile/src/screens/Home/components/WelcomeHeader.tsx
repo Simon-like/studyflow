@@ -35,6 +35,9 @@ export function WelcomeHeader({ userName = DEFAULT_USER.name }: WelcomeHeaderPro
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    overflow: 'hidden',
   },
   gradient: {
     backgroundColor: alpha.primary10,

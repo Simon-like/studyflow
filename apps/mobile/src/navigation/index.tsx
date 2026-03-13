@@ -1,15 +1,19 @@
 /**
  * 导航组件
+ * 
+ * 集成双 Token 认证系统：
+ * 1. 使用 AuthProvider 管理全局认证状态
+ * 2. 自动处理 token 刷新
+ * 3. 未登录时显示登录界面
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { TabBar } from './components/TabBar';
 import { TABS, TabKey } from './constants';
 import { colors } from '../theme';
-import { AuthProvider } from '../contexts/AuthContext';
-import { api } from '@studyflow/api';
+import { AuthProvider, useAuth } from '../contexts/AuthContext';
 
 // 导入页面
 import HomeScreen from '../screens/Home';
@@ -27,44 +31,60 @@ const SCREENS: Record<TabKey, React.ComponentType> = {
   profile: ProfileScreen,
 };
 
-export function Navigation() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+/**
+ * 内部导航组件（使用 AuthContext）
+ */
+function NavigationContent() {
+  const { isAuthenticated, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>('home');
   const ActiveScreen = SCREENS[activeTab];
 
-  const handleLogout = useCallback(() => {
-    api.auth.logout().catch(() => {});
-    setIsAuthenticated(false);
-    setActiveTab('home');
-  }, []);
+  // 加载中显示空白（或可以添加 Loading 组件）
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <StatusBar style="dark" />
+      </View>
+    );
+  }
 
   // 未登录 → 显示登录/注册
   if (!isAuthenticated) {
     return (
       <View style={styles.container}>
         <StatusBar style="dark" />
-        <AuthModule onAuthSuccess={() => setIsAuthenticated(true)} />
+        <AuthModule />
       </View>
     );
   }
 
+  // 已登录 → 显示主界面
   return (
-    <AuthProvider logout={handleLogout}>
-      <View style={styles.container}>
-        <StatusBar style="dark" />
+    <View style={styles.container}>
+      <StatusBar style="dark" />
 
-        {/* 页面内容 */}
-        <View style={styles.content}>
-          <ActiveScreen />
-        </View>
-
-        {/* 底部导航栏 */}
-        <TabBar
-          tabs={TABS}
-          activeTab={activeTab}
-          onTabPress={setActiveTab}
-        />
+      {/* 页面内容 */}
+      <View style={styles.content}>
+        <ActiveScreen />
       </View>
+
+      {/* 底部导航栏 */}
+      <TabBar
+        tabs={TABS}
+        activeTab={activeTab}
+        onTabPress={setActiveTab}
+      />
+    </View>
+  );
+}
+
+/**
+ * 导航组件（带 AuthProvider）
+ */
+export function Navigation() {
+  return (
+    <AuthProvider>
+      <NavigationContent />
     </AuthProvider>
   );
 }

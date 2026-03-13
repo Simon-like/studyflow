@@ -19,7 +19,7 @@ export function StatsHeader({ period, onPeriodChange }: StatsHeaderProps) {
         <h1 className="font-display text-2xl font-bold text-charcoal">学习统计</h1>
         <p className="text-stone text-sm mt-0.5">了解你的学习习惯，持续优化效率</p>
       </div>
-      <Tabs items={tabItems} activeKey={period} onChange={onPeriodChange} />
+      <Tabs items={tabItems} activeKey={period} onChange={(key) => onPeriodChange(key as Period)} />
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import type { Priority, TaskStatus } from '@/types';
+export type Priority = 'high' | 'medium' | 'low';
+export type TaskStatus = 'todo' | 'in_progress' | 'completed';
 
 export interface TaskCardProps {
   id: string;
@@ -22,6 +23,3 @@ export interface Task {
   pomodoros: number;
   dueDate?: string;
 }
-
-export type Priority = 'high' | 'medium' | 'low';
-export type TaskStatus = 'todo' | 'in_progress' | 'completed';

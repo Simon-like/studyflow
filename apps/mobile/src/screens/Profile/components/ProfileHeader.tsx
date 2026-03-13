@@ -55,8 +55,11 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 120,
-    backgroundColor: alpha.primary20,
+    width: '100%',
+    height: '100%',
+    borderBottomRightRadius: 24,
+    borderBottomLeftRadius: 24,
+    backgroundColor: alpha.primary10,
   },
   content: {
     paddingHorizontal: spacing.lg,

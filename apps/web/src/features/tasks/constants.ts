@@ -6,7 +6,7 @@ export const INITIAL_TASKS: Task[] = [
     title: '考研数学复习',
     description: '第三章 线性代数 · 行列式与矩阵',
     priority: 'high',
-    status: 'in_progress',
+    status: 'todo',
     pomodoros: 4,
     dueDate: '2026-03-15',
   },

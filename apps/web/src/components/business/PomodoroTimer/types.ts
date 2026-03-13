@@ -7,9 +7,10 @@ export interface PomodoroTimerProps {
   taskTitle?: string;
   taskSubtitle?: string;
   taskProgress?: string;
-  onStart: () => void;
-  onPause: () => void;
-  onResume: () => void;
-  onStop: () => void;
+  // 四个操作
+  onToggleTimer: () => void;  // 开始/暂停（合一）
+  onCompleteTask: () => void; // 提前完成任务
+  onResetTimer: () => void;   // 重新计时
+  onAbandonTask: () => void;  // 放弃任务（转为自由模式）
   className?: string;
 }

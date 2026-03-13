@@ -1,5 +1,9 @@
 /**
  * 登录页面
+ * 
+ * 使用双 Token 认证：
+ * - 登录成功后自动保存 accessToken + refreshToken
+ * - 使用 AuthContext 管理登录状态
  */
 
 import React from 'react';
@@ -11,27 +15,42 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { colors, spacing, radius, fontSize, fontWeight, shadows } from '../../theme';
 import { FormInput, SocialLogin } from './components';
-import { useLoginForm } from './hooks';
-import { FEATURES } from './constants';
-import { Button } from '../../components/ui/Button';
 import { TEST_ACCOUNT } from '@studyflow/api';
+import { Button } from '../../components/ui/Button';
+import { useAuth } from '../../contexts/AuthContext';
+import { useLoginForm } from './hooks';
 
 interface LoginScreenProps {
-  onLogin: () => void;
   onGoRegister: () => void;
 }
 
-export function LoginScreen({ onLogin, onGoRegister }: LoginScreenProps) {
+export function LoginScreen({ onGoRegister }: LoginScreenProps) {
+  const { login } = useAuth();
   const {
     account, setAccount,
     password, setPassword,
     isLoading,
     errors,
-    handleSubmit,
-  } = useLoginForm(onLogin);
+    handleSubmit: validateAndSubmit,
+  } = useLoginForm();
+
+  const handleSubmit = async () => {
+    if (!validateAndSubmit()) return;
+    
+    try {
+      await login(account, password);
+      // 登录成功由 AuthContext 自动处理状态更新
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const error = err as any;
+      const msg = error?.response?.data?.message || '登录失败，请重试';
+      Alert.alert('登录失败', msg);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -113,6 +132,13 @@ export function LoginScreen({ onLogin, onGoRegister }: LoginScreenProps) {
     </KeyboardAvoidingView>
   );
 }
+
+// 特性列表
+const FEATURES = [
+  { emoji: '🍅', text: '番茄钟' },
+  { emoji: '📝', text: '任务管理' },
+  { emoji: '🤖', text: 'AI 助手' },
+];
 
 const styles = StyleSheet.create({
   container: {

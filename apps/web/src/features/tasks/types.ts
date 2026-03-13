@@ -1,5 +1,6 @@
 import type { Task, TaskStatus, Priority } from '@/types';
 
+export type { Task, TaskStatus, Priority };
 export type TaskFilter = 'all' | TaskStatus;
 
 export interface TaskFormData {

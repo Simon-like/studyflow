@@ -1,6 +1,6 @@
 import type { Period, DailyStudyData, SubjectDistribution } from '@/types';
 
-export type { Period };
+export type { Period, DailyStudyData, SubjectDistribution };
 
 export interface OverviewCard {
   icon: React.ComponentType<{ className?: string }>;

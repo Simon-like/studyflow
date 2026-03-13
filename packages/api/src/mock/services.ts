@@ -84,7 +84,7 @@ let posts = [...MOCK_POSTS];
 
 // ==================== Auth Mock ====================
 
-type AuthLoginResponse = ApiResponse<{ user: User } & TokenResponse>;
+type AuthLoginResponse = ApiResponse<TokenResponse & { user: User }>;
 type AuthRegisterResponse = AuthLoginResponse;
 
 export const mockAuthService = {
@@ -108,7 +108,7 @@ export const mockAuthService = {
     safeStorage.set(STORAGE_KEYS.REFRESH_TOKEN, MOCK_TOKENS.refreshToken);
     safeStorage.set(STORAGE_KEYS.USER, found.user);
 
-    return ok({ user: found.user, ...MOCK_TOKENS });
+    return ok({ ...MOCK_TOKENS, user: found.user });
   },
 
   register: async (data: RegisterRequest): Promise<AuthRegisterResponse> => {
@@ -149,7 +149,7 @@ export const mockAuthService = {
     safeStorage.set(STORAGE_KEYS.REFRESH_TOKEN, MOCK_TOKENS.refreshToken);
     safeStorage.set(STORAGE_KEYS.USER, newUser);
 
-    return ok({ user: newUser, ...MOCK_TOKENS });
+    return ok({ ...MOCK_TOKENS, user: newUser });
   },
 
   refresh: async (): Promise<ApiResponse<TokenResponse>> => {

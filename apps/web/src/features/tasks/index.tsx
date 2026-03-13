@@ -37,7 +37,7 @@ export default function TasksPage() {
       />
 
       {/* Task List */}
-      <div className="space-y-4">
+      <div className="space-y-4 flex flex-col gap-6">
         {tasks.length === 0 ? (
           <EmptyState
             icon={

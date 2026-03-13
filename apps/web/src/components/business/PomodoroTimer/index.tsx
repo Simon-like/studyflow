@@ -17,10 +17,10 @@ export function PomodoroTimer({
   taskTitle,
   taskSubtitle,
   taskProgress,
-  onStart,
-  onPause,
-  onResume,
-  onStop,
+  onToggleTimer,
+  onCompleteTask,
+  onResetTimer,
+  onAbandonTask,
   className = '',
 }: PomodoroTimerProps) {
   const progress = (timeRemaining / totalTime) * (2 * Math.PI * 90);
@@ -34,20 +34,18 @@ export function PomodoroTimer({
         />
 
         <div className="flex-1">
-          {taskTitle && (
-            <TaskInfo
-              title={taskTitle}
-              subtitle={taskSubtitle}
-              progress={taskProgress}
-            />
-          )}
+          <TaskInfo
+            title={taskTitle || '自由任务'}
+            subtitle={taskSubtitle || '专注当下，提升效率'}
+            progress={taskProgress || '自由模式'}
+          />
 
           <TimerControls
             status={status}
-            onStart={onStart}
-            onPause={onPause}
-            onResume={onResume}
-            onStop={onStop}
+            onToggleTimer={onToggleTimer}
+            onCompleteTask={onCompleteTask}
+            onResetTimer={onResetTimer}
+            onAbandonTask={onAbandonTask}
           />
         </div>
       </div>

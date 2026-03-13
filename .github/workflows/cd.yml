@@ -1,40 +1,111 @@
-# CD (持续部署) - 暂时停用
-# 后续有上线需求时，可参考以下配置：
-#
-# 部署 Web 到 Vercel:
-# 1. 在 GitHub Settings > Secrets 中添加:
-#    - VERCEL_TOKEN
-#    - VERCEL_ORG_ID
-#    - VERCEL_PROJECT_ID
-#
-# 2. 取消下方注释并配置:
+name: CD
 
-# name: CD
-#
-# on:
-#   push:
-#     branches: [main]
-#
-# jobs:
-#   deploy:
-#     name: Deploy to Production
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v4
-#       - uses: pnpm/action-setup@v2
-#         with:
-#           version: 8
-#       - uses: actions/setup-node@v4
-#         with:
-#           node-version: 18
-#           cache: "pnpm"
-#       - run: pnpm install --frozen-lockfile
-#       - run: pnpm --filter "./packages/*" build
-#       - run: pnpm --filter @studyflow/web build
-#       - name: Deploy to Vercel
-#         uses: vercel/action-deploy@v1
-#         with:
-#           vercel-token: ${{ secrets.VERCEL_TOKEN }}
-#           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-#           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-#           working-directory: ./apps/web/dist
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # 允许手动触发
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 20
+  PNPM_VERSION: 10.16.1
+
+jobs:
+  # ========== 构建 Web 应用 ==========
+  build:
+    name: Build Web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 构建依赖的包
+      - name: Build packages
+        run: pnpm --filter "./packages/*" build
+
+      # 构建 Web 应用
+      - name: Build Web
+        run: pnpm --filter @studyflow/web build
+
+      # 上传构建产物作为 artifact
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: apps/web/dist/
+          retention-days: 1
+
+  # ========== 部署到云服务器 ==========
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: dist/
+
+      # 设置 SSH 密钥
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          cat >> ~/.ssh/config << EOF
+          Host deploy-server
+            HostName ${{ secrets.SSH_HOST }}
+            User ${{ secrets.SSH_USER }}
+            Port ${{ secrets.SSH_PORT || '22' }}
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking no
+          EOF
+          chmod 600 ~/.ssh/config
+
+      # 使用 rsync 部署到服务器
+      - name: Deploy to server
+        run: |
+          echo "🚀 开始部署到服务器..."
+          
+          # 创建远程目录（如果不存在）
+          ssh deploy-server "mkdir -p ${{ secrets.DEPLOY_PATH }}"
+          
+          # 使用 rsync 同步文件（删除远程多余的文件）
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            dist/ \
+          deploy-server:${{ secrets.DEPLOY_PATH }}
+          
+          echo "✅ 文件同步完成"
+
+      # 可选：重启 Nginx（如果配置了 sudo 免密码）
+      - name: Reload Nginx (optional)
+        if: secrets.RELOAD_NGINX == 'true'
+        run: |
+          ssh deploy-server "sudo nginx -t && sudo systemctl reload nginx"
+          echo "✅ Nginx 重载完成"
+
+      # 发送部署通知（可选）
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "🎉 部署成功！"
+          echo "网站地址: ${{ secrets.SITE_URL }}"
