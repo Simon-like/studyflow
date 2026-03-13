@@ -10,4 +10,5 @@ export const STATUS_CONFIG: Record<TaskStatus, { label: string; color: string; b
   todo: { label: '待开始', color: 'text-stone', bg: 'bg-warm' },
   in_progress: { label: '进行中', color: 'text-coral', bg: 'bg-coral/10' },
   completed: { label: '已完成', color: 'text-sage', bg: 'bg-sage/10' },
+  abandoned: { label: '已放弃', color: 'text-stone', bg: 'bg-stone/10' },
 };

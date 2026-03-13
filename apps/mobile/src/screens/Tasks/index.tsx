@@ -3,7 +3,7 @@
  * 用于查看和管理所有任务
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -45,6 +45,11 @@ export default function TasksScreen() {
       setIsLoading(false);
     }
   }, []);
+
+  // 组件挂载时加载任务
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   // 添加新任务
   const handleAddTask = useCallback(async () => {
@@ -116,7 +121,7 @@ export default function TasksScreen() {
   );
 
   return (
-    <ScreenContainer>
+    <ScreenContainer scrollable={false} padding={false}>
       {/* 头部 */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>任务管理</Text>
@@ -130,16 +135,18 @@ export default function TasksScreen() {
       </View>
 
       {/* 过滤器 */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.filterContainer}
-      >
-        <FilterTab status="all" label="全部" count={stats.all} />
-        <FilterTab status="todo" label="待办" count={stats.todo} />
-        <FilterTab status="in_progress" label="进行中" count={stats.in_progress} />
-        <FilterTab status="completed" label="已完成" count={stats.completed} />
-      </ScrollView>
+      <View style={styles.filterWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterContainer}
+        >
+          <FilterTab status="all" label="全部" count={stats.all} />
+          <FilterTab status="todo" label="待办" count={stats.todo} />
+          <FilterTab status="in_progress" label="进行中" count={stats.in_progress} />
+          <FilterTab status="completed" label="已完成" count={stats.completed} />
+        </ScrollView>
+      </View>
 
       {/* 任务列表 */}
       <ScrollView style={styles.taskList} contentContainerStyle={styles.taskListContent}>
@@ -319,12 +326,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: fontWeight.semibold,
   },
+  filterWrapper: {
+    height: 64,
+    overflow: 'hidden',
+  },
   filterContainer: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
     gap: spacing.sm,
     paddingBottom: spacing.lg,
     paddingTop: spacing.xs,
+    alignItems: 'center',
   },
   filterTab: {
     flexDirection: 'row',
@@ -379,7 +391,7 @@ const styles = StyleSheet.create({
   },
   taskListContent: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingBottom: 100,
     gap: spacing.md,
   },
   emptyState: {

@@ -1,7 +1,8 @@
-import type { Task, TaskStatus, Priority } from '@/types';
+import type { Task, TaskStatus } from '@studyflow/shared';
 
-export type { Task, TaskStatus, Priority };
-export type TaskFilter = 'all' | TaskStatus;
+export type { Task, TaskStatus };
+export type Priority = 'high' | 'medium' | 'low';
+export type TaskFilter = 'all' | 'todo' | 'in_progress' | 'completed';
 
 export interface TaskFormData {
   title: string;

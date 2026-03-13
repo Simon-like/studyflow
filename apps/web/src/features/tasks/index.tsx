@@ -19,8 +19,8 @@ export default function TasksPage() {
 
   const modal = useTaskModal();
 
-  const handleSubmit = () => {
-    addTask(modal.formData);
+  const handleSubmit = async () => {
+    await addTask(modal.formData);
     modal.close();
   };
 
@@ -57,7 +57,15 @@ export default function TasksPage() {
           tasks.map((task) => (
             <TaskCard
               key={task.id}
-              {...task}
+              id={task.id}
+              title={task.title}
+              description={task.description}
+              priority={task.priority}
+              status={task.status}
+              estimatedPomodoros={task.estimatedPomodoros}
+              completedPomodoros={task.completedPomodoros}
+              category={task.category}
+              dueDate={task.dueDate}
               onToggleStatus={toggleStatus}
             />
           ))

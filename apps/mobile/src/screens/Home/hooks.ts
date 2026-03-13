@@ -46,6 +46,10 @@ export function useHomeScreen() {
   // 选中的任务（用于番茄钟专注）
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
+  // 任务切换确认
+  const [showSwitchConfirm, setShowSwitchConfirm] = useState(false);
+  const [pendingSwitchTask, setPendingSwitchTask] = useState<Task | null>(null);
+
   // 获取今日任务列表
   const fetchTodayTasks = useCallback(async () => {
     try {
@@ -241,6 +245,34 @@ export function useHomeScreen() {
     pomodoro.stop();
   }, [pomodoro]);
 
+  // ========== 任务切换确认 ==========
+
+  // 选择任务（带切换确认）
+  const handleSelectTask = useCallback((task: Task) => {
+    if (selectedTask && selectedTask.id !== task.id && (pomodoro.isRunning || pomodoro.isPaused)) {
+      setPendingSwitchTask(task);
+      setShowSwitchConfirm(true);
+      return;
+    }
+    setSelectedTask(task);
+  }, [selectedTask, pomodoro.isRunning, pomodoro.isPaused]);
+
+  // 确认切换任务
+  const confirmSwitchTask = useCallback(() => {
+    if (pendingSwitchTask) {
+      pomodoro.stop();
+      setSelectedTask(pendingSwitchTask);
+    }
+    setShowSwitchConfirm(false);
+    setPendingSwitchTask(null);
+  }, [pendingSwitchTask, pomodoro]);
+
+  // 取消切换
+  const cancelSwitchTask = useCallback(() => {
+    setShowSwitchConfirm(false);
+    setPendingSwitchTask(null);
+  }, []);
+
   // 格式化统计数据供 UI 使用
   const stats = {
     todayPomodoros: todayStats?.completedPomodoros || 0,
@@ -285,7 +317,7 @@ export function useHomeScreen() {
   return {
     tasks,
     selectedTask,
-    setSelectedTask,
+    setSelectedTask: handleSelectTask,
     stats,
     todayStats,
     weeklyStats,
@@ -305,6 +337,14 @@ export function useHomeScreen() {
     addTask,
     viewStats,
     refresh,
+    // 任务切换确认
+    switchConfirm: {
+      visible: showSwitchConfirm,
+      currentTaskTitle: selectedTask?.title || '',
+      pendingTaskTitle: pendingSwitchTask?.title || '',
+      onConfirm: confirmSwitchTask,
+      onCancel: cancelSwitchTask,
+    },
   };
 }
 

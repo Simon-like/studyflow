@@ -1,13 +1,16 @@
 export type Priority = 'high' | 'medium' | 'low';
-export type TaskStatus = 'todo' | 'in_progress' | 'completed';
+export type TaskStatus = 'todo' | 'in_progress' | 'completed' | 'abandoned';
 
 export interface TaskCardProps {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   priority: Priority;
   status: TaskStatus;
-  pomodoros: number;
+  pomodoros?: number;
+  estimatedPomodoros?: number;
+  completedPomodoros?: number;
+  category?: string;
   dueDate?: string;
   onToggleStatus: (id: string) => void;
   onEdit?: (id: string) => void;
@@ -17,9 +20,12 @@ export interface TaskCardProps {
 export interface Task {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   priority: Priority;
   status: TaskStatus;
-  pomodoros: number;
+  pomodoros?: number;
+  estimatedPomodoros?: number;
+  completedPomodoros?: number;
+  category?: string;
   dueDate?: string;
 }

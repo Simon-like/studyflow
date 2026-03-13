@@ -9,6 +9,7 @@ import { View, StyleSheet, Text } from 'react-native';
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { SectionHeader } from '../../components/layout/SectionHeader';
 import { Card } from '../../components/ui/Card';
+import { ConfirmModal } from '../../components/ui/Modal';
 import { PomodoroTimer } from '../../components/business/PomodoroTimer';
 import { WelcomeHeader, StatsRow, SortableTaskList } from './components';
 import { useHomeScreen } from './hooks';
@@ -16,28 +17,40 @@ import { colors, spacing } from '../../theme';
 import { POMODORO_CONFIG } from '../../constants';
 
 export default function HomeScreen() {
-  const { 
-    tasks, 
+  const {
+    tasks,
     selectedTask,
     setSelectedTask,
-    stats, 
+    stats,
     todayStats,
-    isLoading, 
+    isLoading,
     error,
-    pomodoro, 
+    pomodoro,
     taskStatus,
-    toggleTask, 
+    toggleTask,
     reorderTasks,
-    addTask, 
+    addTask,
     viewStats,
-    refresh 
+    refresh,
+    switchConfirm,
   } = useHomeScreen();
-  
+
   return (
     <ScreenContainer>
+      {/* 任务切换确认弹窗 */}
+      <ConfirmModal
+        visible={switchConfirm.visible}
+        onClose={switchConfirm.onCancel}
+        onConfirm={switchConfirm.onConfirm}
+        title="更换当前任务？"
+        message={`当前正在专注「${switchConfirm.currentTaskTitle}」，切换后计时数据将被清零。确定要更换为「${switchConfirm.pendingTaskTitle}」吗？`}
+        confirmText="确认更换"
+        cancelText="继续当前任务"
+      />
+
       {/* 欢迎头部 */}
       <WelcomeHeader />
-      
+
       {/* 番茄钟卡片 */}
       <View style={styles.timerCardContainer}>
         <Card variant="elevated">
@@ -64,14 +77,14 @@ export default function HomeScreen() {
           />
         </Card>
       </View>
-      
+
       {/* 统计行 */}
-      <StatsRow 
-        stats={stats} 
+      <StatsRow
+        stats={stats}
         isLoading={isLoading}
         todayStats={todayStats}
       />
-      
+
       {/* 任务列表 */}
       <SortableTaskList
         tasks={tasks}

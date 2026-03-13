@@ -10,11 +10,17 @@ export function TaskCard({
   priority,
   status,
   pomodoros,
+  estimatedPomodoros,
+  completedPomodoros,
+  category,
   dueDate,
   onToggleStatus,
   onEdit,
   onDelete,
 }: TaskCardProps) {
+  const displayPomodoros = estimatedPomodoros != null
+    ? `${completedPomodoros || 0}/${estimatedPomodoros}`
+    : `${pomodoros || 0}`;
   const priorityConfig = PRIORITY_CONFIG[priority];
   const statusConfig = STATUS_CONFIG[status];
   const isCompleted = status === 'completed';
@@ -58,14 +64,14 @@ export function TaskCard({
               {statusConfig.label}
             </span>
           </div>
-          <p className="text-stone text-xs mt-1 truncate">{description}</p>
+          <p className="text-stone text-xs mt-1 truncate">{category ? `${category} · ` : ''}{description}</p>
         </div>
 
         {/* Meta & Actions */}
         <div className="flex items-center gap-4 flex-shrink-0 text-xs text-stone">
           <div className="flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" />
-            <span>{pomodoros} 番茄</span>
+            <span>{displayPomodoros} 番茄</span>
           </div>
           {dueDate && <span>{dueDate}</span>}
           <button className="p-1 hover:bg-warm rounded-lg transition-all">
