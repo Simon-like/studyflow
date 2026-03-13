@@ -4,14 +4,38 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "base": {
+      "node": "20.15.1",
+      "pnpm": "9.12.0",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "PNPM_IGNORE_PACKAGE_MANAGER_VERSION": "true"
+      },
+      "cache": {
+        "key": "lockfiles",
+        "paths": [
+          "pnpm-lock.yaml",
+          "apps/mobile/pnpm-lock.yaml"
+        ]
+      }
+    },
     "development": {
+      "extends": "base",
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "development"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "extends": "base",
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "preview"
+      }
     },
     "production": {
+      "extends": "base",
       "autoIncrement": true
     }
   },

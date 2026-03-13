@@ -8,14 +8,14 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./src/index.ts",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
     },
     "./mock": {
-      "import": "./src/mock/index.ts",
-      "require": "./dist/mock/index.js",
-      "types": "./dist/mock/index.d.ts"
+      "types": "./dist/mock/index.d.ts",
+      "import": "./dist/mock/index.mjs",
+      "require": "./dist/mock/index.js"
     }
   },
   "sideEffects": false,

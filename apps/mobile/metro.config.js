@@ -29,10 +29,10 @@ config.watchFolders = [path.resolve(workspaceRoot, "packages")];
 // ==================== 关键配置 4: 确保 Metro 能解析 TypeScript ====================
 config.resolver.sourceExts = ["ts", "tsx", "js", "jsx", "json", "cjs", "mjs"];
 
-// ==================== 关键配置 5: 启用新的包解析策略 ====================
-config.resolver.unstable_enablePackageExports = true;
-
-// ==================== 关键配置 6: 禁用可能导致问题的缓存 ====================
+// ==================== 关键配置 5: 禁用可能导致问题的缓存 ====================
 config.resetCache = true;
+
+// ==================== 关键配置 6: 确保正确解析 workspace 包 ====================
+config.resolver.disableHierarchicalLookup = false;
 
 module.exports = config;
