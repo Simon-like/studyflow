@@ -1,0 +1,15 @@
+{
+  "cli": {
+    "version": ">= 18.3.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "base": {
+      "node": "20.15.1",
+      "pnpm": "9.12.0",
+      "env": {
+        "PNPM_IGNORE_PACKAGE_MANAGER_VERSION": "true"
+      }
+    }
+  }
+}

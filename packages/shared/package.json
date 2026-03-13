@@ -3,18 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "description": "StudyFlow 共享工具库",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     }
   },
   "sideEffects": false,
   "files": [
+    "src/**",
     "dist/**"
   ],
   "scripts": {

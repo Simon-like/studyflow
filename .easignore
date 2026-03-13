@@ -1,0 +1,15 @@
+# EAS Build 忽略文件
+# 这个文件控制哪些文件会被上传到 EAS Build
+# 默认会使用 .gitignore，但我们可以覆盖它
+
+# 不需要上传的文件
+node_modules
+.expo
+.turbo
+.vscode
+.idea
+*.log
+.DS_Store
+
+# 但是 packages 目录需要上传！
+# 不要忽略 packages

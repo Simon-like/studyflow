@@ -14,8 +14,7 @@
       "cache": {
         "key": "lockfiles",
         "paths": [
-          "pnpm-lock.yaml",
-          "apps/mobile/pnpm-lock.yaml"
+          "pnpm-lock.yaml"
         ]
       }
     },
