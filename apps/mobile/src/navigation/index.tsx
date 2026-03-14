@@ -8,12 +8,15 @@
  */
 
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { TabBar } from './components/TabBar';
 import { TABS, TabKey } from './constants';
-import { colors } from '../theme';
+import { colors, spacing } from '../theme';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
+
+// Android底部导航栏高度估计值
+const ANDROID_NAV_BAR_HEIGHT = 16;
 
 // 导入页面
 import HomeScreen from '../screens/Home';
@@ -59,6 +62,9 @@ function NavigationContent() {
   }
 
   // 已登录 → 显示主界面
+  // Android底部安全区内边距
+  const bottomPadding = Platform.OS === 'android' ? ANDROID_NAV_BAR_HEIGHT : 0;
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
@@ -69,11 +75,13 @@ function NavigationContent() {
       </View>
 
       {/* 底部导航栏 */}
-      <TabBar
-        tabs={TABS}
-        activeTab={activeTab}
-        onTabPress={setActiveTab}
-      />
+      <View style={{ paddingBottom: bottomPadding }}>
+        <TabBar
+          tabs={TABS}
+          activeTab={activeTab}
+          onTabPress={setActiveTab}
+        />
+      </View>
     </View>
   );
 }

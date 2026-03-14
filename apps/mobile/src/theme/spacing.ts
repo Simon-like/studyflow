@@ -30,6 +30,7 @@ export const radius = {
 } as const;
 
 // 阴影
+// 注意：Android的elevation与iOS shadow表现不同，Android使用较低的elevation值避免异常阴影
 export const shadows = {
   none: {
     shadowColor: 'transparent',
@@ -41,45 +42,45 @@ export const shadows = {
   sm: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 0.5, // Android: 降低到0.5避免异常阴影
   },
   md: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1, // Android: 降低到1
   },
   lg: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 4,
+    shadowRadius: 8,
+    elevation: 2, // Android: 降低到2
   },
   xl: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
-    shadowRadius: 24,
-    elevation: 6,
+    shadowRadius: 12,
+    elevation: 3, // Android: 降低到3
   },
   // 主题色阴影
   primary: {
     shadowColor: '#E8A87C',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 2, // Android: 降低到2
   },
   primarySm: {
     shadowColor: '#E8A87C',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 1, // Android: 降低到1
   },
 } as const;
 

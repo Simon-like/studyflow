@@ -1,9 +1,12 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet, StatusBar, Platform } from 'react-native';
 import { ScreenContainerProps } from './types';
 import { DEFAULT_BACKGROUND, DEFAULT_PADDING } from './constants';
 
 export * from './types';
+
+// 状态栏高度（Android需要额外处理）
+const STATUS_BAR_HEIGHT = StatusBar.currentHeight || 0;
 
 export function ScreenContainer({
   children,
@@ -15,12 +18,16 @@ export function ScreenContainer({
   contentContainerStyle,
   scrollViewProps,
 }: ScreenContainerProps) {
+  // 计算顶部安全区内边距
+  const topPadding = safeArea && Platform.OS === 'android' ? STATUS_BAR_HEIGHT : 0;
+
   const content = scrollable ? (
     <ScrollView
       style={styles.flex}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={[
         padding && styles.padding,
+        { paddingTop: topPadding },
         contentContainerStyle,
       ]}
       {...scrollViewProps}
@@ -28,23 +35,16 @@ export function ScreenContainer({
       {children}
     </ScrollView>
   ) : (
-    <View style={[styles.flex, padding && styles.padding, contentContainerStyle]}>
+    <View style={[styles.flex, padding && styles.padding, { paddingTop: topPadding }, contentContainerStyle]}>
       {children}
     </View>
   );
 
-  const container = (
+  return (
     <View style={[styles.container, { backgroundColor }, style]}>
       {content}
     </View>
   );
-
-  if (safeArea) {
-    // 不使用SafeAreaView，因为React Native默认提供
-    return container;
-  }
-
-  return container;
 }
 
 const styles = StyleSheet.create({
