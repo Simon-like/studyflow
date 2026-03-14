@@ -10,13 +10,14 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "type-check": "tsc --noEmit",
     "build": "echo 'Mobile build handled by EAS'",
-    "clean": "rm -rf node_modules dist .expo"
+    "clean": "rm -rf node_modules dist .expo embedded-packages",
+    "eas-build-pre-install": "node scripts/prepare-packages.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^3.0.1",
-    "@studyflow/api": "workspace:*",
-    "@studyflow/shared": "workspace:*",
-    "@studyflow/theme": "workspace:*",
+    "@studyflow/api": "file:./embedded-packages/api",
+    "@studyflow/shared": "file:./embedded-packages/shared",
+    "@studyflow/theme": "file:./embedded-packages/theme",
     "expo": "~55.0.4",
     "expo-dev-client": "~55.0.16",
     "expo-status-bar": "~55.0.4",
