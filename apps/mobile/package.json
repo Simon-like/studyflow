@@ -14,7 +14,7 @@
     "update-packages": "node scripts/prepare-packages.js"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "^3.0.1",
+    "@react-native-async-storage/async-storage": "~2.1.2",
     "@studyflow/api": "file:./embedded-packages/api",
     "@studyflow/shared": "file:./embedded-packages/shared",
     "@studyflow/theme": "file:./embedded-packages/theme",
