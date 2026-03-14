@@ -637,11 +637,11 @@ export const mockStatsService = {
   ): Promise<ApiResponse<OverviewStats>> => {
     await mockDelay(400);
     const stats: OverviewStats = {
-      ...MOCK_OVERVIEW_STATS,
       focusMinutes: MOCK_OVERVIEW_STATS.totalFocusMinutes,
       completedPomodoros: MOCK_OVERVIEW_STATS.completedPomodoros,
       completedTasks: MOCK_OVERVIEW_STATS.completedTasks,
       streakDays: MOCK_OVERVIEW_STATS.streakDays,
+      compareLastPeriod: MOCK_OVERVIEW_STATS.compareLastPeriod,
     };
     return ok(stats);
   },
