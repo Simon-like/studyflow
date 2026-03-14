@@ -40,5 +40,5 @@ yarn-error.*
 /ios
 /android
 
-# EAS Build embedded packages
-embedded-packages/
+# Note: embedded-packages is intentionally NOT ignored
+# It contains the workspace packages needed for EAS Build

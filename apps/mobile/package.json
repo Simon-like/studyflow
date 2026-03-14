@@ -10,8 +10,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "type-check": "tsc --noEmit",
     "build": "echo 'Mobile build handled by EAS'",
-    "clean": "rm -rf node_modules dist .expo embedded-packages",
-    "eas-build-pre-install": "node scripts/prepare-packages.js"
+    "clean": "rm -rf node_modules dist .expo",
+    "update-packages": "node scripts/prepare-packages.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^3.0.1",

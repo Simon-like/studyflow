@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "46cf6303-2c11-4fc6-96be-b275b2dc3ba5"
+      }
+    },
+    "android": {
+      "package": "com.hayeksimon.studyflow"
+    }
+  }
+}
