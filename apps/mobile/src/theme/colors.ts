@@ -59,6 +59,8 @@ export const alpha = {
   mist50: hexToAlpha(colors.border, 0.5),
   mist60: hexToAlpha(colors.border, 0.6),
   white80: hexToAlpha(colors.surface, 0.8),
+  error10: hexToAlpha(colors.error, 0.1),
+  error20: hexToAlpha(colors.error, 0.2),
 } as const;
 
 // 推荐：直接导出 theme 包的所有颜色

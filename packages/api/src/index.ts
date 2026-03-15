@@ -7,6 +7,8 @@ export { taskService } from "./services/taskService";
 export { pomodoroService } from "./services/pomodoroService";
 export { chatService } from "./services/chatService";
 export { statsService } from "./services/statsService";
+export { userService } from "./services/userService";
+export type { StudyCalendarData } from "./services/userService";
 
 // 导出服务类型
 export type { CreateTaskRequest, UpdateTaskRequest } from "./services/taskService";
@@ -22,6 +24,7 @@ export {
   mockChatService,
   mockCommunityService,
   mockStatsService,
+  mockUserService,
 } from "./mock/services";
 
 // ==================== 统一 API 门面 ====================
@@ -31,6 +34,7 @@ import { taskService } from "./services/taskService";
 import { pomodoroService } from "./services/pomodoroService";
 import { chatService } from "./services/chatService";
 import { statsService } from "./services/statsService";
+import { userService } from "./services/userService";
 import {
   mockAuthService,
   mockTaskService,
@@ -38,6 +42,7 @@ import {
   mockChatService,
   mockCommunityService,
   mockStatsService,
+  mockUserService,
 } from "./mock/services";
 
 /**
@@ -52,6 +57,7 @@ export function createApi(useMock = true) {
     chat: useMock ? mockChatService : chatService,
     community: mockCommunityService,
     stats: useMock ? mockStatsService : statsService,
+    user: useMock ? mockUserService : userService,
   };
 }
 

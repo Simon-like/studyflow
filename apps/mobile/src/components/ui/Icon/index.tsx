@@ -110,6 +110,90 @@ function TasksIcon({ active, color }: { active?: boolean; color?: string }) {
   );
 }
 
+// 设置图标
+function SettingsIcon({ color = colors.text }: { color?: string }) {
+  return (
+    <Text style={[styles.settingsText, { color }]}>⚙</Text>
+  );
+}
+
+// 左箭头图标
+function ChevronLeftIcon({ color = colors.textMuted }: { color?: string }) {
+  return (
+    <Text style={[styles.chevronLeft, { color }]}>‹</Text>
+  );
+}
+
+// 相机图标
+function CameraIcon({ color = colors.text }: { color?: string }) {
+  return (
+    <Text style={[styles.cameraText, { color }]}>📷</Text>
+  );
+}
+
+// 退出登录图标
+function LogOutIcon({ color = colors.text }: { color?: string }) {
+  return (
+    <Text style={[styles.logOutText, { color }]}>→</Text>
+  );
+}
+
+// 删除图标
+function Trash2Icon({ color = colors.text }: { color?: string }) {
+  return (
+    <Text style={[styles.trashText, { color }]}>🗑</Text>
+  );
+}
+
+// 时钟图标
+function ClockIcon({ color = colors.text }: { color?: string }) {
+  return (
+    <Text style={[styles.clockText, { color }]}>🕐</Text>
+  );
+}
+
+// 铃铛图标
+function BellIcon({ color = colors.text }: { color?: string }) {
+  return (
+    <Text style={[styles.bellText, { color }]}>🔔</Text>
+  );
+}
+
+// 调色板图标
+function PaletteIcon({ color = colors.text }: { color?: string }) {
+  return (
+    <Text style={[styles.paletteText, { color }]}>🎨</Text>
+  );
+}
+
+// 盾牌图标
+function ShieldIcon({ color = colors.text }: { color?: string }) {
+  return (
+    <Text style={[styles.shieldText, { color }]}>🛡</Text>
+  );
+}
+
+// 图表图标
+function BarChart2Icon({ color = colors.text }: { color?: string }) {
+  return (
+    <Text style={[styles.barChartText, { color }]}>📊</Text>
+  );
+}
+
+// 奖章图标
+function AwardIcon({ color = colors.text }: { color?: string }) {
+  return (
+    <Text style={[styles.awardText, { color }]}>🏆</Text>
+  );
+}
+
+// 帮助图标
+function HelpCircleIcon({ color = colors.text }: { color?: string }) {
+  return (
+    <Text style={[styles.helpText, { color }]}>?</Text>
+  );
+}
+
 // 主组件
 export function Icon({ name, size = 24, color, active = false }: IconProps) {
   const iconProps = { active, color };
@@ -131,12 +215,36 @@ export function Icon({ name, size = 24, color, active = false }: IconProps) {
       return <CheckIcon color={color} />;
     case 'chevron-right':
       return <ChevronRightIcon color={color} />;
+    case 'chevron-left':
+      return <ChevronLeftIcon color={color} />;
     case 'more':
       return <MoreIcon color={color} />;
     case 'send':
       return <SendIcon color={color} />;
     case 'tasks':
       return <TasksIcon {...iconProps} />;
+    case 'settings':
+      return <SettingsIcon color={color} />;
+    case 'camera':
+      return <CameraIcon color={color} />;
+    case 'log-out':
+      return <LogOutIcon color={color} />;
+    case 'trash-2':
+      return <Trash2Icon color={color} />;
+    case 'clock':
+      return <ClockIcon color={color} />;
+    case 'bell':
+      return <BellIcon color={color} />;
+    case 'palette':
+      return <PaletteIcon color={color} />;
+    case 'shield':
+      return <ShieldIcon color={color} />;
+    case 'bar-chart-2':
+      return <BarChart2Icon color={color} />;
+    case 'award':
+      return <AwardIcon color={color} />;
+    case 'help-circle':
+      return <HelpCircleIcon color={color} />;
     default:
       return null;
   }
@@ -286,5 +394,44 @@ const styles = StyleSheet.create({
     height: 1.5,
     marginLeft: 9,
     borderRadius: 1,
+  },
+  settingsText: {
+    fontSize: 20,
+  },
+  chevronLeft: {
+    fontSize: 20,
+    fontWeight: '300',
+  },
+  cameraText: {
+    fontSize: 18,
+  },
+  logOutText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  trashText: {
+    fontSize: 18,
+  },
+  clockText: {
+    fontSize: 18,
+  },
+  bellText: {
+    fontSize: 18,
+  },
+  paletteText: {
+    fontSize: 18,
+  },
+  shieldText: {
+    fontSize: 18,
+  },
+  barChartText: {
+    fontSize: 18,
+  },
+  awardText: {
+    fontSize: 18,
+  },
+  helpText: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });

@@ -3,27 +3,49 @@ import { View, StyleSheet } from 'react-native';
 import { Card } from '../../../components/ui/Card';
 import { StatItem } from '../../../components/business/StatItem';
 import { colors, spacing } from '../../../theme';
-import { DEFAULT_STATS } from '../constants';
-
-const STATS_CONFIG = [
-  { key: 'totalStudy', label: '累计学习' },
-  { key: 'completedPomodoros', label: '完成番茄' },
-  { key: 'streakDays', label: '连续打卡' },
-] as const;
+import type { UserStats } from '@studyflow/shared';
 
 interface StatsCardProps {
-  stats?: typeof DEFAULT_STATS;
+  stats?: UserStats | null;
 }
 
-export function StatsCard({ stats = DEFAULT_STATS }: StatsCardProps) {
+export function StatsCard({ stats }: StatsCardProps) {
+  // 格式化统计数据
+  const formatStats = () => {
+    if (!stats) {
+      return [
+        { label: '累计学习', value: '0h' },
+        { label: '完成番茄', value: '0' },
+        { label: '连续打卡', value: '0天' },
+      ];
+    }
+
+    return [
+      {
+        label: '累计学习',
+        value: `${Math.floor((stats.totalFocusMinutes || 0) / 60)}h`,
+      },
+      {
+        label: '完成番茄',
+        value: String(stats.totalPomodoros || 0),
+      },
+      {
+        label: '连续打卡',
+        value: `${stats.currentStreak || 0}天`,
+      },
+    ];
+  };
+
+  const displayStats = formatStats();
+
   return (
     <Card style={styles.container} padding="md">
-      {STATS_CONFIG.map((config, index) => (
-        <React.Fragment key={config.key}>
+      {displayStats.map((stat, index) => (
+        <React.Fragment key={stat.label}>
           {index > 0 && <View style={styles.divider} />}
           <StatItem
-            label={config.label}
-            value={String(stats[config.key])}
+            label={stat.label}
+            value={stat.value}
           />
         </React.Fragment>
       ))}

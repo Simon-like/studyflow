@@ -1,4 +1,8 @@
-// 用户类型
+// ==================== 用户相关类型 ====================
+
+/**
+ * 基础用户类型
+ */
 export interface User {
   id: string;
   username: string;
@@ -6,12 +10,106 @@ export interface User {
   phone?: string;
   avatar?: string;
   nickname?: string;
-  focusDuration: number;
-  shortBreakDuration: number;
-  longBreakDuration: number;
   studyGoal?: string;
+  // 番茄钟设置（在基础类型中包含以便 mock 数据使用）
+  focusDuration?: number; // 默认专注时长（秒）
+  shortBreakDuration?: number; // 短休息时长（秒）
+  longBreakDuration?: number; // 长休息时长（秒）
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * 用户完整资料（包含设置和统计）
+ */
+export interface UserProfile extends User {
+  // 番茄钟个性化设置
+  focusDuration: number;           // 默认专注时长（秒）
+  shortBreakDuration: number;      // 短休息时长（秒）
+  longBreakDuration: number;       // 长休息时长（秒）
+  autoStartBreak: boolean;         // 是否自动开始休息
+  autoStartPomodoro: boolean;      // 是否自动开始下一个番茄
+  longBreakInterval: number;       // 几个番茄后长休息
+  
+  // 系统设置
+  theme: 'light' | 'dark' | 'system';
+  notificationEnabled: boolean;
+  soundEnabled: boolean;           // 提示音开关
+  vibrationEnabled: boolean;       // 震动开关（移动端）
+  language: string;                // 语言设置
+  
+  // 统计数据（实时计算或预聚合）
+  stats: UserStats;
+}
+
+/**
+ * 用户统计数据
+ */
+export interface UserStats {
+  totalFocusMinutes: number;       // 累计专注时长（分钟）
+  totalPomodoros: number;          // 累计番茄数
+  totalTasks: number;              // 累计任务数
+  completedTasks: number;          // 已完成任务数
+  currentStreak: number;           // 当前连续天数
+  longestStreak: number;           // 最长连续天数
+  studyDays: number;               // 有学习记录的天数
+  todayFocusMinutes: number;       // 今日专注时长
+  todayPomodoros: number;          // 今日完成番茄数
+  todayTasks: number;              // 今日完成任务数
+}
+
+/**
+ * 更新用户资料请求
+ */
+export interface UpdateProfileRequest {
+  nickname?: string;
+  avatar?: string;
+  studyGoal?: string;
+  email?: string;
+  phone?: string;
+}
+
+/**
+ * 番茄钟设置
+ */
+export interface PomodoroSettings {
+  focusDuration: number;           // 专注时长（秒）
+  shortBreakDuration: number;      // 短休息时长（秒）
+  longBreakDuration: number;       // 长休息时长（秒）
+  autoStartBreak: boolean;         // 是否自动开始休息
+  autoStartPomodoro: boolean;      // 是否自动开始下一个番茄
+  longBreakInterval: number;       // 几个番茄后长休息
+}
+
+/**
+ * 系统设置
+ */
+export interface SystemSettings {
+  theme: 'light' | 'dark' | 'system';
+  notificationEnabled: boolean;
+  soundEnabled: boolean;           // 提示音开关
+  vibrationEnabled: boolean;       // 震动开关（移动端）
+  language: string;                // 语言设置
+}
+
+/**
+ * 修改密码请求
+ */
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+/**
+ * 学习日历数据
+ */
+export interface StudyCalendarData {
+  date: string;                    // 日期 YYYY-MM-DD
+  focusMinutes: number;
+  pomodoros: number;
+  tasks: number;
+  hasStudy: boolean;
 }
 
 // 任务类型
@@ -30,6 +128,8 @@ export interface Task {
   parentId?: string;
   subtasks?: Task[];
   order?: number; // 任务排序序号
+  estimatedPomodoros?: number; // 预估番茄数
+  completedPomodoros?: number; // 已完成番茄数
   createdAt: string;
   updatedAt: string;
 }

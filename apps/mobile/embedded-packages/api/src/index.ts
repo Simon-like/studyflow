@@ -22,6 +22,7 @@ export {
   mockChatService,
   mockCommunityService,
   mockStatsService,
+  mockUserService,
 } from "./mock/services";
 
 // ==================== 统一 API 门面 ====================
@@ -38,6 +39,7 @@ import {
   mockChatService,
   mockCommunityService,
   mockStatsService,
+  mockUserService,
 } from "./mock/services";
 
 /**
@@ -52,6 +54,7 @@ export function createApi(useMock = true) {
     chat: useMock ? mockChatService : chatService,
     community: mockCommunityService,
     stats: useMock ? mockStatsService : statsService,
+    user: mockUserService,
   };
 }
 

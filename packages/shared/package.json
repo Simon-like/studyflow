@@ -9,6 +9,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./loading": {
+      "types": "./src/loading/index.ts",
+      "default": "./src/loading/index.ts"
     }
   },
   "sideEffects": false,

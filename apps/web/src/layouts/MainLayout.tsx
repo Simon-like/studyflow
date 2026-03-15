@@ -1,5 +1,7 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
+import { useTabTransition } from '@/hooks/useTabTransition';
+import { TabTransitionWrapper } from '@/components/PageRefresh';
 import {
   Home,
   MessageCircle,
@@ -24,6 +26,16 @@ const navItems = [
 export function MainLayout() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Tab 切换动画管理
+  const { 
+    activeTab, 
+    isTransitioning,
+    getTabLoadingState, 
+    startTabTransition, 
+    endTabTransition 
+  } = useTabTransition(location.pathname);
 
   const handleLogout = () => {
     logout();
@@ -32,6 +44,13 @@ export function MainLayout() {
 
   const displayName = user?.nickname || user?.username || '用户';
   const avatarLetter = displayName[0]?.toUpperCase() || 'U';
+
+  // 处理导航点击
+  const handleNavClick = (to: string) => {
+    if (to !== location.pathname) {
+      startTabTransition(to);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-cream flex">
@@ -57,6 +76,7 @@ export function MainLayout() {
               <NavLink
                 key={item.to}
                 to={item.to}
+                onClick={() => handleNavClick(item.to)}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                     isActive
@@ -94,8 +114,14 @@ export function MainLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto min-h-screen">
-        <Outlet />
+      <main className="flex-1 overflow-auto min-h-screen relative">
+        <TabTransitionWrapper
+          tabKey={location.pathname}
+          isLoading={getTabLoadingState(location.pathname).isLoading}
+          onTransitionEnd={endTabTransition}
+        >
+          <Outlet />
+        </TabTransitionWrapper>
       </main>
     </div>
   );

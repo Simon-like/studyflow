@@ -1,43 +1,68 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Avatar } from '../../../components/ui/Avatar';
 import { Badge } from '../../../components/ui/Badge';
+import { Icon } from '../../../components/ui/Icon';
 import { colors, radius, spacing, fontWeight, fontSize, alpha, shadows } from '../../../theme';
-import { DEFAULT_USER } from '../constants';
-import { Badge as BadgeType } from '../types';
+// User tags for display
+const USER_TAGS: string[] = ['数学达人', '早起鸟', '专注力强'];
 
 interface ProfileHeaderProps {
   onEditPress: () => void;
+  displayName?: string;
+  avatarUrl?: string;
+  subtitle?: string;
 }
 
-function BadgeItem({ label, variant }: BadgeType) {
-  return (
-    <View style={[styles.badge, variant === 'secondary' && styles.badgeSecondary]}>
-      <Text style={[styles.badgeText, variant === 'secondary' && styles.badgeTextSecondary]}>
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-export function ProfileHeader({ onEditPress }: ProfileHeaderProps) {
+export function ProfileHeader({ 
+  onEditPress, 
+  displayName = '学习者', 
+  avatarUrl,
+  subtitle = '坚持学习中',
+}: ProfileHeaderProps) {
   return (
     <View style={styles.container}>
       <View style={styles.background} />
       <View style={styles.content}>
-        <View style={styles.avatarRow}>
-          <Avatar name={DEFAULT_USER.avatar} size="xl" />
-          <TouchableOpacity style={styles.editButton} onPress={onEditPress} activeOpacity={0.8}>
-            <Text style={styles.editText}>编辑资料</Text>
+        <View style={styles.headerRow}>
+          <View style={styles.avatarRow}>
+            <View style={styles.avatarWrapper}>
+              {avatarUrl ? (
+                <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+              ) : (
+                <Avatar name={displayName} size="xl" />
+              )}
+            </View>
+            <TouchableOpacity 
+              style={styles.editButton} 
+              onPress={onEditPress} 
+              activeOpacity={0.8}
+            >
+              <Text style={styles.editText}>编辑资料</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {/* 设置按钮 */}
+          <TouchableOpacity 
+            style={styles.settingsButton}
+            onPress={onEditPress}
+            activeOpacity={0.8}
+          >
+            <Icon name="settings" size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
         
-        <Text style={styles.name}>{DEFAULT_USER.name}</Text>
-        <Text style={styles.subtitle}>{DEFAULT_USER.subtitle}</Text>
+        <Text style={styles.name}>{displayName}</Text>
+        <Text style={styles.subtitle}>{subtitle}</Text>
         
         <View style={styles.badges}>
-          {DEFAULT_USER.badges.map(badge => (
-            <BadgeItem key={badge.label} {...badge} />
+          {USER_TAGS.map((tag) => (
+            <Badge 
+              key={tag} 
+              variant={tag === '数学达人' || tag === '专注力强' ? 'primary' : 'secondary'}
+            >
+              {tag}
+            </Badge>
           ))}
         </View>
       </View>
@@ -65,11 +90,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
   },
-  avatarRow: {
+  headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: spacing.md,
+  },
+  avatarRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    flex: 1,
+  },
+  avatarWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    overflow: 'hidden',
+    backgroundColor: colors.primary,
+  },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   editButton: {
     marginTop: spacing.sm,
@@ -86,10 +128,22 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: fontWeight.medium,
   },
+  settingsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.sm,
+  },
   name: {
     fontSize: fontSize['2xl'],
     fontWeight: fontWeight.bold,
     color: colors.text,
+    marginTop: spacing.md,
   },
   subtitle: {
     fontSize: fontSize.sm,
@@ -100,22 +154,6 @@ const styles = StyleSheet.create({
   badges: {
     flexDirection: 'row',
     gap: spacing.sm,
-  },
-  badge: {
-    backgroundColor: alpha.primary25,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.full,
-  },
-  badgeSecondary: {
-    backgroundColor: alpha.secondary25,
-  },
-  badgeText: {
-    fontSize: 12,
-    color: colors.primaryDark,
-    fontWeight: fontWeight.medium,
-  },
-  badgeTextSecondary: {
-    color: colors.secondaryDark,
+    marginTop: spacing.sm,
   },
 });

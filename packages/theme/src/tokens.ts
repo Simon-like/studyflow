@@ -165,12 +165,47 @@ export const animations = {
     normal: 200,
     slow: 300,
     slower: 500,
+    pageTransition: 400,
   },
   easing: {
     linear: 'linear',
     easeIn: 'cubic-bezier(0.4, 0, 1, 1)',
     easeOut: 'cubic-bezier(0, 0, 0.2, 1)',
     easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+  },
+} as const;
+
+// ============================================
+// Loading 动画配置
+// ============================================
+export const loadingAnimation = {
+  // 页面刷新动画配置
+  pageRefresh: {
+    // 动画时长（毫秒）
+    duration: 600,
+    // 延迟显示loading的时间（避免快速响应时的闪烁）
+    delay: 150,
+    // 最小显示时间（避免loading一闪而过）
+    minDisplayTime: 400,
+    // 淡出动画时长
+    fadeOutDuration: 300,
+  },
+  // 骨架屏配置
+  skeleton: {
+    // 闪烁动画时长
+    shimmerDuration: 1500,
+    // 脉冲动画时长
+    pulseDuration: 2000,
+  },
+  // 加载指示器配置
+  spinner: {
+    // 旋转动画时长
+    rotateDuration: 800,
+    // 圆点数量
+    dotCount: 3,
+    // 圆点弹跳延迟
+    bounceDelay: 150,
   },
 } as const;
 
@@ -217,6 +252,7 @@ export const tokens = {
   borderRadius,
   shadows,
   animations,
+  loadingAnimation,
   breakpoints,
   components,
 } as const;
@@ -225,3 +261,4 @@ export type Tokens = typeof tokens;
 export type Colors = typeof colors;
 export type Spacing = typeof spacing;
 export type Typography = typeof typography;
+export type LoadingAnimation = typeof loadingAnimation;

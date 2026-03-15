@@ -135,9 +135,6 @@ export const mockAuthService = {
       phone: isEmailAddr ? (data.phone || "") : data.username,
       nickname: data.nickname || data.username.split("@")[0],
       avatar: "",
-      focusDuration: 1500,
-      shortBreakDuration: 300,
-      longBreakDuration: 900,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -615,6 +612,183 @@ export const mockCommunityService = {
     post.isLiked = !post.isLiked;
     post.likeCount += post.isLiked ? 1 : -1;
     return ok({ isLiked: post.isLiked, likeCount: post.likeCount });
+  },
+};
+
+// ==================== User Mock ====================
+
+import type {
+  UserProfile,
+  UserStats,
+  PomodoroSettings,
+  SystemSettings,
+  UpdateProfileRequest,
+  ChangePasswordRequest,
+  StudyCalendarData,
+} from "@studyflow/shared";
+
+// 模拟用户设置存储
+let userSettings: PomodoroSettings = {
+  focusDuration: 1500,
+  shortBreakDuration: 300,
+  longBreakDuration: 900,
+  autoStartBreak: false,
+  autoStartPomodoro: false,
+  longBreakInterval: 4,
+};
+
+let systemSettings: SystemSettings = {
+  theme: "light",
+  notificationEnabled: true,
+  soundEnabled: true,
+  vibrationEnabled: true,
+  language: "zh-CN",
+};
+
+// 模拟用户统计数据
+let userStats: UserStats = {
+  totalFocusMinutes: 3600,
+  totalPomodoros: 144,
+  totalTasks: 50,
+  completedTasks: 42,
+  currentStreak: 7,
+  longestStreak: 15,
+  studyDays: 30,
+  todayFocusMinutes: 75,
+  todayPomodoros: 3,
+  todayTasks: 2,
+};
+
+// 默认头像（使用UI Avatars服务生成）
+const getDefaultAvatar = (name: string) => {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=f4a261&color=fff&size=256`;
+};
+
+export const mockUserService = {
+  // 获取用户完整资料
+  getProfile: async (): Promise<ApiResponse<UserProfile>> => {
+    await mockDelay(400);
+    const user = currentUser || MOCK_USER;
+    const profile: UserProfile = {
+      ...user,
+      avatar: user.avatar || getDefaultAvatar(user.nickname || user.username),
+      focusDuration: userSettings.focusDuration,
+      shortBreakDuration: userSettings.shortBreakDuration,
+      longBreakDuration: userSettings.longBreakDuration,
+      autoStartBreak: userSettings.autoStartBreak,
+      autoStartPomodoro: userSettings.autoStartPomodoro,
+      longBreakInterval: userSettings.longBreakInterval,
+      theme: systemSettings.theme,
+      notificationEnabled: systemSettings.notificationEnabled,
+      soundEnabled: systemSettings.soundEnabled,
+      vibrationEnabled: systemSettings.vibrationEnabled,
+      language: systemSettings.language,
+      stats: userStats,
+    };
+    return ok(profile);
+  },
+
+  // 更新用户资料
+  updateProfile: async (data: UpdateProfileRequest): Promise<ApiResponse<User>> => {
+    await mockDelay(500);
+    const user = currentUser || MOCK_USER;
+    const updatedUser = {
+      ...user,
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+    currentUser = updatedUser;
+    safeStorage.set(STORAGE_KEYS.USER, updatedUser);
+    return ok(updatedUser, "资料更新成功");
+  },
+
+  // 上传头像
+  uploadAvatar: async (file: File | FormData): Promise<ApiResponse<{ avatarUrl: string }>> => {
+    await mockDelay(1000);
+    // 模拟上传成功，返回一个随机头像
+    const user = currentUser || MOCK_USER;
+    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nickname || user.username)}&background=random&color=fff&size=256&t=${Date.now()}`;
+    
+    if (currentUser) {
+      currentUser.avatar = avatarUrl;
+      safeStorage.set(STORAGE_KEYS.USER, currentUser);
+    }
+    
+    return ok({ avatarUrl }, "头像上传成功");
+  },
+
+  // 获取番茄钟设置
+  getPomodoroSettings: async (): Promise<ApiResponse<PomodoroSettings>> => {
+    await mockDelay(300);
+    return ok(userSettings);
+  },
+
+  // 更新番茄钟设置
+  updatePomodoroSettings: async (data: PomodoroSettings): Promise<ApiResponse<PomodoroSettings>> => {
+    await mockDelay(400);
+    userSettings = { ...data };
+    return ok(userSettings, "设置已保存");
+  },
+
+  // 获取系统设置
+  getSystemSettings: async (): Promise<ApiResponse<SystemSettings>> => {
+    await mockDelay(300);
+    return ok(systemSettings);
+  },
+
+  // 更新系统设置
+  updateSystemSettings: async (data: SystemSettings): Promise<ApiResponse<SystemSettings>> => {
+    await mockDelay(400);
+    systemSettings = { ...data };
+    return ok(systemSettings, "设置已保存");
+  },
+
+  // 获取用户统计
+  getUserStats: async (): Promise<ApiResponse<UserStats>> => {
+    await mockDelay(400);
+    return ok(userStats);
+  },
+
+  // 修改密码
+  changePassword: async (data: ChangePasswordRequest): Promise<ApiResponse<void>> => {
+    await mockDelay(500);
+    // 模拟验证当前密码
+    if (data.currentPassword !== TEST_ACCOUNT.password) {
+      throw { response: { status: 401, data: fail(401, "当前密码错误") } };
+    }
+    return ok(undefined as unknown as void, "密码修改成功");
+  },
+
+  // 获取学习日历
+  getStudyCalendar: async (startDate: string, endDate: string): Promise<ApiResponse<StudyCalendarData[]>> => {
+    await mockDelay(500);
+    // 生成模拟日历数据
+    const calendar: StudyCalendarData[] = [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const hasStudy = Math.random() > 0.3;
+      calendar.push({
+        date: d.toISOString().split("T")[0],
+        focusMinutes: hasStudy ? Math.floor(Math.random() * 180) + 30 : 0,
+        pomodoros: hasStudy ? Math.floor(Math.random() * 6) + 1 : 0,
+        tasks: hasStudy ? Math.floor(Math.random() * 4) + 1 : 0,
+        hasStudy,
+      });
+    }
+    
+    return ok(calendar);
+  },
+
+  // 删除账号
+  deleteAccount: async (): Promise<ApiResponse<void>> => {
+    await mockDelay(800);
+    currentUser = null;
+    safeStorage.remove(STORAGE_KEYS.USER);
+    safeStorage.remove(STORAGE_KEYS.TOKEN);
+    safeStorage.remove(STORAGE_KEYS.REFRESH_TOKEN);
+    return ok(undefined as unknown as void, "账号已删除");
   },
 };
 

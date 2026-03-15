@@ -442,7 +442,7 @@ export const mockPomodoroService = {
       if (taskIdx !== -1) {
         tasks[taskIdx] = {
           ...tasks[taskIdx],
-          completedPomodoros: tasks[taskIdx].completedPomodoros + 1,
+          completedPomodoros: (tasks[taskIdx].completedPomodoros || 0) + 1,
           status: tasks[taskIdx].status === "todo" ? "in_progress" : tasks[taskIdx].status,
           updatedAt: now.toISOString(),
         };
@@ -618,6 +618,130 @@ export const mockCommunityService = {
     post.isLiked = !post.isLiked;
     post.likeCount += post.isLiked ? 1 : -1;
     return ok({ isLiked: post.isLiked, likeCount: post.likeCount });
+  },
+};
+
+// ==================== User Mock ====================
+
+import type { 
+  UserProfile,
+  UserStats,
+  UpdateProfileRequest,
+  PomodoroSettings,
+  SystemSettings,
+  ChangePasswordRequest,
+} from "@studyflow/shared";
+
+const MOCK_USER_PROFILE: UserProfile = {
+  ...MOCK_USER,
+  focusDuration: 1500,
+  shortBreakDuration: 300,
+  longBreakDuration: 900,
+  autoStartBreak: false,
+  autoStartPomodoro: false,
+  longBreakInterval: 4,
+  theme: 'light',
+  notificationEnabled: true,
+  soundEnabled: true,
+  vibrationEnabled: true,
+  language: 'zh-CN',
+  stats: {
+    totalFocusMinutes: 900,
+    totalPomodoros: 36,
+    totalTasks: 20,
+    completedTasks: 16,
+    currentStreak: 7,
+    longestStreak: 14,
+    studyDays: 30,
+    todayFocusMinutes: 75,
+    todayPomodoros: 3,
+    todayTasks: 1,
+  },
+};
+
+let userProfile = { ...MOCK_USER_PROFILE };
+
+export const mockUserService = {
+  // 获取用户资料
+  getProfile: async (): Promise<ApiResponse<UserProfile>> => {
+    await mockDelay(300);
+    return ok(userProfile);
+  },
+
+  // 更新用户资料
+  updateProfile: async (data: UpdateProfileRequest): Promise<ApiResponse<UserProfile>> => {
+    await mockDelay(400);
+    userProfile = {
+      ...userProfile,
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+    return ok(userProfile, "更新成功");
+  },
+
+  // 获取用户统计
+  getUserStats: async (): Promise<ApiResponse<UserStats>> => {
+    await mockDelay(300);
+    return ok(userProfile.stats);
+  },
+
+  // 上传头像
+  uploadAvatar: async (_formData: FormData): Promise<ApiResponse<{ avatar: string }>> => {
+    await mockDelay(800);
+    return ok({ avatar: "" });
+  },
+
+  // 获取番茄钟设置
+  getPomodoroSettings: async (): Promise<ApiResponse<PomodoroSettings>> => {
+    await mockDelay(200);
+    return ok({
+      focusDuration: userProfile.focusDuration,
+      shortBreakDuration: userProfile.shortBreakDuration,
+      longBreakDuration: userProfile.longBreakDuration,
+      autoStartBreak: userProfile.autoStartBreak,
+      autoStartPomodoro: userProfile.autoStartPomodoro,
+      longBreakInterval: userProfile.longBreakInterval,
+    });
+  },
+
+  // 更新番茄钟设置
+  updatePomodoroSettings: async (settings: PomodoroSettings): Promise<ApiResponse<PomodoroSettings>> => {
+    await mockDelay(300);
+    userProfile = {
+      ...userProfile,
+      ...settings,
+      updatedAt: new Date().toISOString(),
+    };
+    return ok(settings);
+  },
+
+  // 获取系统设置
+  getSystemSettings: async (): Promise<ApiResponse<SystemSettings>> => {
+    await mockDelay(200);
+    return ok({
+      theme: userProfile.theme,
+      notificationEnabled: userProfile.notificationEnabled,
+      soundEnabled: userProfile.soundEnabled,
+      vibrationEnabled: userProfile.vibrationEnabled,
+      language: userProfile.language,
+    });
+  },
+
+  // 更新系统设置
+  updateSystemSettings: async (settings: SystemSettings): Promise<ApiResponse<SystemSettings>> => {
+    await mockDelay(300);
+    userProfile = {
+      ...userProfile,
+      ...settings,
+      updatedAt: new Date().toISOString(),
+    };
+    return ok(settings);
+  },
+
+  // 修改密码
+  changePassword: async (_data: ChangePasswordRequest): Promise<ApiResponse<void>> => {
+    await mockDelay(400);
+    return ok(undefined as unknown as void, "密码修改成功");
   },
 };
 

@@ -8,9 +8,21 @@ export type IconName =
   | 'stop' 
   | 'check' 
   | 'chevron-right'
+  | 'chevron-left'
   | 'more'
   | 'send'
-  | 'tasks';
+  | 'tasks'
+  | 'settings'
+  | 'camera'
+  | 'log-out'
+  | 'trash-2'
+  | 'clock'
+  | 'bell'
+  | 'palette'
+  | 'shield'
+  | 'bar-chart-2'
+  | 'award'
+  | 'help-circle';
 
 export interface IconProps {
   name: IconName;

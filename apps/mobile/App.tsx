@@ -5,12 +5,12 @@
 
 import React from 'react';
 import { Navigation } from './src/navigation';
-import { DialogProvider } from './src/providers/DialogProvider';
+import { Providers } from './src/providers/Providers';
 
 export default function App() {
   return (
-    <DialogProvider>
+    <Providers>
       <Navigation />
-    </DialogProvider>
+    </Providers>
   );
 }

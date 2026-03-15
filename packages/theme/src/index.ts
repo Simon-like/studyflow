@@ -17,10 +17,10 @@
  */
 
 // 基础设计令牌
-export { tokens, colors, semanticColors, spacing, typography, borderRadius, shadows, animations, breakpoints, components } from './tokens';
+export { tokens, colors, semanticColors, spacing, typography, borderRadius, shadows, animations, loadingAnimation, breakpoints, components } from './tokens';
 
 // 平台适配器
 export { mobileTokens, webTokens, generateCSSVariables, generateTailwindConfig } from './adapters';
 
 // 类型导出
-export type { Tokens, Colors, Spacing, Typography } from './tokens';
+export type { Tokens, Colors, Spacing, Typography, LoadingAnimation } from './tokens';

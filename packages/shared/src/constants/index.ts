@@ -37,10 +37,20 @@ export const API_ENDPOINTS = {
     REGISTER: "/api/v1/auth/register",
     REFRESH: "/api/v1/auth/refresh",
     LOGOUT: "/api/v1/auth/logout",
+    ME: "/api/v1/auth/me",
   },
   USER: {
-    PROFILE: "/api/v1/user/profile",
-    UPDATE: "/api/v1/user/update",
+    PROFILE: "/api/v1/users/profile",
+    UPDATE_PROFILE: "/api/v1/users/profile",
+    AVATAR: "/api/v1/users/avatar",
+    PASSWORD: "/api/v1/users/password",
+    ACCOUNT: "/api/v1/users/account",
+    STATS: "/api/v1/users/stats",
+    CALENDAR: "/api/v1/users/calendar",
+    SETTINGS: {
+      POMODORO: "/api/v1/users/settings/pomodoro",
+      SYSTEM: "/api/v1/users/settings/system",
+    },
   },
   TASK: {
     LIST: "/api/v1/tasks",
