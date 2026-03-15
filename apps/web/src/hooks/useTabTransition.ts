@@ -50,8 +50,8 @@ export function useTabTransition(
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [tabLoadingStates, setTabLoadingStates] = useState<Record<string, TabLoadingState>>({});
   
-  const transitionTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const loadingTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadingTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const clearTransitionTimer = useCallback(() => {
     if (transitionTimerRef.current) {

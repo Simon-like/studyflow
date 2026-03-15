@@ -48,8 +48,8 @@ export function usePageLoading(options: LoadingOptions = {}): PageLoadingManager
   const [state, setState] = useState<PageLoadingState>('idle');
   const [isLoading, setIsLoading] = useState(false);
   
-  const delayTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const minDisplayTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const delayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const minDisplayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loadingStartTimeRef = useRef<number>(0);
 
   const clearTimers = useCallback(() => {
