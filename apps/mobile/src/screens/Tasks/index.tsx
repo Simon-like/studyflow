@@ -16,7 +16,7 @@ import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { SectionHeader } from '../../components/layout/SectionHeader';
 import { TaskCard } from '../../components/business/TaskCard';
 import { Modal as AppModal } from '../../components/ui/Modal';
-import { colors, radius, spacing, fontWeight, shadows } from '../../theme';
+import { colors, radius, spacing, fontWeight } from '../../theme';
 import { api } from '@studyflow/api';
 import type { Task, TaskPriority } from '@studyflow/shared';
 
@@ -30,7 +30,7 @@ export default function TasksScreen() {
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState<TaskPriority>('medium');
-  const [newTaskPomodoros, setNewTaskPomodoros] = useState(1);
+
   const [newTaskCategory, setNewTaskCategory] = useState('');
 
   // 获取任务列表
@@ -60,14 +60,14 @@ export default function TasksScreen() {
         title: newTaskTitle.trim(),
         description: newTaskDescription.trim() || undefined,
         priority: newTaskPriority,
-        estimatedPomodoros: newTaskPomodoros,
+
         category: newTaskCategory.trim() || undefined,
       });
       setTasks((prev) => [response.data, ...prev]);
       setNewTaskTitle('');
       setNewTaskDescription('');
       setNewTaskPriority('medium');
-      setNewTaskPomodoros(1);
+
       setNewTaskCategory('');
       setShowAddModal(false);
     } catch (err) {
@@ -162,7 +162,7 @@ export default function TasksScreen() {
               key={task.id}
               id={task.id}
               title={task.title}
-              subtitle={`${task.category || '未分类'} · ${task.completedPomodoros}/${task.estimatedPomodoros} 番茄`}
+              subtitle={task.category || '未分类'}
               status={
                 task.status === 'completed'
                   ? 'completed'
@@ -184,7 +184,7 @@ export default function TasksScreen() {
           setNewTaskTitle('');
           setNewTaskDescription('');
           setNewTaskPriority('medium');
-          setNewTaskPomodoros(1);
+    
           setNewTaskCategory('');
         }}
         title="新建任务"
@@ -197,7 +197,7 @@ export default function TasksScreen() {
                 setNewTaskTitle('');
                 setNewTaskDescription('');
                 setNewTaskPriority('medium');
-                setNewTaskPomodoros(1);
+          
                 setNewTaskCategory('');
               }}
             >
@@ -261,39 +261,15 @@ export default function TasksScreen() {
               </TouchableOpacity>
             ))}
           </View>
-          <View style={styles.formRow}>
-            <View style={styles.formHalf}>
-              <Text style={[styles.inputLabel, { marginTop: spacing.md }]}>预估番茄数</Text>
-              <View style={styles.pomodoroStepper}>
-                <TouchableOpacity
-                  style={styles.stepperBtn}
-                  onPress={() => setNewTaskPomodoros((v) => Math.max(1, v - 1))}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.stepperBtnText}>-</Text>
-                </TouchableOpacity>
-                <Text style={styles.stepperValue}>{newTaskPomodoros}</Text>
-                <TouchableOpacity
-                  style={styles.stepperBtn}
-                  onPress={() => setNewTaskPomodoros((v) => Math.min(20, v + 1))}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.stepperBtnText}>+</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={styles.formHalf}>
-              <Text style={[styles.inputLabel, { marginTop: spacing.md }]}>分类 (可选)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="如：高等数学"
-                placeholderTextColor={colors.textMuted}
-                value={newTaskCategory}
-                onChangeText={setNewTaskCategory}
-                returnKeyType="done"
-              />
-            </View>
-          </View>
+          <Text style={[styles.inputLabel, { marginTop: spacing.md }]}>分类 (可选)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="如：高等数学"
+            placeholderTextColor={colors.textMuted}
+            value={newTaskCategory}
+            onChangeText={setNewTaskCategory}
+            returnKeyType="done"
+          />
         </View>
       </AppModal>
     </ScreenContainer>
@@ -319,7 +295,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radius.lg,
-    ...shadows.sm,
   },
   addButtonText: {
     color: colors.white,
@@ -450,33 +425,6 @@ const styles = StyleSheet.create({
   },
   formHalf: {
     flex: 1,
-  },
-  pomodoroStepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    backgroundColor: colors.warm,
-    overflow: 'hidden',
-  },
-  stepperBtn: {
-    width: 40,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepperBtnText: {
-    fontSize: 18,
-    fontWeight: fontWeight.medium,
-    color: colors.primary,
-  },
-  stepperValue: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 15,
-    fontWeight: fontWeight.semibold,
-    color: colors.text,
   },
   modalButtons: {
     flexDirection: 'row',

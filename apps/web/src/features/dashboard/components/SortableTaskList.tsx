@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { Task } from '@studyflow/shared';
+import type { TimerStatus } from '@/components/business/PomodoroTimer';
 import {
   DndContext,
   closestCenter,
@@ -19,20 +20,23 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, AlertCircle, Target } from 'lucide-react';
+import { GripVertical, AlertCircle } from 'lucide-react';
+import { useDialog } from '@/providers/DialogProvider';
 
 interface SortableTaskItemProps {
   task: Task;
   index: number;
   isSelected: boolean;
+  isTimerActive: boolean; // timer is running or paused
   isOverlay?: boolean;
   onToggleRequest?: (id: string) => void;
   onSelectTask?: (task: Task) => void;
 }
 
-function TaskItemContent({ task, index, isSelected, isOverlay, onToggleRequest, onSelectTask }: SortableTaskItemProps) {
+function TaskItemContent({ task, index, isSelected, isTimerActive, isOverlay, onToggleRequest, onSelectTask }: SortableTaskItemProps) {
   const isDone = task.status === 'completed';
-  const isActive = task.status === 'in_progress';
+  // "进行中" 仅在该任务被选中且计时器正在运行/暂停时显示
+  const showInProgress = isSelected && isTimerActive && !isDone;
 
   const handleToggleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -51,9 +55,7 @@ function TaskItemContent({ task, index, isSelected, isOverlay, onToggleRequest, 
           ? 'bg-white shadow-xl ring-2 ring-coral rotate-2 scale-105'
           : isSelected
             ? 'bg-coral/8 border-2 border-coral'
-            : isActive
-              ? 'bg-coral/5 border-2 border-coral/50'
-              : 'bg-warm/50 hover:bg-warm border border-transparent'
+            : 'bg-warm/50 hover:bg-warm border border-transparent'
       }`}
     >
       {/* 拖拽手柄 */}
@@ -66,9 +68,9 @@ function TaskItemContent({ task, index, isSelected, isOverlay, onToggleRequest, 
 
       {/* 任务内容 */}
       <div className="flex-1 flex items-center gap-3">
-        {/* 选中指示器（选中状态） */}
+        {/* 选中指示器 */}
         {isSelected && !isDone && (
-          <div className="flex-shrink-0 w-2.5 h-2.5 rounded-full bg-coral shadow-[0_0_8px_rgba(232,168,124,0.6)]" title="正在专注" />
+          <div className="flex-shrink-0 w-2.5 h-2.5 rounded-full bg-coral shadow-[0_0_8px_rgba(232,168,124,0.6)]" />
         )}
         {(!isSelected || isDone) && <div className="flex-shrink-0 w-2.5 h-2.5" />}
 
@@ -92,29 +94,21 @@ function TaskItemContent({ task, index, isSelected, isOverlay, onToggleRequest, 
 
         {/* 任务信息 */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p
-              className={`text-sm font-medium truncate ${
-                isDone ? 'text-stone line-through' : 'text-charcoal'
-              }`}
-            >
-              {task.title}
-            </p>
-            {isSelected && !isDone && (
-              <span className="text-[10px] px-2 py-0.5 bg-coral text-white rounded-full font-semibold">
-                <Target className="w-3 h-3 inline-block mr-0.5" />
-                正在专注
-              </span>
-            )}
-          </div>
+          <p
+            className={`text-sm font-medium line-clamp-3 ${
+              isDone ? 'text-stone line-through' : 'text-charcoal'
+            }`}
+          >
+            {task.title}
+          </p>
           <p className="text-xs text-stone mt-1">
-            {task.category} · {task.completedPomodoros}/{task.estimatedPomodoros} 番茄
+            {task.category || '未分类'}
           </p>
         </div>
 
         {/* 状态标签 */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          {isActive && (
+          {showInProgress && (
             <span className="text-xs font-semibold text-coral bg-coral/10 px-2.5 py-1 rounded-full border border-coral/20">
               进行中
             </span>
@@ -156,6 +150,7 @@ function SortableTaskItem(props: SortableTaskItemProps) {
 interface SortableTaskListProps {
   tasks: Task[];
   selectedTaskId?: string | null;
+  pomodoroStatus?: TimerStatus;
   isLoading?: boolean;
   error?: Error | null;
   onToggleTask?: (id: string) => Promise<void>;
@@ -221,6 +216,7 @@ function EmptyState() {
 export function SortableTaskList({
   tasks,
   selectedTaskId,
+  pomodoroStatus = 'idle',
   isLoading,
   error,
   onToggleTask,
@@ -233,10 +229,9 @@ export function SortableTaskList({
 }: SortableTaskListProps) {
   const [items, setItems] = useState<Task[]>(tasks);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false);
-  const [pendingCompleteTaskId, setPendingCompleteTaskId] = useState<string | null>(null);
-  const [pendingReorder, setPendingReorder] = useState<{ oldIndex: number; newIndex: number } | null>(null);
+  const dialog = useDialog();
+
+  const isTimerActive = pomodoroStatus === 'running' || pomodoroStatus === 'paused';
 
   // 同步外部 tasks 变化
   if (JSON.stringify(items.map((t) => t.id)) !== JSON.stringify(tasks.map((t) => t.id))) {
@@ -257,8 +252,6 @@ export function SortableTaskList({
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     setActiveId(active.id as string);
-
-    // 如果番茄钟正在运行，暂停它
     if (isPomodoroRunning) {
       onPausePomodoro?.();
     }
@@ -268,9 +261,7 @@ export function SortableTaskList({
     const { active, over } = event;
     setActiveId(null);
 
-    if (!over || active.id === over.id) {
-      return;
-    }
+    if (!over || active.id === over.id) return;
 
     const oldIndex = items.findIndex((item) => item.id === active.id);
     const newIndex = items.findIndex((item) => item.id === over.id);
@@ -278,67 +269,52 @@ export function SortableTaskList({
     // 检查是否拖拽到了选中任务前面
     const selectedIndex = items.findIndex((t) => t.id === selectedTaskId);
     if (selectedTaskId && isPomodoroRunning && newIndex <= selectedIndex && oldIndex > selectedIndex) {
-      setPendingReorder({ oldIndex, newIndex });
-      setShowConfirm(true);
+      dialog.confirm({
+        variant: 'warning',
+        title: '当前有进行中的番茄钟',
+        message: '将此任务移到正在专注的任务前面会重置当前番茄钟进度，是否继续？',
+        confirmText: '重置并继续',
+        cancelText: '取消',
+        onConfirm: () => {
+          const newItems = arrayMove(items, oldIndex, newIndex);
+          setItems(newItems);
+          onReorder?.(newItems);
+          onResetPomodoro?.();
+        },
+      });
       return;
     }
 
-    // 直接执行排序
     const newItems = arrayMove(items, oldIndex, newIndex);
     setItems(newItems);
     onReorder?.(newItems);
-  };
-
-  const handleConfirmReset = () => {
-    if (pendingReorder) {
-      const { oldIndex, newIndex } = pendingReorder;
-      const newItems = arrayMove(items, oldIndex, newIndex);
-      setItems(newItems);
-      onReorder?.(newItems);
-    }
-    onResetPomodoro?.();
-    setShowConfirm(false);
-    setPendingReorder(null);
-  };
-
-  const handleCancelReset = () => {
-    setShowConfirm(false);
-    setPendingReorder(null);
   };
 
   // 请求完成任务（显示确认对话框）
   const handleToggleRequest = useCallback((taskId: string) => {
     const task = items.find((t) => t.id === taskId);
     if (task && task.status !== 'completed') {
-      setPendingCompleteTaskId(taskId);
-      setShowCompleteConfirm(true);
+      dialog.confirm({
+        variant: 'success',
+        title: '完成任务',
+        message: `确定要完成任务「${task.title}」吗？`,
+        confirmText: '完成',
+        cancelText: '取消',
+        onConfirm: () => {
+          onToggleTask?.(taskId);
+        },
+      });
     } else {
       onToggleTask?.(taskId);
     }
-  }, [items, onToggleTask]);
-
-  // 确认完成任务
-  const handleConfirmComplete = useCallback(() => {
-    if (pendingCompleteTaskId) {
-      onToggleTask?.(pendingCompleteTaskId);
-    }
-    setShowCompleteConfirm(false);
-    setPendingCompleteTaskId(null);
-  }, [pendingCompleteTaskId, onToggleTask]);
-
-  // 取消完成任务
-  const handleCancelComplete = useCallback(() => {
-    setShowCompleteConfirm(false);
-    setPendingCompleteTaskId(null);
-  }, []);
+  }, [items, onToggleTask, dialog]);
 
   // 选择任务 - 移动到第一位
   const handleSelectTask = useCallback((task: Task) => {
-    if (task.status === 'completed') return; // 已完成的任务不能被选中
-    
+    if (task.status === 'completed') return;
+
     const currentIndex = items.findIndex((t) => t.id === task.id);
     if (currentIndex > 0) {
-      // 移动到第一位
       const newItems = arrayMove(items, currentIndex, 0);
       setItems(newItems);
       onReorder?.(newItems);
@@ -372,66 +348,6 @@ export function SortableTaskList({
 
   return (
     <div className="mt-8 bg-white rounded-3xl p-6 shadow-soft relative">
-      {/* 番茄钟重置确认弹窗 */}
-      {showConfirm && (
-        <div className="absolute inset-0 bg-white/98 backdrop-blur-sm rounded-3xl z-50 flex items-center justify-center p-6">
-          <div className="text-center max-w-xs">
-            <div className="w-14 h-14 bg-amber/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-7 h-7 text-amber" />
-            </div>
-            <h3 className="text-lg font-semibold text-charcoal mb-2">当前有进行中的番茄钟</h3>
-            <p className="text-sm text-stone mb-6 leading-relaxed">
-              将此任务移到正在专注的任务前面会重置当前番茄钟进度，是否继续？
-            </p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={handleCancelReset}
-                className="px-5 py-2.5 text-sm font-medium text-stone bg-warm hover:bg-warm/80 rounded-xl transition-colors"
-              >
-                取消
-              </button>
-              <button
-                onClick={handleConfirmReset}
-                className="px-5 py-2.5 text-sm font-medium text-white bg-coral hover:bg-coral-700 rounded-xl transition-colors"
-              >
-                重置并继续
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 完成任务确认弹窗 */}
-      {showCompleteConfirm && (
-        <div className="absolute inset-0 bg-white/98 backdrop-blur-sm rounded-3xl z-50 flex items-center justify-center p-6">
-          <div className="text-center max-w-xs">
-            <div className="w-14 h-14 bg-sage/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-7 h-7 text-sage" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-charcoal mb-2">完成任务</h3>
-            <p className="text-sm text-stone mb-6 leading-relaxed">
-              确定要完成这个任务吗？
-            </p>
-            <div className="flex gap-3 justify-center">
-              <button
-                onClick={handleCancelComplete}
-                className="px-5 py-2.5 text-sm font-medium text-stone bg-warm hover:bg-warm/80 rounded-xl transition-colors"
-              >
-                取消
-              </button>
-              <button
-                onClick={handleConfirmComplete}
-                className="px-5 py-2.5 text-sm font-medium text-white bg-sage hover:bg-sage/90 rounded-xl transition-colors"
-              >
-                完成
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
           <h2 className="font-semibold text-charcoal text-lg">今日任务</h2>
@@ -458,6 +374,7 @@ export function SortableTaskList({
                   task={task}
                   index={index}
                   isSelected={task.id === selectedTaskId}
+                  isTimerActive={isTimerActive}
                   onToggleRequest={handleToggleRequest}
                   onSelectTask={handleSelectTask}
                 />
@@ -465,7 +382,17 @@ export function SortableTaskList({
             </div>
           </SortableContext>
           <DragOverlay dropAnimation={null}>
-            {activeTask ? <TaskItemContent task={activeTask} index={0} isSelected={false} isOverlay onToggleRequest={handleToggleRequest} onSelectTask={handleSelectTask} /> : null}
+            {activeTask ? (
+              <TaskItemContent
+                task={activeTask}
+                index={0}
+                isSelected={false}
+                isTimerActive={false}
+                isOverlay
+                onToggleRequest={handleToggleRequest}
+                onSelectTask={handleSelectTask}
+              />
+            ) : null}
           </DragOverlay>
         </DndContext>
       )}

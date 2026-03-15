@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { TaskCardProps } from './types';
-import { colors, radius, spacing, shadows, fontWeight } from '../../../theme';
+import { colors, radius, spacing, fontWeight } from '../../../theme';
 
 export * from './types';
 
@@ -52,12 +52,10 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.warm,
     borderRadius: radius.xl,
     padding: spacing.md,
-    marginBottom: spacing.md,
     gap: spacing.md,
-    ...shadows.sm,
   },
   activeContainer: {
     borderWidth: 1.5,

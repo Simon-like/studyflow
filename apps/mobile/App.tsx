@@ -5,7 +5,12 @@
 
 import React from 'react';
 import { Navigation } from './src/navigation';
+import { DialogProvider } from './src/providers/DialogProvider';
 
 export default function App() {
-  return <Navigation />;
+  return (
+    <DialogProvider>
+      <Navigation />
+    </DialogProvider>
+  );
 }

@@ -5,17 +5,17 @@ import type { TimerStatus } from '../types';
 
 interface TimerControlsProps {
   status: TimerStatus;
+  isTaskBound?: boolean;
   onToggleTimer: () => void;
   onCompleteTask: () => void;
-  onResetTimer: () => void;
   onAbandonTask: () => void;
 }
 
 export function TimerControls({
   status,
+  isTaskBound = false,
   onToggleTimer,
   onCompleteTask,
-  onResetTimer,
   onAbandonTask,
 }: TimerControlsProps) {
   const isRunning = status === 'running';
@@ -23,41 +23,32 @@ export function TimerControls({
   const isIdle = status === 'idle';
 
   const showPlay = !isRunning;
+  // 完成按钮禁用条件：未绑定任务且计时器未运行（自由模式下必须开始计时后才能完成）
+  const isCompleteDisabled = !isTaskBound && isIdle;
 
   return (
     <View style={styles.container}>
-      {/* 第一行：完成、重置、放弃 */}
+      {/* 第一行：完成、放弃任务 */}
       <View style={styles.secondaryRow}>
         {/* 提前完成任务 */}
-        <TouchableOpacity 
-          style={[styles.secondaryButton, isIdle && styles.secondaryButtonDisabled]} 
+        <TouchableOpacity
+          style={[styles.secondaryButton, isCompleteDisabled && styles.secondaryButtonDisabled]}
           onPress={onCompleteTask}
-          disabled={isIdle}
-          activeOpacity={0.7}
+          activeOpacity={isCompleteDisabled ? 1 : 0.7}
+          disabled={isCompleteDisabled}
         >
-          <Text style={[styles.secondaryIcon, isIdle && styles.secondaryIconDisabled]}>✓</Text>
-          <Text style={[styles.secondaryText, isIdle && styles.secondaryTextDisabled]}>完成</Text>
+          <Text style={[styles.secondaryIcon, isCompleteDisabled && styles.secondaryIconDisabled]}>✓</Text>
+          <Text style={[styles.secondaryText, isCompleteDisabled && styles.secondaryTextDisabled]}>完成</Text>
         </TouchableOpacity>
 
-        {/* 重新计时 */}
-        <TouchableOpacity 
-          style={styles.secondaryButton} 
-          onPress={onResetTimer}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.secondaryIcon}>↺</Text>
-          <Text style={styles.secondaryText}>重置</Text>
-        </TouchableOpacity>
-
-        {/* 放弃任务 */}
-        <TouchableOpacity 
-          style={[styles.secondaryButton, isIdle && styles.secondaryButtonDisabled]} 
+        {/* 放弃任务（始终可用） */}
+        <TouchableOpacity
+          style={styles.secondaryButton}
           onPress={onAbandonTask}
-          disabled={isIdle}
           activeOpacity={0.7}
         >
-          <Text style={[styles.secondaryIcon, isIdle && styles.secondaryIconDisabled]}>✕</Text>
-          <Text style={[styles.secondaryText, isIdle && styles.secondaryTextDisabled]}>放弃</Text>
+          <Text style={styles.secondaryIcon}>■</Text>
+          <Text style={styles.secondaryText}>放弃任务</Text>
         </TouchableOpacity>
       </View>
 
@@ -100,7 +91,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: radius.lg,
     backgroundColor: colors.warm,
-    minWidth: 70,
+    minWidth: 90,
   },
   secondaryButtonDisabled: {
     opacity: 0.4,

@@ -1,10 +1,13 @@
+import { FileText } from 'lucide-react';
+
 interface TaskInfoProps {
   title: string;
   subtitle?: string;
   progress?: string;
+  onShowDetail?: () => void;
 }
 
-export function TaskInfo({ title, subtitle, progress }: TaskInfoProps) {
+export function TaskInfo({ title, subtitle, progress, onShowDetail }: TaskInfoProps) {
   return (
     <div className="bg-warm rounded-xl p-4 mb-4">
       <div className="flex items-center gap-3">
@@ -26,6 +29,15 @@ export function TaskInfo({ title, subtitle, progress }: TaskInfoProps) {
           <span className="text-xs text-stone bg-white px-2 py-1 rounded-full flex-shrink-0">
             {progress}
           </span>
+        )}
+        {onShowDetail && (
+          <button
+            onClick={onShowDetail}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/80 transition-colors flex-shrink-0"
+            title="查看任务详情"
+          >
+            <FileText className="w-4 h-4 text-stone" />
+          </button>
         )}
       </div>
     </div>

@@ -52,7 +52,7 @@ function TaskItem({
           {task.title}
         </p>
         <p className="text-xs text-stone mt-0.5">
-          {task.category} · {task.completedPomodoros}/{task.estimatedPomodoros} 番茄
+          {task.category || '未分类'}
         </p>
       </div>
       {isActive && <span className="text-xs text-coral font-medium flex-shrink-0">进行中</span>}

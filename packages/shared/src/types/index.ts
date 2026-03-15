@@ -25,8 +25,6 @@ export interface Task {
   description?: string;
   category?: string;
   priority: TaskPriority;
-  estimatedPomodoros: number;
-  completedPomodoros: number;
   status: TaskStatus;
   dueDate?: string;
   parentId?: string;

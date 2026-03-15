@@ -7,9 +7,6 @@ export interface TaskCardProps {
   description?: string;
   priority: Priority;
   status: TaskStatus;
-  pomodoros?: number;
-  estimatedPomodoros?: number;
-  completedPomodoros?: number;
   category?: string;
   dueDate?: string;
   onToggleStatus: (id: string) => void;
@@ -23,9 +20,6 @@ export interface Task {
   description?: string;
   priority: Priority;
   status: TaskStatus;
-  pomodoros?: number;
-  estimatedPomodoros?: number;
-  completedPomodoros?: number;
   category?: string;
   dueDate?: string;
 }

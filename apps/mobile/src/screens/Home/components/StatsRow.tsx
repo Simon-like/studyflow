@@ -30,7 +30,7 @@ export function StatsRow({ stats, todayStats, isLoading }: StatsRowProps) {
   
   // 从 todayStats 或 stats 获取值
   const todayPomodoros = todayStats?.completedPomodoros ?? stats?.todayPomodoros ?? 0;
-  const completedTasks = `${todayStats?.completedTasks ?? 0}/${todayStats?.completedPomodoros ?? 0}`;
+  const completedTasks = String(todayStats?.completedTasks ?? 0);
   const streakDays = `${todayStats?.streakDays ?? stats?.streakDays ?? '0'}天`;
   
   const statItems = [

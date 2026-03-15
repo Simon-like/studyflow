@@ -16,14 +16,15 @@ export function PomodoroTimer({
   taskSubtitle = '专注当下，提升效率',
   taskEmoji = '📖',
   pomodoroCount = '自由模式',
+  isTaskBound = false,
   onToggleTimer,
   onCompleteTask,
-  onResetTimer,
   onAbandonTask,
+  onShowTaskDetail,
 }: PomodoroTimerProps) {
   const progress = (totalTime - timeLeft) / totalTime;
   const timeDisplay = formatTime(timeLeft);
-  
+
   return (
     <View style={styles.container}>
       <TimerRing progress={progress} timeDisplay={timeDisplay} />
@@ -32,12 +33,13 @@ export function PomodoroTimer({
         subtitle={taskSubtitle}
         emoji={taskEmoji}
         pomodoroCount={pomodoroCount}
+        onShowDetail={onShowTaskDetail}
       />
       <TimerControls
         status={status}
+        isTaskBound={isTaskBound}
         onToggleTimer={onToggleTimer}
         onCompleteTask={onCompleteTask}
-        onResetTimer={onResetTimer}
         onAbandonTask={onAbandonTask}
       />
     </View>

@@ -15,7 +15,6 @@ export interface CreateTaskRequest {
   description?: string;
   category?: string;
   priority?: "low" | "medium" | "high";
-  estimatedPomodoros?: number;
   dueDate?: string;
   parentId?: string;
 }

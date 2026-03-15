@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, radius, spacing, fontWeight } from '../../../../theme';
 
 interface TaskInfoProps {
@@ -7,9 +7,10 @@ interface TaskInfoProps {
   subtitle: string;
   emoji: string;
   pomodoroCount: string;
+  onShowDetail?: () => void;
 }
 
-export function TaskInfo({ title, subtitle, emoji, pomodoroCount }: TaskInfoProps) {
+export function TaskInfo({ title, subtitle, emoji, pomodoroCount, onShowDetail }: TaskInfoProps) {
   return (
     <View style={styles.container}>
       <View style={styles.iconBox}>
@@ -22,6 +23,16 @@ export function TaskInfo({ title, subtitle, emoji, pomodoroCount }: TaskInfoProp
       <View style={styles.badge}>
         <Text style={styles.badgeText}>{pomodoroCount}</Text>
       </View>
+      {onShowDetail && (
+        <TouchableOpacity
+          style={styles.detailButton}
+          onPress={onShowDetail}
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Text style={styles.detailIcon}>📋</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -69,5 +80,16 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     color: colors.textSecondary,
+  },
+  detailButton: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  detailIcon: {
+    fontSize: 14,
   },
 });

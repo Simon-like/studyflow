@@ -241,8 +241,6 @@ export const mockTaskService = {
       description: data.description,
       category: data.category,
       priority: data.priority || "medium",
-      estimatedPomodoros: data.estimatedPomodoros || 1,
-      completedPomodoros: 0,
       status: "todo",
       dueDate: data.dueDate,
       parentId: data.parentId,
@@ -436,14 +434,13 @@ export const mockPomodoroService = {
     const record = pomodoroRecords[idx];
     let updatedTask: Task | null = null;
 
-    // 如果完成且有关联任务，更新任务进度
+    // 如果完成且有关联任务，将任务状态设为进行中（如果是todo）
     if (isCompleted && record.taskId) {
       const taskIdx = tasks.findIndex((t) => t.id === record.taskId);
-      if (taskIdx !== -1) {
+      if (taskIdx !== -1 && tasks[taskIdx].status === "todo") {
         tasks[taskIdx] = {
           ...tasks[taskIdx],
-          completedPomodoros: tasks[taskIdx].completedPomodoros + 1,
-          status: tasks[taskIdx].status === "todo" ? "in_progress" : tasks[taskIdx].status,
+          status: "in_progress",
           updatedAt: now.toISOString(),
         };
         updatedTask = tasks[taskIdx];

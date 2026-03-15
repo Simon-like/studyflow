@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
+import { DialogProvider } from "./providers/DialogProvider";
 import { router } from "./router";
 import "./styles/globals.css";
 
@@ -22,7 +23,9 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
+      <DialogProvider>
       <RouterProvider router={router} />
+      </DialogProvider>
       <Toaster
         position="top-center"
         toastOptions={{

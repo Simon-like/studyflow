@@ -62,7 +62,6 @@ export function useTasks() {
         title: formData.title,
         description: formData.description || undefined,
         priority: formData.priority,
-        estimatedPomodoros: formData.pomodoros,
       });
       await fetchTasks();
     } catch (err) {

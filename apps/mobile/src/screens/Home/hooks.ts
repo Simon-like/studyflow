@@ -7,6 +7,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { api } from '@studyflow/api';
 import type { Task, TodayStats, WeeklyOverview } from '@studyflow/shared';
 import { usePomodoro } from '../../hooks';
+import { useDialog } from '../../providers/DialogProvider';
+import { POMODORO_CONFIG } from '../../constants';
 
 // ==================== Home Screen 主 Hook ====================
 
@@ -31,24 +33,21 @@ export interface HomeScreenPomodoro {
   status: 'idle' | 'running' | 'paused' | 'completed';
   toggleTimer: () => void;
   completeTask: () => Promise<void>;
-  resetTimer: () => void;
   abandonTask: () => void;
 }
 
 export function useHomeScreen() {
+  const dialog = useDialog();
+
   // 任务和统计数据状态
   const [tasks, setTasks] = useState<Task[]>([]);
   const [todayStats, setTodayStats] = useState<TodayStats | null>(null);
   const [weeklyStats, setWeeklyStats] = useState<WeeklyOverview | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  
+
   // 选中的任务（用于番茄钟专注）
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
-  // 任务切换确认
-  const [showSwitchConfirm, setShowSwitchConfirm] = useState(false);
-  const [pendingSwitchTask, setPendingSwitchTask] = useState<Task | null>(null);
 
   // 获取今日任务列表
   const fetchTodayTasks = useCallback(async () => {
@@ -111,9 +110,8 @@ export function useHomeScreen() {
     loadData();
   }, [loadData]);
 
-  // 番茄钟完成回调 - 更新任务进度和统计数据
+  // 番茄钟完成回调
   const handlePomodoroComplete = useCallback(async () => {
-    // 重新获取任务列表和统计数据（番茄钟完成后任务进度会更新）
     await Promise.all([
       fetchTodayTasks(),
       fetchTodayStats(),
@@ -130,21 +128,17 @@ export function useHomeScreen() {
     try {
       const response = await api.task.toggleStatus(taskId);
       const updatedTask = response.data;
-      
-      // 如果任务变为已完成，从今日任务列表中移除
+
       if (updatedTask.status === 'completed') {
         setTasks((prev) => prev.filter((t) => t.id !== taskId));
-        // 如果选中的是这个任务，清除选中状态
         if (selectedTask?.id === taskId) {
           setSelectedTask(null);
         }
-        // 刷新统计数据和任务列表
         await Promise.all([
           fetchTodayStats(),
           fetchTodayTasks(),
         ]);
       } else {
-        // 重新打开任务，更新本地状态
         setTasks((prev) =>
           prev.map((t) => (t.id === taskId ? updatedTask : t))
         );
@@ -155,12 +149,12 @@ export function useHomeScreen() {
     }
   }, [fetchTodayTasks, fetchTodayStats, selectedTask]);
 
-  // 添加新任务（导航到任务页面）
+  // 添加新任务
   const addTask = useCallback(() => {
     console.log('Navigate to add task');
   }, []);
 
-  // 查看统计（导航到统计页面）
+  // 查看统计
   const viewStats = useCallback(() => {
     console.log('Navigate to stats');
   }, []);
@@ -187,22 +181,17 @@ export function useHomeScreen() {
 
   // ========== 番茄钟操作 ==========
 
-  // 开始/暂停（合一）
+  // 开始/暂停（自由模式下不自动选择任务）
   const toggleTimer = useCallback(async () => {
     if (pomodoro.isRunning) {
       pomodoro.pause();
     } else if (pomodoro.isPaused) {
       pomodoro.resume();
     } else {
-      // 开始新番茄钟
-      // 如果没有手动选择任务，自动选择第一个可用任务
-      const taskToStart = selectedTask ||
-        tasks.find(t => t.status === 'in_progress') ||
-        tasks.find(t => t.status !== 'completed');
-      if (taskToStart && taskToStart.status !== 'completed') {
+      // 只有在有明确选中任务时才绑定任务，否则保持自由模式
+      if (selectedTask && selectedTask.status !== 'completed') {
         try {
-          setSelectedTask(taskToStart);
-          await api.task.startTask(taskToStart.id);
+          await api.task.startTask(selectedTask.id);
           await fetchTodayTasks();
         } catch (err) {
           console.error('Failed to start task:', err);
@@ -210,68 +199,110 @@ export function useHomeScreen() {
       }
       pomodoro.start();
     }
-  }, [pomodoro, selectedTask, tasks, fetchTodayTasks]);
+  }, [pomodoro, selectedTask, fetchTodayTasks]);
 
   // 提前完成任务
   const completeTask = useCallback(async () => {
-    if (!selectedTask) {
-      console.log('No task selected');
+    // 自由模式下：计时器未运行时无法完成
+    if (!selectedTask && pomodoro.status === 'idle') {
       return;
     }
-    if (selectedTask.status === 'completed') {
-      console.log('Task already completed');
+
+    // 显示确认弹窗
+    dialog.confirm({
+      variant: 'success',
+      title: '完成任务',
+      message: selectedTask
+        ? `确定要提前结束并完成任务「${selectedTask.title}」吗？`
+        : '确定要完成当前番茄钟吗？完成后将计入统计。',
+      confirmText: '确认完成',
+      cancelText: '取消',
+      onConfirm: async () => {
+        if (selectedTask) {
+          // 任务模式：标记任务完成
+          if (selectedTask.status !== 'completed') {
+            try {
+              await api.task.toggleStatus(selectedTask.id);
+              await fetchTodayTasks();
+              await fetchTodayStats();
+            } catch (err) {
+              console.error('Failed to complete task:', err);
+            }
+          }
+          setSelectedTask(null);
+        } else {
+          // 自由模式：记录完成的番茄钟
+          try {
+            // 计算已专注的时间
+            const focusedDuration = POMODORO_CONFIG.DEFAULT_DURATION - pomodoro.timeLeft;
+            if (focusedDuration > 0) {
+              // 创建番茄钟记录
+              const response = await api.pomodoro.start({
+                duration: focusedDuration,
+                isLocked: false,
+              });
+              // 停止番茄钟并标记为完成
+              if (response.data?.id) {
+                await api.pomodoro.stop(response.data.id, { status: 'completed' });
+              }
+              await fetchTodayStats();
+            }
+          } catch (err) {
+            console.error('Failed to record pomodoro:', err);
+          }
+        }
+        pomodoro.stop();
+      },
+    });
+  }, [selectedTask, pomodoro, fetchTodayTasks, fetchTodayStats, dialog]);
+
+
+
+  // 放弃任务（进入自由模式，所有任务未选中）
+  const abandonTask = useCallback(() => {
+    const isTimerActive = pomodoro.status === 'running' || pomodoro.status === 'paused';
+    
+    if (!isTimerActive && !selectedTask) {
+      // 已经是自由模式且计时器未运行，无需操作
       return;
     }
     
-    try {
-      await api.task.toggleStatus(selectedTask.id);
-      await fetchTodayTasks();
-      await fetchTodayStats();
-      setSelectedTask(null);
-      pomodoro.stop();
-    } catch (err) {
-      console.error('Failed to complete task:', err);
-    }
-  }, [selectedTask, pomodoro, fetchTodayTasks, fetchTodayStats]);
-
-  // 重新计时
-  const resetTimer = useCallback(() => {
-    pomodoro.reset();
-  }, [pomodoro]);
-
-  // 放弃任务（转为自由模式）
-  const abandonTask = useCallback(() => {
-    setSelectedTask(null);
-    pomodoro.stop();
-  }, [pomodoro]);
+    dialog.confirm({
+      variant: 'danger',
+      title: '放弃任务',
+      message: selectedTask
+        ? `确定要放弃当前任务「${selectedTask.title}」吗？放弃后计时将不会计入统计。`
+        : '确定要放弃当前番茄钟吗？放弃后计时将不会计入统计。',
+      confirmText: '确认放弃',
+      cancelText: '继续',
+      onConfirm: () => {
+        // 清除选中的任务，进入自由模式
+        setSelectedTask(null);
+        pomodoro.stop();
+      },
+    });
+  }, [selectedTask, pomodoro, dialog]);
 
   // ========== 任务切换确认 ==========
 
   // 选择任务（带切换确认）
   const handleSelectTask = useCallback((task: Task) => {
     if (selectedTask && selectedTask.id !== task.id && (pomodoro.isRunning || pomodoro.isPaused)) {
-      setPendingSwitchTask(task);
-      setShowSwitchConfirm(true);
+      dialog.confirm({
+        variant: 'warning',
+        title: '更换当前任务？',
+        message: `当前正在专注「${selectedTask.title}」，切换后计时数据将被清零。确定要更换为「${task.title}」吗？`,
+        confirmText: '确认更换',
+        cancelText: '继续当前任务',
+        onConfirm: () => {
+          pomodoro.stop();
+          setSelectedTask(task);
+        },
+      });
       return;
     }
     setSelectedTask(task);
-  }, [selectedTask, pomodoro.isRunning, pomodoro.isPaused]);
-
-  // 确认切换任务
-  const confirmSwitchTask = useCallback(() => {
-    if (pendingSwitchTask) {
-      pomodoro.stop();
-      setSelectedTask(pendingSwitchTask);
-    }
-    setShowSwitchConfirm(false);
-    setPendingSwitchTask(null);
-  }, [pendingSwitchTask, pomodoro]);
-
-  // 取消切换
-  const cancelSwitchTask = useCallback(() => {
-    setShowSwitchConfirm(false);
-    setPendingSwitchTask(null);
-  }, []);
+  }, [selectedTask, pomodoro, dialog]);
 
   // 格式化统计数据供 UI 使用
   const stats = {
@@ -280,43 +311,34 @@ export function useHomeScreen() {
     streakDays: `${todayStats?.streakDays || 0}天`,
   };
 
-  // 获取显示的任务状态
+  // 获取显示的任务状态（自由模式下显示默认字样）
   const getTaskStatus = useCallback(() => {
+    // 只有在有明确选中任务时才显示任务信息
     if (selectedTask) {
       return {
         title: selectedTask.title,
         subtitle: selectedTask.category || '专注模式',
-        count: `${selectedTask.completedPomodoros}/${selectedTask.estimatedPomodoros}`,
+        count: '任务模式中',
       };
     }
-    const inProgressTask = tasks.find(t => t.status === 'in_progress');
-    if (inProgressTask) {
-      return {
-        title: inProgressTask.title,
-        subtitle: inProgressTask.category || '专注模式',
-        count: `${inProgressTask.completedPomodoros}/${inProgressTask.estimatedPomodoros}`,
-      };
-    }
-    const firstTask = tasks.find(t => t.status !== 'completed');
-    if (firstTask) {
-      return {
-        title: firstTask.title,
-        subtitle: firstTask.category || '点击任务开始专注',
-        count: `${firstTask.completedPomodoros}/${firstTask.estimatedPomodoros}`,
-      };
-    }
+    
+    // 自由模式：所有任务未选中状态
     return {
       title: '自由任务',
       subtitle: '专注当下，提升效率',
       count: '自由模式',
     };
-  }, [selectedTask, tasks]);
+  }, [selectedTask]);
+
+  // 获取显示的任务（用于详情弹窗）- 只有明确选中时才显示
+  const displayTask = selectedTask;
 
   const taskStatus = getTaskStatus();
 
   return {
     tasks,
     selectedTask,
+    displayTask,
     setSelectedTask: handleSelectTask,
     stats,
     todayStats,
@@ -328,7 +350,6 @@ export function useHomeScreen() {
       status: pomodoro.status,
       toggleTimer,
       completeTask,
-      resetTimer,
       abandonTask,
     },
     taskStatus,
@@ -337,14 +358,6 @@ export function useHomeScreen() {
     addTask,
     viewStats,
     refresh,
-    // 任务切换确认
-    switchConfirm: {
-      visible: showSwitchConfirm,
-      currentTaskTitle: selectedTask?.title || '',
-      pendingTaskTitle: pendingSwitchTask?.title || '',
-      onConfirm: confirmSwitchTask,
-      onCancel: cancelSwitchTask,
-    },
   };
 }
 
