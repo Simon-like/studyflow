@@ -1,28 +1,28 @@
-import { useState, useEffect } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@studyflow/api';
-import { useAuthStore } from '@/stores/authStore';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { 
-  Bell, 
-  Moon, 
-  Shield, 
-  User, 
-  Clock, 
-  Volume2, 
+import { useState, useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "@studyflow/api";
+import { useAuthStore } from "@/stores/authStore";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import {
+  Bell,
+  Moon,
+  Shield,
+  User,
+  Clock,
+  Volume2,
   Smartphone,
   Trash2,
   LogOut,
-  ChevronRight
-} from 'lucide-react';
-import toast from 'react-hot-toast';
-import type { PomodoroSettings, SystemSettings } from '@studyflow/shared';
+  ChevronRight,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import type { PomodoroSettings, SystemSettings } from "@studyflow/shared";
 
 // Query keys
 const SETTINGS_KEYS = {
-  pomodoro: ['settings', 'pomodoro'] as const,
-  system: ['settings', 'system'] as const,
+  pomodoro: ["settings", "pomodoro"] as const,
+  system: ["settings", "system"] as const,
 };
 
 /**
@@ -44,7 +44,7 @@ export default function SettingsPage() {
   const queryClient = useQueryClient();
 
   // ============ 数据查询 ============
-  
+
   // 番茄钟设置
   const { data: pomodoroSettings, isLoading: isLoadingPomodoro } = useQuery({
     queryKey: SETTINGS_KEYS.pomodoro,
@@ -69,13 +69,14 @@ export default function SettingsPage() {
 
   // 更新番茄钟设置
   const updatePomodoroMutation = useMutation({
-    mutationFn: (data: PomodoroSettings) => api.user.updatePomodoroSettings(data),
+    mutationFn: (data: PomodoroSettings) =>
+      api.user.updatePomodoroSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SETTINGS_KEYS.pomodoro });
-      toast.success('番茄钟设置已更新');
+      toast.success("番茄钟设置已更新");
     },
     onError: () => {
-      toast.error('设置更新失败');
+      toast.error("设置更新失败");
     },
   });
 
@@ -84,10 +85,10 @@ export default function SettingsPage() {
     mutationFn: (data: SystemSettings) => api.user.updateSystemSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: SETTINGS_KEYS.system });
-      toast.success('系统设置已更新');
+      toast.success("系统设置已更新");
     },
     onError: () => {
-      toast.error('设置更新失败');
+      toast.error("设置更新失败");
     },
   });
 
@@ -96,12 +97,16 @@ export default function SettingsPage() {
     mutationFn: (data: { currentPassword: string; newPassword: string }) =>
       api.user.changePassword({ ...data, confirmPassword: data.newPassword }),
     onSuccess: () => {
-      toast.success('密码修改成功');
+      toast.success("密码修改成功");
       setShowPasswordModal(false);
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
     },
     onError: () => {
-      toast.error('密码修改失败，请检查当前密码');
+      toast.error("密码修改失败，请检查当前密码");
     },
   });
 
@@ -109,14 +114,16 @@ export default function SettingsPage() {
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
 
   // 本地设置状态（用于UI）
-  const [localPomodoroSettings, setLocalPomodoroSettings] = useState<PomodoroSettings | null>(null);
-  const [localSystemSettings, setLocalSystemSettings] = useState<SystemSettings | null>(null);
+  const [localPomodoroSettings, setLocalPomodoroSettings] =
+    useState<PomodoroSettings | null>(null);
+  const [localSystemSettings, setLocalSystemSettings] =
+    useState<SystemSettings | null>(null);
 
   // 同步服务器数据到本地状态
   useEffect(() => {
@@ -133,14 +140,20 @@ export default function SettingsPage() {
 
   // ============ 事件处理 ============
 
-  const handlePomodoroChange = (field: keyof PomodoroSettings, value: number | boolean) => {
+  const handlePomodoroChange = (
+    field: keyof PomodoroSettings,
+    value: number | boolean,
+  ) => {
     if (!localPomodoroSettings) return;
     const newSettings = { ...localPomodoroSettings, [field]: value };
     setLocalPomodoroSettings(newSettings);
     updatePomodoroMutation.mutate(newSettings);
   };
 
-  const handleSystemChange = (field: keyof SystemSettings, value: string | boolean) => {
+  const handleSystemChange = (
+    field: keyof SystemSettings,
+    value: string | boolean,
+  ) => {
     if (!localSystemSettings) return;
     const newSettings = { ...localSystemSettings, [field]: value };
     setLocalSystemSettings(newSettings);
@@ -150,11 +163,11 @@ export default function SettingsPage() {
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('两次输入的新密码不一致');
+      toast.error("两次输入的新密码不一致");
       return;
     }
     if (passwordData.newPassword.length < 6) {
-      toast.error('新密码长度至少6位');
+      toast.error("新密码长度至少6位");
       return;
     }
     changePasswordMutation.mutate({
@@ -165,7 +178,7 @@ export default function SettingsPage() {
 
   const handleLogout = () => {
     logout();
-    toast.success('已退出登录');
+    toast.success("已退出登录");
   };
 
   const isLoading = isLoadingPomodoro || isLoadingSystem;
@@ -186,7 +199,7 @@ export default function SettingsPage() {
     <div className="p-10 max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold text-charcoal mb-8">设置</h1>
 
-      <div className="space-y-8">
+      <div className="space-y-8 flex flex-col gap-4">
         {/* 账户设置 */}
         <Card className="p-7">
           <div className="flex items-center gap-4 mb-5">
@@ -201,15 +214,21 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <div className="flex justify-between items-center py-2 border-b border-mist/20">
               <span className="text-stone">用户名</span>
-              <span className="text-charcoal font-medium">{user?.username || '未设置'}</span>
+              <span className="text-charcoal font-medium">
+                {user?.username || "未设置"}
+              </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-mist/20">
               <span className="text-stone">昵称</span>
-              <span className="text-charcoal font-medium">{user?.nickname || '未设置'}</span>
+              <span className="text-charcoal font-medium">
+                {user?.nickname || "未设置"}
+              </span>
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-stone">邮箱</span>
-              <span className="text-charcoal font-medium">{user?.email || '未设置'}</span>
+              <span className="text-charcoal font-medium">
+                {user?.email || "未设置"}
+              </span>
             </div>
           </div>
         </Card>
@@ -221,7 +240,9 @@ export default function SettingsPage() {
               <Clock className="w-5 h-5 text-sage" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-charcoal">番茄钟设置</h2>
+              <h2 className="text-lg font-semibold text-charcoal">
+                番茄钟设置
+              </h2>
               <p className="text-sm text-stone">自定义您的专注时长</p>
             </div>
           </div>
@@ -230,12 +251,21 @@ export default function SettingsPage() {
             <div className="flex justify-between items-center py-2 border-b border-mist/20">
               <span className="text-stone">专注时长</span>
               <select
-                value={Math.floor((localPomodoroSettings?.focusDuration || 1500) / 60)}
-                onChange={(e) => handlePomodoroChange('focusDuration', parseInt(e.target.value) * 60)}
+                value={Math.floor(
+                  (localPomodoroSettings?.focusDuration || 1500) / 60,
+                )}
+                onChange={(e) =>
+                  handlePomodoroChange(
+                    "focusDuration",
+                    parseInt(e.target.value) * 60,
+                  )
+                }
                 className="bg-warm rounded-lg px-3 py-1.5 text-charcoal text-sm focus:ring-2 focus:ring-coral/30 outline-none"
               >
                 {[15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((min) => (
-                  <option key={min} value={min}>{min}分钟</option>
+                  <option key={min} value={min}>
+                    {min}分钟
+                  </option>
                 ))}
               </select>
             </div>
@@ -243,12 +273,21 @@ export default function SettingsPage() {
             <div className="flex justify-between items-center py-2 border-b border-mist/20">
               <span className="text-stone">短休息时长</span>
               <select
-                value={Math.floor((localPomodoroSettings?.shortBreakDuration || 300) / 60)}
-                onChange={(e) => handlePomodoroChange('shortBreakDuration', parseInt(e.target.value) * 60)}
+                value={Math.floor(
+                  (localPomodoroSettings?.shortBreakDuration || 300) / 60,
+                )}
+                onChange={(e) =>
+                  handlePomodoroChange(
+                    "shortBreakDuration",
+                    parseInt(e.target.value) * 60,
+                  )
+                }
                 className="bg-warm rounded-lg px-3 py-1.5 text-charcoal text-sm focus:ring-2 focus:ring-coral/30 outline-none"
               >
                 {[3, 5, 10, 15].map((min) => (
-                  <option key={min} value={min}>{min}分钟</option>
+                  <option key={min} value={min}>
+                    {min}分钟
+                  </option>
                 ))}
               </select>
             </div>
@@ -256,12 +295,21 @@ export default function SettingsPage() {
             <div className="flex justify-between items-center py-2">
               <span className="text-stone">长休息时长</span>
               <select
-                value={Math.floor((localPomodoroSettings?.longBreakDuration || 900) / 60)}
-                onChange={(e) => handlePomodoroChange('longBreakDuration', parseInt(e.target.value) * 60)}
+                value={Math.floor(
+                  (localPomodoroSettings?.longBreakDuration || 900) / 60,
+                )}
+                onChange={(e) =>
+                  handlePomodoroChange(
+                    "longBreakDuration",
+                    parseInt(e.target.value) * 60,
+                  )
+                }
                 className="bg-warm rounded-lg px-3 py-1.5 text-charcoal text-sm focus:ring-2 focus:ring-coral/30 outline-none"
               >
                 {[10, 15, 20, 25, 30].map((min) => (
-                  <option key={min} value={min}>{min}分钟</option>
+                  <option key={min} value={min}>
+                    {min}分钟
+                  </option>
                 ))}
               </select>
             </div>
@@ -287,7 +335,9 @@ export default function SettingsPage() {
               </div>
               <ToggleSwitch
                 checked={localSystemSettings?.notificationEnabled ?? true}
-                onChange={(checked) => handleSystemChange('notificationEnabled', checked)}
+                onChange={(checked) =>
+                  handleSystemChange("notificationEnabled", checked)
+                }
               />
             </div>
             <div className="flex items-center justify-between py-2 border-b border-mist/20">
@@ -297,7 +347,9 @@ export default function SettingsPage() {
               </div>
               <ToggleSwitch
                 checked={localSystemSettings?.soundEnabled ?? true}
-                onChange={(checked) => handleSystemChange('soundEnabled', checked)}
+                onChange={(checked) =>
+                  handleSystemChange("soundEnabled", checked)
+                }
               />
             </div>
             <div className="flex items-center justify-between py-2">
@@ -307,7 +359,9 @@ export default function SettingsPage() {
               </div>
               <ToggleSwitch
                 checked={localSystemSettings?.vibrationEnabled ?? true}
-                onChange={(checked) => handleSystemChange('vibrationEnabled', checked)}
+                onChange={(checked) =>
+                  handleSystemChange("vibrationEnabled", checked)
+                }
               />
             </div>
           </div>
@@ -325,25 +379,33 @@ export default function SettingsPage() {
             </div>
           </div>
           <div className="space-y-3">
-            {(['light', 'dark', 'system'] as const).map((theme) => (
+            {(["light", "dark", "system"] as const).map((theme) => (
               <button
                 key={theme}
-                onClick={() => handleSystemChange('theme', theme)}
+                onClick={() => handleSystemChange("theme", theme)}
                 className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${
                   localSystemSettings?.theme === theme
-                    ? 'border-coral bg-coral/5'
-                    : 'border-mist/30 hover:border-mist/50'
+                    ? "border-coral bg-coral/5"
+                    : "border-mist/30 hover:border-mist/50"
                 }`}
               >
                 <span className="text-charcoal">
-                  {theme === 'light' && '浅色模式'}
-                  {theme === 'dark' && '深色模式'}
-                  {theme === 'system' && '跟随系统'}
+                  {theme === "light" && "浅色模式"}
+                  {theme === "dark" && "深色模式"}
+                  {theme === "system" && "跟随系统"}
                 </span>
                 {localSystemSettings?.theme === theme && (
                   <div className="w-5 h-5 rounded-full bg-coral flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    <svg
+                      className="w-3 h-3 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </div>
                 )}
@@ -359,7 +421,9 @@ export default function SettingsPage() {
               <Shield className="w-5 h-5 text-coral" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-charcoal">隐私与安全</h2>
+              <h2 className="text-lg font-semibold text-charcoal">
+                隐私与安全
+              </h2>
               <p className="text-sm text-stone">管理您的隐私设置</p>
             </div>
           </div>
@@ -398,13 +462,16 @@ export default function SettingsPage() {
           </div>
           <button
             onClick={() => {
-              if (confirm('确定要删除账号吗？此操作不可恢复！')) {
-                api.user.deleteAccount().then(() => {
-                  toast.success('账号已删除');
-                  logout();
-                }).catch(() => {
-                  toast.error('删除失败');
-                });
+              if (confirm("确定要删除账号吗？此操作不可恢复！")) {
+                api.user
+                  .deleteAccount()
+                  .then(() => {
+                    toast.success("账号已删除");
+                    logout();
+                  })
+                  .catch(() => {
+                    toast.error("删除失败");
+                  });
               }
             }}
             className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-red-300 text-red-600 hover:bg-red-50 transition-all"
@@ -425,39 +492,70 @@ export default function SettingsPage() {
                 onClick={() => setShowPasswordModal(false)}
                 className="p-2 hover:bg-mist/30 rounded-lg transition-colors"
               >
-                <svg className="w-5 h-5 text-stone" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-5 h-5 text-stone"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
             <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">当前密码</label>
+                <label className="block text-sm font-medium text-charcoal mb-1">
+                  当前密码
+                </label>
                 <input
                   type="password"
                   value={passwordData.currentPassword}
-                  onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                  onChange={(e) =>
+                    setPasswordData((prev) => ({
+                      ...prev,
+                      currentPassword: e.target.value,
+                    }))
+                  }
                   className="w-full px-4 py-3 bg-warm rounded-xl border-0 text-charcoal focus:ring-2 focus:ring-coral/30"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">新密码</label>
+                <label className="block text-sm font-medium text-charcoal mb-1">
+                  新密码
+                </label>
                 <input
                   type="password"
                   value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  onChange={(e) =>
+                    setPasswordData((prev) => ({
+                      ...prev,
+                      newPassword: e.target.value,
+                    }))
+                  }
                   className="w-full px-4 py-3 bg-warm rounded-xl border-0 text-charcoal focus:ring-2 focus:ring-coral/30"
                   required
                   minLength={6}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1">确认新密码</label>
+                <label className="block text-sm font-medium text-charcoal mb-1">
+                  确认新密码
+                </label>
                 <input
                   type="password"
                   value={passwordData.confirmPassword}
-                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  onChange={(e) =>
+                    setPasswordData((prev) => ({
+                      ...prev,
+                      confirmPassword: e.target.value,
+                    }))
+                  }
                   className="w-full px-4 py-3 bg-warm rounded-xl border-0 text-charcoal focus:ring-2 focus:ring-coral/30"
                   required
                 />
@@ -476,7 +574,7 @@ export default function SettingsPage() {
                   className="flex-1"
                   disabled={changePasswordMutation.isPending}
                 >
-                  {changePasswordMutation.isPending ? '保存中...' : '保存'}
+                  {changePasswordMutation.isPending ? "保存中..." : "保存"}
                 </Button>
               </div>
             </form>
@@ -488,18 +586,24 @@ export default function SettingsPage() {
 }
 
 // Toggle Switch 组件
-function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
+function ToggleSwitch({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
   return (
     <button
       type="button"
       onClick={() => onChange(!checked)}
       className={`w-12 h-6 rounded-full transition-colors ${
-        checked ? 'bg-coral' : 'bg-mist'
+        checked ? "bg-coral" : "bg-mist"
       }`}
     >
       <div
         className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
-          checked ? 'translate-x-6' : 'translate-x-0.5'
+          checked ? "translate-x-6" : "translate-x-0.5"
         }`}
       />
     </button>
