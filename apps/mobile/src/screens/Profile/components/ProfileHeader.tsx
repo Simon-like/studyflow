@@ -4,14 +4,14 @@ import { Avatar } from '../../../components/ui/Avatar';
 import { Badge } from '../../../components/ui/Badge';
 import { Icon } from '../../../components/ui/Icon';
 import { colors, radius, spacing, fontWeight, fontSize, alpha, shadows } from '../../../theme';
-// User tags for display
-const USER_TAGS: string[] = ['数学达人', '早起鸟', '专注力强'];
+import type { UserTag } from '@studyflow/shared';
 
 interface ProfileHeaderProps {
   onEditPress: () => void;
   displayName?: string;
   avatarUrl?: string;
   subtitle?: string;
+  tags?: UserTag[];
 }
 
 export function ProfileHeader({ 
@@ -19,6 +19,7 @@ export function ProfileHeader({
   displayName = '学习者', 
   avatarUrl,
   subtitle = '坚持学习中',
+  tags,
 }: ProfileHeaderProps) {
   return (
     <View style={styles.container}>
@@ -42,28 +43,25 @@ export function ProfileHeader({
             </TouchableOpacity>
           </View>
           
-          {/* 设置按钮 */}
-          <TouchableOpacity 
-            style={styles.settingsButton}
-            onPress={onEditPress}
-            activeOpacity={0.8}
-          >
-            <Icon name="settings" size={20} color={colors.textSecondary} />
-          </TouchableOpacity>
+
         </View>
         
         <Text style={styles.name}>{displayName}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
         
         <View style={styles.badges}>
-          {USER_TAGS.map((tag) => (
-            <Badge 
-              key={tag} 
-              variant={tag === '数学达人' || tag === '专注力强' ? 'primary' : 'secondary'}
-            >
-              {tag}
-            </Badge>
-          ))}
+          {tags && tags.length > 0 ? (
+            tags.map((tag) => (
+              <Badge 
+                key={tag.id} 
+                variant={tag.type === 'achievement' ? 'primary' : tag.type === 'system' ? 'success' : 'secondary'}
+              >
+                {tag.name}
+              </Badge>
+            ))
+          ) : (
+            <Text style={styles.noTagsText}>点击编辑资料添加标签</Text>
+          )}
         </View>
       </View>
     </View>
@@ -128,17 +126,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: fontWeight.medium,
   },
-  settingsButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.sm,
-  },
+
   name: {
     fontSize: fontSize['2xl'],
     fontWeight: fontWeight.bold,
@@ -155,5 +143,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
     marginTop: spacing.sm,
+    flexWrap: 'wrap',
+  },
+  noTagsText: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
   },
 });

@@ -2,6 +2,23 @@
 export const APP_NAME = "StudyFlow";
 export const APP_VERSION = "1.0.0";
 
+// 预设用户标签
+export const PRESET_USER_TAGS = [
+  { id: 'tag_kaoyan', name: '考研上岸', type: 'custom' as const, description: '正在备战考研' },
+  { id: 'tag_math', name: '数学达人', type: 'custom' as const, description: '擅长数学学习' },
+  { id: 'tag_english', name: '英语学霸', type: 'custom' as const, description: '英语能力出众' },
+  { id: 'tag_coder', name: '代码工匠', type: 'custom' as const, description: '热爱编程学习' },
+  { id: 'tag_early_bird', name: '早起鸟', type: 'custom' as const, description: '习惯早起学习' },
+  { id: 'tag_night_owl', name: '夜猫子', type: 'custom' as const, description: '深夜学习效率更高' },
+  { id: 'tag_focus', name: '专注力强', type: 'system' as const, description: '连续专注超过1小时' },
+  { id: 'tag_persist', name: '持之以恒', type: 'achievement' as const, description: '连续打卡7天' },
+  { id: 'tag_master', name: '学习大师', type: 'achievement' as const, description: '累计学习100小时' },
+  { id: 'tag_tomato', name: '番茄达人', type: 'achievement' as const, description: '完成100个番茄钟' },
+] as const;
+
+// 用户可选择的最大标签数
+export const MAX_USER_TAGS = 3;
+
 // 番茄钟默认设置
 export const DEFAULT_FOCUS_DURATION = 25 * 60; // 25 分钟（秒）
 export const DEFAULT_SHORT_BREAK_DURATION = 5 * 60; // 5 分钟

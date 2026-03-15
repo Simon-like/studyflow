@@ -4,6 +4,10 @@
  * 集成双 Token 认证：
  * - 使用 AuthContext 的 logout 方法
  * - 自动清除 token 并跳转登录页
+ * 
+ * 数据同步规范（遵循 DATA_SYNC.md）：
+ * - 使用统一的 USER_KEYS 进行缓存管理
+ * - 更新资料时同步更新全局缓存
  */
 
 import { useState, useCallback, useMemo } from 'react';
@@ -11,16 +15,15 @@ import { Alert, Platform } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../../embedded-packages/api/src';
+import { USER_KEYS, useUserProfile, useUserStats } from '../../hooks/useUser';
 import type { UpdateProfileRequest, PomodoroSettings, SystemSettings } from '@studyflow/shared';
+import { PRESET_USER_TAGS } from '@studyflow/shared';
 import toast from 'react-hot-toast';
 
-// Query keys
-const PROFILE_KEYS = {
-  all: ['profile'] as const,
-  detail: () => [...PROFILE_KEYS.all, 'detail'] as const,
-  stats: () => [...PROFILE_KEYS.all, 'stats'] as const,
-  pomodoroSettings: ['settings', 'pomodoro'] as const,
-  systemSettings: ['settings', 'system'] as const,
+// 设置相关的独立 Query Keys
+const SETTINGS_KEYS = {
+  pomodoro: ['settings', 'pomodoro'] as const,
+  system: ['settings', 'system'] as const,
 };
 
 /**
@@ -67,35 +70,10 @@ export function useProfileScreen() {
 }
 
 /**
- * 获取用户资料
- */
-export function useUserProfile() {
-  return useQuery({
-    queryKey: PROFILE_KEYS.detail(),
-    queryFn: async () => {
-      const response = await api.user.getProfile();
-      return response.data;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-}
-
-/**
- * 获取用户统计
- */
-export function useUserStats() {
-  return useQuery({
-    queryKey: PROFILE_KEYS.stats(),
-    queryFn: async () => {
-      const response = await api.user.getUserStats();
-      return response.data;
-    },
-    staleTime: 60 * 1000,
-  });
-}
-
-/**
- * 更新用户资料
+ * 更新用户资料 - 同步更新全局缓存
+ * 
+ * 注意：此 Hook 与 apps/mobile/src/hooks/useUser.ts 中的版本保持一致
+ * 确保所有页面使用相同的缓存更新逻辑
  */
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
@@ -105,8 +83,24 @@ export function useUpdateProfile() {
       const response = await api.user.updateProfile(data);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: PROFILE_KEYS.detail() });
+    onSuccess: (data, variables) => {
+      // 1. 更新 QueryClient 缓存（统一使用 USER_KEYS）
+      queryClient.setQueryData(USER_KEYS.profile(), (old: any) => {
+        if (!old) return old;
+        
+        // 如果更新了tags，从variables中获取最新的tags数据
+        const updatedTags = variables.tags 
+          ? PRESET_USER_TAGS
+              .filter(tag => variables.tags?.includes(tag.id))
+              .map(tag => ({ ...tag, unlockedAt: new Date().toISOString() }))
+          : old.tags;
+        
+        return { ...old, ...data, tags: updatedTags };
+      });
+      
+      // 2. 同时使 stats 缓存失效（因为统计数据可能变化）
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.stats() });
+      
       toast.success('资料更新成功');
     },
     onError: () => {
@@ -116,7 +110,7 @@ export function useUpdateProfile() {
 }
 
 /**
- * 上传头像
+ * 上传头像 - 使统一的用户资料缓存失效
  */
 export function useUploadAvatar() {
   const queryClient = useQueryClient();
@@ -130,7 +124,8 @@ export function useUploadAvatar() {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: PROFILE_KEYS.detail() });
+      // 使用统一的 USER_KEYS 使缓存失效
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.profile() });
       toast.success('头像上传成功');
     },
     onError: () => {
@@ -140,7 +135,7 @@ export function useUploadAvatar() {
 }
 
 /**
- * Profile 数据 Hook
+ * Profile 数据 Hook - 从统一数据源获取
  */
 export function useProfileData() {
   const { data: profile, isLoading: isProfileLoading } = useUserProfile();
@@ -168,6 +163,7 @@ export function useProfileData() {
     avatarUrl,
     studyGoal,
     subtitle,
+    tags: profile?.tags,
     profile,
     stats: profile?.stats || stats,
     isLoading: isProfileLoading || isStatsLoading,
@@ -175,13 +171,16 @@ export function useProfileData() {
 }
 
 /**
- * 番茄钟设置 Hook
+ * 番茄钟设置 Hook - 带本地存储同步
+ * 
+ * 注意：更新设置时同时使 USER_KEYS.profile() 缓存失效
+ * 确保设置页面和用户资料页面数据一致
  */
 export function usePomodoroSettings() {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: PROFILE_KEYS.pomodoroSettings,
+    queryKey: SETTINGS_KEYS.pomodoro,
     queryFn: async () => {
       const response = await api.user.getPomodoroSettings();
       return response.data;
@@ -194,9 +193,30 @@ export function usePomodoroSettings() {
       const response = await api.user.updatePomodoroSettings(settings);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: PROFILE_KEYS.pomodoroSettings });
-      toast.success('设置已保存');
+    onSuccess: (_, variables) => {
+      // 使设置缓存失效
+      queryClient.invalidateQueries({ queryKey: SETTINGS_KEYS.pomodoro });
+      
+      // 同时使统一的 user profile 缓存失效，保持数据一致性
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.profile() });
+      
+      // 同步到本地存储供番茄钟组件使用
+      const localSettings = {
+        focusDuration: variables.focusDuration,
+        shortBreakDuration: variables.shortBreakDuration,
+        longBreakDuration: variables.longBreakDuration,
+        autoStartBreak: variables.autoStartBreak,
+        autoStartPomodoro: variables.autoStartPomodoro,
+        longBreakInterval: variables.longBreakInterval,
+      };
+      // 使用AsyncStorage或全局状态管理
+      try {
+        const { AsyncStorage } = require('react-native');
+        AsyncStorage.setItem('pomodoro_settings', JSON.stringify(localSettings));
+      } catch {
+        // Web环境忽略
+      }
+      toast.success('设置已保存，下次专注时生效');
     },
     onError: () => {
       toast.error('设置保存失败');
@@ -212,13 +232,16 @@ export function usePomodoroSettings() {
 }
 
 /**
- * 系统设置 Hook
+ * 系统设置 Hook - 带主题应用
+ * 
+ * 注意：更新设置时同时使 USER_KEYS.profile() 缓存失效
+ * 确保设置页面和用户资料页面数据一致
  */
 export function useSystemSettings() {
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: PROFILE_KEYS.systemSettings,
+    queryKey: SETTINGS_KEYS.system,
     queryFn: async () => {
       const response = await api.user.getSystemSettings();
       return response.data;
@@ -231,8 +254,20 @@ export function useSystemSettings() {
       const response = await api.user.updateSystemSettings(settings);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: PROFILE_KEYS.systemSettings });
+    onSuccess: (_, variables) => {
+      // 使设置缓存失效
+      queryClient.invalidateQueries({ queryKey: SETTINGS_KEYS.system });
+      
+      // 同时使统一的 user profile 缓存失效，保持数据一致性
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.profile() });
+      
+      // 应用主题设置到本地存储
+      try {
+        const { AsyncStorage } = require('react-native');
+        AsyncStorage.setItem('theme', variables.theme);
+      } catch {
+        // Web环境忽略
+      }
       toast.success('设置已保存');
     },
     onError: () => {

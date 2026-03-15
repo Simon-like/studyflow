@@ -1,4 +1,4 @@
-export type AvatarSize = 'sm' | 'md' | 'lg' | 'xl';
+export type AvatarSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 
 export interface AvatarProps {
   name: string;

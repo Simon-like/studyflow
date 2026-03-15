@@ -11,6 +11,7 @@ import {
   ScrollView,
   Switch,
   Alert,
+  Modal,
 } from 'react-native';
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { Icon, type IconName } from '../../components/ui/Icon';
@@ -81,23 +82,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     );
   };
 
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      '删除账号',
-      '此操作不可恢复，确定要删除账号吗？',
-      [
-        { text: '取消', style: 'cancel' },
-        {
-          text: '删除',
-          style: 'destructive',
-          onPress: () => {
-            // TODO: 调用删除账号API
-            Alert.alert('提示', '请联系客服删除账号');
-          },
-        },
-      ]
-    );
-  };
+
 
   const renderSection = (title: string, icon: IconName, children: React.ReactNode) => (
     <View style={styles.section}>
@@ -223,23 +208,30 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           </>
         ))}
 
-        {/* 通知设置 */}
+        {/* 通知设置 - 暂时锁定 */}
         {renderSection('通知设置', 'bell', (
           <>
+            <View style={styles.lockedOverlay}>
+              <View style={styles.lockedContent}>
+                <Icon name="lock" size={24} color={colors.textMuted} />
+                <Text style={styles.lockedTitle}>通知设置</Text>
+                <Text style={styles.lockedSubtitle}>该功能即将推出，敬请期待</Text>
+              </View>
+            </View>
             {renderToggleItem(
               '启用通知',
               systemSettings?.notificationEnabled ?? true,
-              (value) => handleSystemChange('notificationEnabled', value)
+              () => {} // 禁用操作
             )}
             {renderToggleItem(
               '提示音',
               systemSettings?.soundEnabled ?? true,
-              (value) => handleSystemChange('soundEnabled', value)
+              () => {} // 禁用操作
             )}
             {renderToggleItem(
               '震动提醒',
               systemSettings?.vibrationEnabled ?? true,
-              (value) => handleSystemChange('vibrationEnabled', value)
+              () => {} // 禁用操作
             )}
           </>
         ))}
@@ -288,14 +280,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           <Text style={styles.logoutText}>退出登录</Text>
         </TouchableOpacity>
 
-        {/* 删除账号 */}
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={handleDeleteAccount}
-        >
-          <Icon name="trash-2" size={20} color={colors.error} />
-          <Text style={styles.deleteText}>删除账号</Text>
-        </TouchableOpacity>
+
 
         <View style={styles.bottomPadding} />
       </ScrollView>
@@ -500,23 +485,27 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.medium,
     color: colors.error,
   },
-  deleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  lockedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
     justifyContent: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-    marginHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: radius.lg,
-    backgroundColor: alpha.error10,
-    borderWidth: 1,
-    borderColor: colors.error,
+    alignItems: 'center',
+    zIndex: 10,
+    borderRadius: radius.xl,
   },
-  deleteText: {
+  lockedContent: {
+    alignItems: 'center',
+  },
+  lockedTitle: {
     fontSize: fontSize.base,
-    fontWeight: fontWeight.medium,
-    color: colors.error,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    marginTop: spacing.sm,
+  },
+  lockedSubtitle: {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
+    marginTop: spacing.xs,
   },
   bottomPadding: {
     height: spacing.xl * 2,

@@ -33,6 +33,8 @@ import {
   MOCK_OVERVIEW_STATS,
   MOCK_DAILY_STATS,
   MOCK_SUBJECT_STATS,
+  MOCK_USER_TAGS,
+  PRESET_TAGS,
 } from "./data";
 import { mockDelay, ok, fail, paginate, genId } from "./helpers";
 import type { CreateTaskRequest, UpdateTaskRequest } from "../services/taskService";
@@ -625,6 +627,7 @@ import type {
   UpdateProfileRequest,
   ChangePasswordRequest,
   StudyCalendarData,
+  UserTag,
 } from "@studyflow/shared";
 
 // 模拟用户设置存储
@@ -659,6 +662,9 @@ let userStats: UserStats = {
   todayTasks: 2,
 };
 
+// 用户已选择的标签
+let userTags: UserTag[] = [...MOCK_USER_TAGS];
+
 // 默认头像（使用UI Avatars服务生成）
 const getDefaultAvatar = (name: string) => {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=f4a261&color=fff&size=256`;
@@ -671,6 +677,7 @@ export const mockUserService = {
     const user = currentUser || MOCK_USER;
     const profile: UserProfile = {
       ...user,
+      tags: userTags,
       avatar: user.avatar || getDefaultAvatar(user.nickname || user.username),
       focusDuration: userSettings.focusDuration,
       shortBreakDuration: userSettings.shortBreakDuration,
@@ -688,10 +695,24 @@ export const mockUserService = {
     return ok(profile);
   },
 
+  // 获取预设标签列表
+  getPresetTags: async (): Promise<ApiResponse<typeof PRESET_TAGS>> => {
+    await mockDelay(300);
+    return ok(PRESET_TAGS);
+  },
+
   // 更新用户资料
   updateProfile: async (data: UpdateProfileRequest): Promise<ApiResponse<User>> => {
     await mockDelay(500);
     const user = currentUser || MOCK_USER;
+    
+    // 如果更新了标签，同步更新userTags
+    if (data.tags) {
+      userTags = PRESET_TAGS
+        .filter(tag => data.tags?.includes(tag.id))
+        .map(tag => ({ ...tag, unlockedAt: new Date().toISOString() }));
+    }
+    
     const updatedUser = {
       ...user,
       ...data,
@@ -781,14 +802,15 @@ export const mockUserService = {
     return ok(calendar);
   },
 
-  // 删除账号
+  // 删除账号 - 已禁用（危险操作）
   deleteAccount: async (): Promise<ApiResponse<void>> => {
-    await mockDelay(800);
-    currentUser = null;
-    safeStorage.remove(STORAGE_KEYS.USER);
-    safeStorage.remove(STORAGE_KEYS.TOKEN);
-    safeStorage.remove(STORAGE_KEYS.REFRESH_TOKEN);
-    return ok(undefined as unknown as void, "账号已删除");
+    await mockDelay(300);
+    throw { 
+      response: { 
+        status: 403, 
+        data: fail(403, "账号删除功能已禁用，如需删除账号请联系客服") 
+      } 
+    };
   },
 };
 

@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '@/stores/authStore';
+import { useUser } from '@/hooks';
 import { useTabTransition } from '@/hooks/useTabTransition';
 import { TabTransitionWrapper } from '@/components/PageRefresh';
 import {
@@ -24,7 +24,7 @@ const navItems = [
 ];
 
 export function MainLayout() {
-  const { user, logout } = useAuthStore();
+  const { user, displayName, logout } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -42,7 +42,6 @@ export function MainLayout() {
     navigate('/auth/login');
   };
 
-  const displayName = user?.nickname || user?.username || '用户';
   const avatarLetter = displayName[0]?.toUpperCase() || 'U';
 
   // 处理导航点击

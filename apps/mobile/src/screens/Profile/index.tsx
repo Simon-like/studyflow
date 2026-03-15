@@ -11,7 +11,7 @@ import {
   StatsCard,
   WeeklyChart,
   Achievements,
-  StudyGoals,
+  // StudyGoals, // 功能搁置
   MenuList,
   LogoutButton,
 } from './components';
@@ -25,7 +25,7 @@ type ProfileScreenState = 'main' | 'edit' | 'settings';
 export default function ProfileScreen() {
   const [screenState, setScreenState] = useState<ProfileScreenState>('main');
   const { handleLogout } = useProfileScreen();
-  const { displayName, avatarUrl, subtitle, stats, isLoading } = useProfileData();
+  const { displayName, avatarUrl, subtitle, tags, stats, isLoading } = useProfileData();
 
   // 处理菜单点击
   const handleMenuPress = (label: string) => {
@@ -36,9 +36,7 @@ export default function ProfileScreen() {
       case '成就中心':
         // 导航到成就页面
         break;
-      case '番茄钟设置':
-      case '通知设置':
-      case '外观主题':
+      case '设置':
         setScreenState('settings');
         break;
       case '帮助与反馈':
@@ -79,6 +77,7 @@ export default function ProfileScreen() {
         displayName={displayName}
         avatarUrl={avatarUrl}
         subtitle={subtitle}
+        tags={tags}
       />
       
       {/* 统计数据卡片 */}
@@ -94,10 +93,10 @@ export default function ProfileScreen() {
         <Achievements />
       </View>
       
-      {/* 学习目标 */}
-      <View style={styles.section}>
+      {/* 学习目标 - 功能搁置 */}
+      {/* <View style={styles.section}>
         <StudyGoals />
-      </View>
+      </View> */}
       
       {/* 菜单列表 */}
       <View style={styles.section}>

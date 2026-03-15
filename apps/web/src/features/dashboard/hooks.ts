@@ -1,5 +1,5 @@
 import { useEffect, useRef, useMemo, useState, useCallback } from 'react';
-import { useAuthStore } from '@/stores/authStore';
+import { useUser } from '@/hooks';
 import { usePomodoroStore } from '@/stores/pomodoroStore';
 import { formatDuration } from '@/lib/utils';
 import { api } from '@studyflow/api';
@@ -253,11 +253,10 @@ export function useDashboardSummary(): UseDashboardSummaryReturn {
   };
 }
 
-// ==================== Dashboard 主数据 Hook（向后兼容） ====================
+// ==================== Dashboard 主数据 Hook ====================
 
 export function useDashboardData() {
-  const { user } = useAuthStore();
-  const displayName = user?.nickname || user?.username || '同学';
+  const { displayName } = useUser();
 
   const { stats, todayStats, isLoading: statsLoading, refetch: refetchStats } = useDashboardStats();
   const { tasks, isLoading: tasksLoading, error, toggleTask, reorderTasks, refetch: refetchTasks } = useDashboardTasks();

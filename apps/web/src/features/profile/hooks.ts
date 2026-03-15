@@ -1,25 +1,27 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@studyflow/api';
 import { useAuthStore } from '@/stores/authStore';
+import { USER_KEYS } from '@/hooks';
 import type { UserProfile, UpdateProfileRequest, UserStats } from '@studyflow/shared';
+import { PRESET_USER_TAGS } from '@studyflow/shared';
 import type { ProfileStats } from './types';
 import { Clock, Target, Flame, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-// Query keys
+// Profile 模块专用 Query keys
 const PROFILE_KEYS = {
   all: ['profile'] as const,
-  detail: () => [...PROFILE_KEYS.all, 'detail'] as const,
   stats: () => [...PROFILE_KEYS.all, 'stats'] as const,
 };
 
 /**
- * 获取用户资料
+ * 获取用户资料（使用统一的 USER_KEYS 以保持缓存一致性）
+ * 推荐使用 useUser hook 代替
  */
 export function useUserProfile() {
   return useQuery({
-    queryKey: PROFILE_KEYS.detail(),
+    queryKey: USER_KEYS.profile(),
     queryFn: async () => {
       const response = await api.user.getProfile();
       return response.data;
@@ -54,12 +56,20 @@ export function useUpdateProfile() {
       const response = await api.user.updateProfile(data);
       return response.data;
     },
-    onSuccess: (data) => {
-      // 更新本地缓存
-      queryClient.setQueryData(PROFILE_KEYS.detail(), (old: UserProfile | undefined) => {
+    onSuccess: (data, variables) => {
+      // 更新本地缓存 - 需要保留原有的tags，因为从API返回的data可能不包含完整的tags信息
+      queryClient.setQueryData(USER_KEYS.profile(), (old: UserProfile | undefined) => {
         if (!old) return old;
-        return { ...old, ...data };
+        // 如果更新了tags，从variables中获取最新的tags数据
+        const updatedTags = variables.tags 
+          ? PRESET_USER_TAGS
+              .filter(tag => variables.tags?.includes(tag.id))
+              .map(tag => ({ ...tag, unlockedAt: new Date().toISOString() }))
+          : old.tags;
+        return { ...old, ...data, tags: updatedTags };
       });
+      // 同时使 profile 模块的 stats 缓存失效
+      queryClient.invalidateQueries({ queryKey: PROFILE_KEYS.stats() });
       // 更新AuthStore
       setUser(data);
       toast.success('资料更新成功');
@@ -83,7 +93,8 @@ export function useUploadAvatar() {
       return response.data;
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: PROFILE_KEYS.detail() });
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.profile() });
+      queryClient.invalidateQueries({ queryKey: PROFILE_KEYS.stats() });
       // 创建临时URL用于预览
       const avatarUrl = URL.createObjectURL(variables);
       if (user) {
@@ -153,6 +164,7 @@ export function useProfileData() {
     displayName,
     avatarUrl,
     studyGoal,
+    tags: profile?.tags,
     stats: profileStats,
     profile,
     userStats: profile?.stats || stats,
@@ -160,34 +172,4 @@ export function useProfileData() {
   };
 }
 
-/**
- * 编辑Profile弹窗Hook
- */
-export function useEditProfileModal() {
-  const [isOpen, setIsOpen] = useState(false);
-  const { profile } = useProfileData();
-  const updateProfile = useUpdateProfile();
-  const uploadAvatar = useUploadAvatar();
 
-  const openModal = useCallback(() => setIsOpen(true), []);
-  const closeModal = useCallback(() => setIsOpen(false), []);
-
-  const handleSubmit = useCallback(async (data: UpdateProfileRequest) => {
-    await updateProfile.mutateAsync(data);
-    closeModal();
-  }, [updateProfile, closeModal]);
-
-  const handleAvatarChange = useCallback(async (file: File) => {
-    await uploadAvatar.mutateAsync(file);
-  }, [uploadAvatar]);
-
-  return {
-    isOpen,
-    openModal,
-    closeModal,
-    profile,
-    isSubmitting: updateProfile.isPending || uploadAvatar.isPending,
-    handleSubmit,
-    handleAvatarChange,
-  };
-}

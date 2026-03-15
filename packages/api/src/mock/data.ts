@@ -5,11 +5,16 @@
 
 import type {
   User,
+  UserProfile,
+  UserStats,
+  PomodoroSettings,
+  SystemSettings,
   Task,
   PomodoroRecord,
   ChatMessage,
   SocialPost,
   Achievement,
+  UserTag,
 } from "@studyflow/shared";
 
 // ==================== 测试账号 ====================
@@ -31,6 +36,64 @@ export const MOCK_USER: User = {
   studyGoal: "考研上岸",
   createdAt: "2026-01-15T08:00:00Z",
   updatedAt: "2026-03-12T10:00:00Z",
+};
+
+// 用户标签
+export const MOCK_USER_TAGS: UserTag[] = [
+  { id: 'tag_kaoyan', name: '考研上岸', type: 'custom' },
+  { id: 'tag_math', name: '数学达人', type: 'custom' },
+  { id: 'tag_focus', name: '专注力强', type: 'system' },
+];
+
+// 用户统计
+export const MOCK_USER_STATS: UserStats = {
+  totalFocusMinutes: 900,
+  totalPomodoros: 36,
+  totalTasks: 25,
+  completedTasks: 16,
+  currentStreak: 7,
+  longestStreak: 15,
+  studyDays: 30,
+  todayFocusMinutes: 75,
+  todayPomodoros: 3,
+  todayTasks: 2,
+};
+
+// 番茄钟设置
+export const MOCK_POMODORO_SETTINGS: PomodoroSettings = {
+  focusDuration: 25 * 60,
+  shortBreakDuration: 5 * 60,
+  longBreakDuration: 15 * 60,
+  autoStartBreak: false,
+  autoStartPomodoro: false,
+  longBreakInterval: 4,
+};
+
+// 系统设置
+export const MOCK_SYSTEM_SETTINGS: SystemSettings = {
+  theme: 'light',
+  notificationEnabled: true,
+  soundEnabled: true,
+  vibrationEnabled: true,
+  language: 'zh-CN',
+};
+
+// 用户完整资料
+export const MOCK_USER_PROFILE: UserProfile = {
+  ...MOCK_USER,
+  tags: MOCK_USER_TAGS,
+  focusDuration: MOCK_POMODORO_SETTINGS.focusDuration,
+  shortBreakDuration: MOCK_POMODORO_SETTINGS.shortBreakDuration,
+  longBreakDuration: MOCK_POMODORO_SETTINGS.longBreakDuration,
+  autoStartBreak: MOCK_POMODORO_SETTINGS.autoStartBreak,
+  autoStartPomodoro: MOCK_POMODORO_SETTINGS.autoStartPomodoro,
+  longBreakInterval: MOCK_POMODORO_SETTINGS.longBreakInterval,
+  theme: MOCK_SYSTEM_SETTINGS.theme,
+  notificationEnabled: MOCK_SYSTEM_SETTINGS.notificationEnabled,
+  soundEnabled: MOCK_SYSTEM_SETTINGS.soundEnabled,
+  vibrationEnabled: MOCK_SYSTEM_SETTINGS.vibrationEnabled,
+  language: MOCK_SYSTEM_SETTINGS.language,
+  stats: MOCK_USER_STATS,
 };
 
 export const MOCK_TOKENS = {
@@ -270,6 +333,20 @@ export const MOCK_OVERVIEW_STATS = {
     tasks: "-5%",
   },
 };
+
+// 预设标签列表
+export const PRESET_TAGS = [
+  { id: 'tag_kaoyan', name: '考研上岸', type: 'custom' as const, description: '正在备战考研' },
+  { id: 'tag_math', name: '数学达人', type: 'custom' as const, description: '擅长数学学习' },
+  { id: 'tag_english', name: '英语学霸', type: 'custom' as const, description: '英语能力出众' },
+  { id: 'tag_coder', name: '代码工匠', type: 'custom' as const, description: '热爱编程学习' },
+  { id: 'tag_early_bird', name: '早起鸟', type: 'custom' as const, description: '习惯早起学习' },
+  { id: 'tag_night_owl', name: '夜猫子', type: 'custom' as const, description: '深夜学习效率更高' },
+  { id: 'tag_focus', name: '专注力强', type: 'system' as const, description: '连续专注超过1小时' },
+  { id: 'tag_persist', name: '持之以恒', type: 'achievement' as const, description: '连续打卡7天' },
+  { id: 'tag_master', name: '学习大师', type: 'achievement' as const, description: '累计学习100小时' },
+  { id: 'tag_tomato', name: '番茄达人', type: 'achievement' as const, description: '完成100个番茄钟' },
+];
 
 export const MOCK_SUBJECT_STATS = [
   { category: "高等数学", focusMinutes: 320, percentage: 35.6 },

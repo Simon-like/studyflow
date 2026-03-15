@@ -13,9 +13,7 @@ interface MenuItem {
 const MENU_ITEMS: MenuItem[] = [
   { icon: 'bar-chart-2', label: '学习统计', sub: '查看详细数据' },
   { icon: 'award', label: '成就中心', sub: '3/6 已解锁' },
-  { icon: 'clock', label: '番茄钟设置', sub: '25分钟专注' },
-  { icon: 'bell', label: '通知设置', sub: '已开启' },
-  { icon: 'palette', label: '外观主题', sub: '浅色模式' },
+  { icon: 'settings', label: '设置', sub: '番茄钟、通知、主题' },
   { icon: 'help-circle', label: '帮助与反馈', sub: '' },
 ];
 

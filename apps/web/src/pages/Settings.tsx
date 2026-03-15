@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@studyflow/api";
-import { useAuthStore } from "@/stores/authStore";
+import { useUser, USER_KEYS } from "@/hooks";
+import { usePomodoroStore } from "@/stores/pomodoroStore";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import {
@@ -12,9 +13,9 @@ import {
   Clock,
   Volume2,
   Smartphone,
-  Trash2,
   LogOut,
   ChevronRight,
+  Lock,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import type { PomodoroSettings, SystemSettings } from "@studyflow/shared";
@@ -33,6 +34,27 @@ function formatDuration(seconds: number): string {
 }
 
 /**
+ * 应用主题设置
+ */
+function applyTheme(theme: 'light' | 'dark' | 'system') {
+  const root = document.documentElement;
+  
+  if (theme === 'dark') {
+    root.classList.add('dark');
+  } else if (theme === 'light') {
+    root.classList.remove('dark');
+  } else {
+    // 跟随系统
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (prefersDark) {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }
+}
+
+/**
  * 解析分钟数为秒数
  */
 function parseDuration(minutes: string): number {
@@ -40,7 +62,8 @@ function parseDuration(minutes: string): number {
 }
 
 export default function SettingsPage() {
-  const { user, logout } = useAuthStore();
+  const { user, displayName, logout } = useUser();
+  const pomodoroStore = usePomodoroStore();
   const queryClient = useQueryClient();
 
   // ============ 数据查询 ============
@@ -71,9 +94,17 @@ export default function SettingsPage() {
   const updatePomodoroMutation = useMutation({
     mutationFn: (data: PomodoroSettings) =>
       api.user.updatePomodoroSettings(data),
-    onSuccess: () => {
+    onSuccess: (_, data) => {
       queryClient.invalidateQueries({ queryKey: SETTINGS_KEYS.pomodoro });
-      toast.success("番茄钟设置已更新");
+      // 同时使 user profile 缓存失效，保持数据一致性
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.profile() });
+      // 同步到番茄钟Store
+      pomodoroStore.updateSettings({
+        focusDuration: data.focusDuration,
+        shortBreakDuration: data.shortBreakDuration,
+        longBreakDuration: data.longBreakDuration,
+      });
+      toast.success("番茄钟设置已更新，下次专注时生效");
     },
     onError: () => {
       toast.error("设置更新失败");
@@ -83,8 +114,12 @@ export default function SettingsPage() {
   // 更新系统设置
   const updateSystemMutation = useMutation({
     mutationFn: (data: SystemSettings) => api.user.updateSystemSettings(data),
-    onSuccess: () => {
+    onSuccess: (_, data) => {
       queryClient.invalidateQueries({ queryKey: SETTINGS_KEYS.system });
+      // 同时使 user profile 缓存失效，保持数据一致性
+      queryClient.invalidateQueries({ queryKey: USER_KEYS.profile() });
+      // 应用主题设置
+      applyTheme(data.theme);
       toast.success("系统设置已更新");
     },
     onError: () => {
@@ -157,6 +192,11 @@ export default function SettingsPage() {
     if (!localSystemSettings) return;
     const newSettings = { ...localSystemSettings, [field]: value };
     setLocalSystemSettings(newSettings);
+    // 通知设置暂时不同步到后端
+    if (field === 'notificationEnabled' || field === 'soundEnabled' || field === 'vibrationEnabled') {
+      toast.success("设置已保存（本地）");
+      return;
+    }
     updateSystemMutation.mutate(newSettings);
   };
 
@@ -316,8 +356,17 @@ export default function SettingsPage() {
           </div>
         </Card>
 
-        {/* 通知设置 */}
-        <Card className="p-7">
+        {/* 通知设置 - 暂时锁定 */}
+        <Card className="p-7 relative overflow-hidden">
+          {/* 锁定遮罩 */}
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
+            <div className="text-center">
+              <Lock className="w-8 h-8 text-stone/40 mx-auto mb-2" />
+              <p className="text-stone font-medium">通知设置</p>
+              <p className="text-sm text-stone/60">该功能即将推出，敬请期待</p>
+            </div>
+          </div>
+          
           <div className="flex items-center gap-4 mb-5">
             <div className="w-10 h-10 bg-sage/20 rounded-lg flex items-center justify-center">
               <Bell className="w-5 h-5 text-sage" />
@@ -446,38 +495,6 @@ export default function SettingsPage() {
           >
             <LogOut className="w-5 h-5" />
             <span className="font-medium">退出登录</span>
-          </button>
-        </Card>
-
-        {/* 危险区域 */}
-        <Card className="p-7 border-red-200">
-          <div className="flex items-center gap-4 mb-5">
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <Trash2 className="w-5 h-5 text-red-500" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-red-600">危险区域</h2>
-              <p className="text-sm text-stone">删除账号的操作不可恢复</p>
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              if (confirm("确定要删除账号吗？此操作不可恢复！")) {
-                api.user
-                  .deleteAccount()
-                  .then(() => {
-                    toast.success("账号已删除");
-                    logout();
-                  })
-                  .catch(() => {
-                    toast.error("删除失败");
-                  });
-              }
-            }}
-            className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-red-300 text-red-600 hover:bg-red-50 transition-all"
-          >
-            <Trash2 className="w-5 h-5" />
-            <span className="font-medium">删除账号</span>
           </button>
         </Card>
       </div>

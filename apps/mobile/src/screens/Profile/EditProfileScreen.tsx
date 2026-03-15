@@ -16,9 +16,11 @@ import {
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { Button } from '../../components/ui/Button';
 import { Icon } from '../../components/ui/Icon';
+import { Badge } from '../../components/ui/Badge';
 import { useProfileData, useUpdateProfile, useUploadAvatar } from './hooks';
 import { colors, spacing, radius, fontSize, fontWeight, shadows } from '../../theme';
 import type { UpdateProfileRequest } from '@studyflow/shared';
+import { PRESET_USER_TAGS, MAX_USER_TAGS } from '@studyflow/shared';
 
 interface EditProfileScreenProps {
   onBack: () => void;
@@ -34,7 +36,9 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
     studyGoal: '',
     email: '',
     phone: '',
+    tags: [],
   });
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // 初始化表单数据
   useEffect(() => {
@@ -44,12 +48,27 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
         studyGoal: profile.studyGoal || '',
         email: profile.email || '',
         phone: profile.phone || '',
+        tags: profile.tags?.map(t => t.id) || [],
       });
+      setSelectedTags(profile.tags?.map(t => t.id) || []);
     }
   }, [profile]);
 
   const handleInputChange = (field: keyof UpdateProfileRequest, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleTagToggle = (tagId: string) => {
+    setSelectedTags((prev) => {
+      if (prev.includes(tagId)) {
+        return prev.filter((id) => id !== tagId);
+      }
+      if (prev.length >= MAX_USER_TAGS) {
+        Alert.alert('提示', `最多只能选择${MAX_USER_TAGS}个标签`);
+        return prev;
+      }
+      return [...prev, tagId];
+    });
   };
 
   const handleAvatarPress = () => {
@@ -62,7 +81,7 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
   };
 
   const handleSubmit = async () => {
-    await updateProfile.mutateAsync(formData);
+    await updateProfile.mutateAsync({ ...formData, tags: selectedTags });
     onBack();
   };
 
@@ -158,6 +177,40 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
               style={styles.input}
               placeholderTextColor={colors.textMuted}
             />
+          </View>
+
+          {/* Tags */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>
+              个人标签 (最多{MAX_USER_TAGS}个)
+            </Text>
+            <View style={styles.tagsContainer}>
+              {PRESET_USER_TAGS.map((tag) => (
+                <TouchableOpacity
+                  key={tag.id}
+                  onPress={() => handleTagToggle(tag.id)}
+                  disabled={isSubmitting || (!selectedTags.includes(tag.id) && selectedTags.length >= MAX_USER_TAGS)}
+                  style={[
+                    styles.tagButton,
+                    selectedTags.includes(tag.id) && styles.tagButtonActive,
+                    !selectedTags.includes(tag.id) && selectedTags.length >= MAX_USER_TAGS && styles.tagButtonDisabled,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.tagButtonText,
+                      selectedTags.includes(tag.id) && styles.tagButtonTextActive,
+                      !selectedTags.includes(tag.id) && selectedTags.length >= MAX_USER_TAGS && styles.tagButtonTextDisabled,
+                    ]}
+                  >
+                    {tag.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.tagCount}>
+              已选择 {selectedTags.length}/{MAX_USER_TAGS} 个标签
+            </Text>
           </View>
         </View>
 
@@ -280,5 +333,43 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     width: '100%',
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  tagButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  tagButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  tagButtonDisabled: {
+    backgroundColor: colors.background,
+    borderColor: colors.border,
+    opacity: 0.5,
+  },
+  tagButtonText: {
+    fontSize: fontSize.sm,
+    color: colors.text,
+  },
+  tagButtonTextActive: {
+    color: colors.surface,
+    fontWeight: fontWeight.medium,
+  },
+  tagButtonTextDisabled: {
+    color: colors.textMuted,
+  },
+  tagCount: {
+    fontSize: fontSize.xs,
+    color: colors.textMuted,
+    marginTop: spacing.sm,
   },
 });

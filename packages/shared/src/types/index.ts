@@ -23,6 +23,9 @@ export interface User {
  * 用户完整资料（包含设置和统计）
  */
 export interface UserProfile extends User {
+  // 用户标签
+  tags?: UserTag[];                // 用户已解锁/设置的标签
+  
   // 番茄钟个性化设置
   focusDuration: number;           // 默认专注时长（秒）
   shortBreakDuration: number;      // 短休息时长（秒）
@@ -59,6 +62,16 @@ export interface UserStats {
 }
 
 /**
+ * 用户标签类型
+ */
+export interface UserTag {
+  id: string;
+  name: string;
+  type: 'achievement' | 'custom' | 'system';
+  unlockedAt?: string;
+}
+
+/**
  * 更新用户资料请求
  */
 export interface UpdateProfileRequest {
@@ -67,6 +80,7 @@ export interface UpdateProfileRequest {
   studyGoal?: string;
   email?: string;
   phone?: string;
+  tags?: string[];  // 用户选择的标签ID列表
 }
 
 /**

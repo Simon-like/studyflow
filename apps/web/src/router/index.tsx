@@ -15,6 +15,7 @@ const StatsPage = lazy(() => import('@/features/stats'));
 const CompanionPage = lazy(() => import('@/features/companion'));
 const CommunityPage = lazy(() => import('@/features/community'));
 const ProfilePage = lazy(() => import('@/features/profile'));
+const EditProfilePage = lazy(() => import('@/features/profile/EditProfilePage'));
 
 // 保持旧的pages路径作为fallback（可选）
 const SettingsPage = lazy(() => import('@/pages/Settings'));
@@ -78,6 +79,10 @@ export const router: ReturnType<typeof createBrowserRouter> = createBrowserRoute
       {
         path: 'profile',
         element: withSuspense(ProfilePage),
+      },
+      {
+        path: 'profile/edit',
+        element: withSuspense(EditProfilePage),
       },
       {
         path: 'settings',

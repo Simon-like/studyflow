@@ -2,13 +2,12 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Avatar } from '../../../components/ui/Avatar';
 import { colors, spacing, fontWeight, fontSize, alpha } from '../../../theme';
-import { DEFAULT_USER, WELCOME_MESSAGES } from '../constants';
+import { useUser } from '../../../hooks';
+import { WELCOME_MESSAGES } from '../constants';
 
-interface WelcomeHeaderProps {
-  userName?: string;
-}
+export function WelcomeHeader() {
+  const { displayName, avatarUrl, isLoading } = useUser();
 
-export function WelcomeHeader({ userName = DEFAULT_USER.name }: WelcomeHeaderProps) {
   // 根据时间选择欢迎语
   const getWelcomeMessage = () => {
     const hour = new Date().getHours();
@@ -23,9 +22,13 @@ export function WelcomeHeader({ userName = DEFAULT_USER.name }: WelcomeHeaderPro
         <View style={styles.content}>
           <View>
             <Text style={styles.subtitle}>{getWelcomeMessage()}</Text>
-            <Text style={styles.title}>Hi, {userName}</Text>
+            <Text style={styles.title}>Hi, {displayName}</Text>
           </View>
-          <Avatar name={DEFAULT_USER.avatar} size="lg" />
+          <Avatar 
+            name={displayName} 
+            src={avatarUrl}
+            size="lg" 
+          />
         </View>
       </View>
     </View>

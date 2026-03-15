@@ -3,6 +3,7 @@ export const AVATAR_SIZES = {
   md: 'w-10 h-10 text-sm',
   lg: 'w-12 h-12 text-base',
   xl: 'w-20 h-20 text-3xl',
+  '2xl': 'w-28 h-28 text-4xl',
 } as const;
 
 export const AVATAR_COLORS = ['bg-coral', 'bg-sage', 'bg-blue-400', 'bg-amber-400'] as const;

@@ -1,12 +1,12 @@
-import { Edit2, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Edit2 } from 'lucide-react';
 import { Avatar, Badge } from '@/components/ui';
-import { USER_TAGS } from '../constants';
+import type { UserTag } from '@studyflow/shared';
 
 interface ProfileHeaderProps {
   displayName: string;
   avatarUrl?: string;
   studyGoal?: string;
+  tags?: UserTag[];
   onEditPress?: () => void;
 }
 
@@ -14,9 +14,9 @@ export function ProfileHeader({
   displayName,
   avatarUrl,
   studyGoal = '考研冲刺中',
+  tags,
   onEditPress,
 }: ProfileHeaderProps) {
-  const navigate = useNavigate();
 
   return (
     <div className="bg-gradient-to-r from-coral/20 via-warm to-cream rounded-3xl p-8 mb-8">
@@ -48,14 +48,18 @@ export function ProfileHeader({
             {studyGoal} · <span className="text-coral">坚持学习中</span>
           </p>
           <div className="flex gap-2 mt-3 flex-wrap">
-            {USER_TAGS.map((tag) => (
-              <Badge
-                key={tag}
-                variant={tag === '数学达人' || tag === '专注力强' ? 'primary' : 'success'}
-              >
-                {tag}
-              </Badge>
-            ))}
+            {tags && tags.length > 0 ? (
+              tags.map((tag) => (
+                <Badge
+                  key={tag.id}
+                  variant={tag.type === 'achievement' ? 'primary' : tag.type === 'system' ? 'success' : 'default'}
+                >
+                  {tag.name}
+                </Badge>
+              ))
+            ) : (
+              <span className="text-sm text-stone/60">点击编辑资料添加标签</span>
+            )}
           </div>
         </div>
 
@@ -66,13 +70,6 @@ export function ProfileHeader({
             className="px-4 py-2 bg-white text-charcoal rounded-xl text-sm font-medium border border-mist hover:bg-warm transition-all"
           >
             编辑资料
-          </button>
-          <button
-            onClick={() => navigate('/settings')}
-            className="px-4 py-2 bg-white/50 text-stone rounded-xl text-sm font-medium border border-mist/50 hover:bg-white transition-all flex items-center justify-center gap-1.5"
-          >
-            <Settings className="w-3.5 h-3.5" />
-            设置
           </button>
         </div>
       </div>
