@@ -17,7 +17,7 @@ import { SectionHeader } from '../../components/layout/SectionHeader';
 import { TaskCard } from '../../components/business/TaskCard';
 import { Modal as AppModal } from '../../components/ui/Modal';
 import { colors, radius, spacing, fontWeight } from '../../theme';
-import { api } from '@studyflow/api';
+import { api } from '../../api';
 import type { Task, TaskPriority } from '@studyflow/shared';
 
 type FilterStatus = 'all' | 'todo' | 'in_progress' | 'completed';

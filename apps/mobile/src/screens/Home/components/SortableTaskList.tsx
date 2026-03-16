@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import type { Task, TaskPriority } from '@studyflow/shared';
 import type { TimerStatus } from '../../../components/business/PomodoroTimer';
-import { api } from '@studyflow/api';
+import { api } from '../../../api';
 import { SectionHeader } from '../../../components/layout/SectionHeader';
 import { Modal } from '../../../components/ui/Modal';
 import { useDialog } from '../../../providers/DialogProvider';

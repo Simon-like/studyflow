@@ -22,7 +22,7 @@ import { FormInput } from './components';
 import { useRegisterForm } from './hooks';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
-import { api } from '@studyflow/api';
+import { api } from '../../api';
 
 interface RegisterScreenProps {
   onGoLogin: () => void;

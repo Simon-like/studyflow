@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { api } from '@studyflow/api';
+import { api } from '../../api';
 import type { Task, TodayStats, WeeklyOverview } from '@studyflow/shared';
 import { usePomodoro } from '../../hooks';
 import { useDialog } from '../../providers/DialogProvider';

@@ -10,7 +10,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { tokenStorage, type TokenData, type User } from '../utils/tokenStorage';
-import { api } from '@studyflow/api';
+import { api } from '../api';
 
 // Token 刷新配置
 const TOKEN_REFRESH_CONFIG = {

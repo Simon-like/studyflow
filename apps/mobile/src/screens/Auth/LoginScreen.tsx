@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import { colors, spacing, radius, fontSize, fontWeight, shadows } from '../../theme';
 import { FormInput, SocialLogin } from './components';
-import { TEST_ACCOUNT } from '@studyflow/api';
+import { TEST_ACCOUNT } from '../../api';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLoginForm } from './hooks';
