@@ -81,11 +81,11 @@ export const API_ENDPOINTS = {
     REORDER: "/api/v1/tasks/reorder",
   },
   POMODORO: {
-    START: "/api/v1/pomodoro/start",
-    STOP: (id: string) => `/api/v1/pomodoro/${id}/stop`,
-    HISTORY: "/api/v1/pomodoro/history",
-    TODAY_STATS: "/api/v1/pomodoro/stats/today",
-    WEEKLY_STATS: "/api/v1/pomodoro/stats/weekly",
+    START: "/api/v1/pomodoros/start",
+    STOP: (id: string) => `/api/v1/pomodoros/${id}/stop`,
+    HISTORY: "/api/v1/pomodoros/history",
+    TODAY_STATS: "/api/v1/pomodoros/stats/today",
+    WEEKLY_STATS: "/api/v1/pomodoros/stats/weekly",
   },
   STATS: {
     OVERVIEW: "/api/v1/stats/overview",
