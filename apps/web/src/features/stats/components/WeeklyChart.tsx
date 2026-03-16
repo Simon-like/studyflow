@@ -1,12 +1,42 @@
 import { Card, CardHeader } from '@/components/ui';
-import type { DailyStudyData } from '@/types';
 
-interface WeeklyChartProps {
-  data: DailyStudyData[];
-  maxValue: number;
+interface WeeklyChartData {
+  day: string;
+  pomodoros: number;
+  hours: number;
 }
 
-export function WeeklyChart({ data, maxValue }: WeeklyChartProps) {
+interface WeeklyChartProps {
+  data: WeeklyChartData[];
+  maxValue: number;
+  isLoading?: boolean;
+}
+
+export function WeeklyChart({ data, maxValue, isLoading }: WeeklyChartProps) {
+  if (isLoading) {
+    return (
+      <Card className="lg:col-span-2">
+        <CardHeader title="每日番茄钟" />
+        <div className="flex items-end gap-3 h-40 animate-pulse">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div key={i} className="flex-1 bg-gray-100 rounded-t-xl h-20" />
+          ))}
+        </div>
+      </Card>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <Card className="lg:col-span-2">
+        <CardHeader title="每日番茄钟" />
+        <div className="flex items-center justify-center h-40 text-stone text-sm">
+          暂无数据，开始学习吧！
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="lg:col-span-2">
       <CardHeader title="每日番茄钟" />

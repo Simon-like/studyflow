@@ -18,9 +18,10 @@ import {
 import { useProfileScreen, useProfileData } from './hooks';
 import { EditProfileScreen } from './EditProfileScreen';
 import { SettingsScreen } from './SettingsScreen';
+import StatsScreen from '../Stats';
 import { spacing, colors } from '../../theme';
 
-type ProfileScreenState = 'main' | 'edit' | 'settings';
+type ProfileScreenState = 'main' | 'edit' | 'settings' | 'stats';
 
 export default function ProfileScreen() {
   const [screenState, setScreenState] = useState<ProfileScreenState>('main');
@@ -31,7 +32,7 @@ export default function ProfileScreen() {
   const handleMenuPress = (label: string) => {
     switch (label) {
       case '学习统计':
-        // 导航到统计页面
+        setScreenState('stats');
         break;
       case '成就中心':
         // 导航到成就页面
@@ -66,6 +67,11 @@ export default function ProfileScreen() {
   // 设置页面
   if (screenState === 'settings') {
     return <SettingsScreen onBack={() => setScreenState('main')} />;
+  }
+
+  // 统计页面
+  if (screenState === 'stats') {
+    return <StatsScreen onBack={() => setScreenState('main')} />;
   }
 
   // 主页面

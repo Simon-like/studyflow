@@ -30,9 +30,6 @@ import {
   MOCK_POMODORO_RECORDS,
   MOCK_CHAT_MESSAGES,
   MOCK_POSTS,
-  MOCK_OVERVIEW_STATS,
-  MOCK_DAILY_STATS,
-  MOCK_SUBJECT_STATS,
   MOCK_USER_TAGS,
   PRESET_TAGS,
 } from "./data";
@@ -281,22 +278,16 @@ export const mockTaskService = {
       throw { response: { status: 404, data: fail(404, "任务不存在") } };
 
     const currentStatus = tasks[idx].status;
-    let newStatus: Task['status'];
-    
-    if (currentStatus === "completed") {
-      newStatus = "todo";
-    } else if (currentStatus === "in_progress") {
-      newStatus = "completed";
-    } else {
-      // todo -> completed (点击完成)
-      newStatus = "completed";
-    }
+    const newStatus: Task["status"] =
+      currentStatus === "completed" ? "todo" : "completed";
 
     tasks[idx] = {
       ...tasks[idx],
       status: newStatus,
       updatedAt: new Date().toISOString(),
     };
+
+    recalculateTodayStats();
     return ok(tasks[idx]);
   },
 
@@ -376,9 +367,63 @@ export const mockTaskService = {
 
 // ==================== Pomodoro Mock ====================
 
-// 模拟今日统计数据
-let todayPomodoroCount = 3;
-let todayFocusMinutes = 75;
+// 模拟今日统计数据（实时聚合）
+let todayPomodoroCount = 0;
+let todayFocusMinutes = 0;
+let todayCompletedTasks = 0;
+
+// 记录今天已经完成的任务ID（避免重复计数）
+const todayCompletedTaskIds = new Set<string>();
+
+const toDateKey = (date: string | Date): string => {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const getCompletedDurationSeconds = (record: PomodoroRecord): number => {
+  if (typeof record.actualDuration === "number" && record.actualDuration > 0) {
+    return record.actualDuration;
+  }
+  return record.duration || 0;
+};
+
+const toFocusMinutes = (seconds: number): number => {
+  if (seconds <= 0) return 0;
+  return Math.max(1, Math.round(seconds / 60));
+};
+
+const isDateInRange = (date: Date, start: Date, end: Date): boolean => {
+  return date.getTime() >= start.getTime() && date.getTime() <= end.getTime();
+};
+
+const recalculateTodayStats = () => {
+  const todayKey = toDateKey(new Date());
+
+  const completedTodayRecords = pomodoroRecords.filter((record) => {
+    if (record.status !== "completed") return false;
+    const effectiveTime = record.endTime || record.startTime;
+    return toDateKey(effectiveTime) === todayKey;
+  });
+
+  todayPomodoroCount = completedTodayRecords.length;
+  todayFocusMinutes = completedTodayRecords.reduce(
+    (sum, record) => sum + toFocusMinutes(getCompletedDurationSeconds(record)),
+    0,
+  );
+
+  todayCompletedTaskIds.clear();
+  tasks.forEach((task) => {
+    if (task.status === "completed" && toDateKey(task.updatedAt) === todayKey) {
+      todayCompletedTaskIds.add(task.id);
+    }
+  });
+  todayCompletedTasks = todayCompletedTaskIds.size;
+};
+
+recalculateTodayStats();
 
 export const mockPomodoroService = {
   start: async (
@@ -417,13 +462,17 @@ export const mockPomodoroService = {
       throw { response: { status: 404, data: fail(404, "记录不存在") } };
 
     const now = new Date();
-    const start = new Date(pomodoroRecords[idx].startTime);
-    const actualDuration = Math.floor((now.getTime() - start.getTime()) / 1000);
+    const current = pomodoroRecords[idx];
+    const start = new Date(current.startTime);
+    const elapsedDuration = Math.max(0, Math.floor((now.getTime() - start.getTime()) / 1000));
     const isCompleted = data.status === "completed";
+    const actualDuration = isCompleted
+      ? (elapsedDuration <= 1 ? (current.duration || 0) : elapsedDuration)
+      : elapsedDuration;
 
     // 更新记录
     pomodoroRecords[idx] = {
-      ...pomodoroRecords[idx],
+      ...current,
       status: isCompleted ? "completed" : "stopped",
       endTime: now.toISOString(),
       actualDuration,
@@ -446,11 +495,7 @@ export const mockPomodoroService = {
       }
     }
 
-    // 更新今日统计
-    if (isCompleted) {
-      todayPomodoroCount++;
-      todayFocusMinutes += Math.floor(actualDuration / 60);
-    }
+    recalculateTodayStats();
 
     // 构建结算摘要
     const settlement: import("@studyflow/shared").PomodoroSettlement = {
@@ -459,7 +504,7 @@ export const mockPomodoroService = {
       todayStats: {
         focusMinutes: todayFocusMinutes,
         completedPomodoros: todayPomodoroCount,
-        completedTasks: tasks.filter((t) => t.status === "completed").length,
+        completedTasks: todayCompletedTasks,
         streakDays: 7,
       },
     };
@@ -477,23 +522,48 @@ export const mockPomodoroService = {
   // 获取今日统计 (TodayStats 格式)
   getTodayStats: async (): Promise<ApiResponse<TodayStats>> => {
     await mockDelay(300);
+    recalculateTodayStats();
     return ok({
       focusMinutes: todayFocusMinutes,
       completedPomodoros: todayPomodoroCount,
-      completedTasks: tasks.filter((t) => t.status === "completed").length,
+      completedTasks: todayCompletedTasks,
       streakDays: 7,
     });
   },
 
   getWeeklyStats: async () => {
     await mockDelay(400);
-    return ok({
-      dailyStats: MOCK_DAILY_STATS.map((d) => ({
-        date: d.date,
-        pomodoros: d.pomodoros,
-        focusTime: d.focusMinutes * 60,
-      })),
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    weekStart.setHours(0, 0, 0, 0);
+
+    const dailyStats = Array.from({ length: 7 }).map((_, i) => {
+      const dayStart = new Date(weekStart);
+      dayStart.setDate(weekStart.getDate() + i);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      const dayRecords = pomodoroRecords.filter((record) => {
+        if (record.status !== "completed") return false;
+        const effectiveTime = new Date(record.endTime || record.startTime);
+        return isDateInRange(effectiveTime, dayStart, dayEnd);
+      });
+
+      const focusSeconds = dayRecords.reduce(
+        (sum, record) => sum + getCompletedDurationSeconds(record),
+        0,
+      );
+
+      return {
+        date: toDateKey(dayStart),
+        pomodoros: dayRecords.length,
+        focusTime: focusSeconds,
+      };
     });
+
+    return ok({ dailyStats });
   },
 };
 
@@ -820,7 +890,7 @@ import type {
   OverviewStats, 
   DailyStat, 
   SubjectStat, 
-  DashboardSummary 
+  DashboardSummary,
 } from "@studyflow/shared";
 
 export const mockStatsService = {
@@ -829,12 +899,51 @@ export const mockStatsService = {
     period?: string,
   ): Promise<ApiResponse<OverviewStats>> => {
     await mockDelay(400);
+    recalculateTodayStats();
+
+    const normalizedPeriod = period || "week";
+    const now = new Date();
+
+    let startDate = new Date(now);
+    if (normalizedPeriod === "today") {
+      startDate.setHours(0, 0, 0, 0);
+    } else if (normalizedPeriod === "week") {
+      const dayOfWeek = now.getDay();
+      startDate.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      startDate.setHours(0, 0, 0, 0);
+    } else if (normalizedPeriod === "month") {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else {
+      startDate = new Date(now.getFullYear(), 0, 1);
+    }
+
+    const currentRecords = pomodoroRecords.filter((record) => {
+      if (record.status !== "completed") return false;
+      const effective = new Date(record.endTime || record.startTime);
+      return effective >= startDate && effective <= now;
+    });
+
+    const periodFocusMinutes = currentRecords.reduce(
+      (sum, record) => sum + toFocusMinutes(getCompletedDurationSeconds(record)),
+      0,
+    );
+    const periodPomodoros = currentRecords.length;
+    const periodCompletedTasks = tasks.filter((task) => {
+      if (task.status !== "completed") return false;
+      const updated = new Date(task.updatedAt);
+      return updated >= startDate && updated <= now;
+    }).length;
+
     const stats: OverviewStats = {
-      focusMinutes: MOCK_OVERVIEW_STATS.totalFocusMinutes,
-      completedPomodoros: MOCK_OVERVIEW_STATS.completedPomodoros,
-      completedTasks: MOCK_OVERVIEW_STATS.completedTasks,
-      streakDays: MOCK_OVERVIEW_STATS.streakDays,
-      compareLastPeriod: MOCK_OVERVIEW_STATS.compareLastPeriod,
+      focusMinutes: periodFocusMinutes,
+      completedPomodoros: periodPomodoros,
+      completedTasks: periodCompletedTasks,
+      streakDays: 7,
+      compareLastPeriod: {
+        focusMinutes: "+0%",
+        pomodoros: "+0%",
+        tasks: "+0%",
+      },
     };
     return ok(stats);
   },
@@ -845,13 +954,54 @@ export const mockStatsService = {
     endDate?: string,
   ): Promise<ApiResponse<DailyStat[]>> => {
     await mockDelay(400);
-    // 转换为 DailyStat 格式
-    const dailyStats: DailyStat[] = MOCK_DAILY_STATS.map((d) => ({
-      date: d.date,
-      focusMinutes: d.focusMinutes,
-      pomodoros: d.pomodoros,
-      tasks: d.tasks,
-    }));
+
+    const now = new Date();
+    const rangeStart = startDate ? new Date(`${startDate}T00:00:00`) : (() => {
+      const dayOfWeek = now.getDay();
+      const d = new Date(now);
+      d.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      d.setHours(0, 0, 0, 0);
+      return d;
+    })();
+    const rangeEnd = endDate ? new Date(`${endDate}T23:59:59`) : (() => {
+      const d = new Date(rangeStart);
+      d.setDate(rangeStart.getDate() + 6);
+      d.setHours(23, 59, 59, 999);
+      return d;
+    })();
+
+    const dailyStats: DailyStat[] = [];
+    for (let d = new Date(rangeStart); d <= rangeEnd; d.setDate(d.getDate() + 1)) {
+      const dayStart = new Date(d);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(d);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      const dayRecords = pomodoroRecords.filter((record) => {
+        if (record.status !== "completed") return false;
+        const effective = new Date(record.endTime || record.startTime);
+        return isDateInRange(effective, dayStart, dayEnd);
+      });
+
+      const focusMinutes = dayRecords.reduce(
+        (sum, record) => sum + toFocusMinutes(getCompletedDurationSeconds(record)),
+        0,
+      );
+
+      const dayTasks = tasks.filter((task) => {
+        if (task.status !== "completed") return false;
+        const updated = new Date(task.updatedAt);
+        return isDateInRange(updated, dayStart, dayEnd);
+      }).length;
+
+      dailyStats.push({
+        date: toDateKey(dayStart),
+        focusMinutes,
+        pomodoros: dayRecords.length,
+        tasks: dayTasks,
+      });
+    }
+
     return ok(dailyStats);
   },
 
@@ -860,37 +1010,119 @@ export const mockStatsService = {
     period?: string,
   ): Promise<ApiResponse<SubjectStat[]>> => {
     await mockDelay(300);
-    const subjectStats: SubjectStat[] = MOCK_SUBJECT_STATS.map((s) => ({
-      category: s.category,
-      focusMinutes: s.focusMinutes,
-      percentage: s.percentage,
-    }));
+
+    const normalizedPeriod = period || "week";
+    const now = new Date();
+    let startDate = new Date(now);
+
+    if (normalizedPeriod === "today") {
+      startDate.setHours(0, 0, 0, 0);
+    } else if (normalizedPeriod === "week") {
+      const dayOfWeek = now.getDay();
+      startDate.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      startDate.setHours(0, 0, 0, 0);
+    } else if (normalizedPeriod === "month") {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    } else {
+      startDate = new Date(now.getFullYear(), 0, 1);
+    }
+
+    const categoryMinutes = new Map<string, number>();
+    const scopedRecords = pomodoroRecords.filter((record) => {
+      if (record.status !== "completed") return false;
+      const effective = new Date(record.endTime || record.startTime);
+      return effective >= startDate && effective <= now;
+    });
+
+    scopedRecords.forEach((record) => {
+      const task = record.taskId ? tasks.find((t) => t.id === record.taskId) : null;
+      const category = task?.category || "未分类";
+      const current = categoryMinutes.get(category) || 0;
+      categoryMinutes.set(
+        category,
+        current + toFocusMinutes(getCompletedDurationSeconds(record)),
+      );
+    });
+
+    const totalMinutes = Array.from(categoryMinutes.values()).reduce((sum, v) => sum + v, 0);
+    if (totalMinutes <= 0) {
+      return ok([]);
+    }
+
+    const subjectStats: SubjectStat[] = Array.from(categoryMinutes.entries())
+      .map(([category, focusMinutes]) => ({
+        category,
+        focusMinutes,
+        percentage: Number(((focusMinutes / totalMinutes) * 100).toFixed(1)),
+      }))
+      .sort((a, b) => b.focusMinutes - a.focusMinutes);
+
     return ok(subjectStats);
   },
 
   // 获取 Dashboard 聚合数据
   getDashboardSummary: async (): Promise<ApiResponse<DashboardSummary>> => {
     await mockDelay(500);
+    recalculateTodayStats();
+
     const todayTasks = tasks.filter(
       (t) => t.status === "todo" || t.status === "in_progress"
     );
-    
+
+    const { dailyStats } = await mockPomodoroService.getWeeklyStats().then((res) => res.data);
+    const totalPomodoros = dailyStats.reduce((sum, d) => sum + d.pomodoros, 0);
+    const totalFocusHours = Math.round(
+      (dailyStats.reduce((sum, d) => sum + d.focusTime, 0) / 3600) * 10
+    ) / 10;
+
     const summary: DashboardSummary = {
       todayStats: {
         focusMinutes: todayFocusMinutes,
         completedPomodoros: todayPomodoroCount,
-        completedTasks: tasks.filter((t) => t.status === "completed").length,
+        completedTasks: todayCompletedTasks,
         streakDays: 7,
       },
       weeklyStats: {
-        totalPomodoros: 36,
-        totalFocusHours: 15,
-        completionRate: 89,
+        totalPomodoros,
+        totalFocusHours,
+        completionRate: totalPomodoros > 0 ? 100 : 0,
         streakDays: 7,
       },
       todayTasks: todayTasks.slice(0, 5),
       activePomodoro: pomodoroRecords.find((r) => r.status === "running") || null,
     };
     return ok(summary);
+  },
+
+  // 获取用户累计统计数据
+  getUserStats: async (): Promise<ApiResponse<UserStats>> => {
+    await mockDelay(400);
+    recalculateTodayStats();
+
+    const completedRecords = pomodoroRecords.filter((r) => r.status === "completed");
+    const totalFocusMinutes = completedRecords.reduce(
+      (sum, record) => sum + toFocusMinutes(getCompletedDurationSeconds(record)),
+      0,
+    );
+
+    const totalPomodoros = completedRecords.length;
+    const completedTasks = tasks.filter((t) => t.status === "completed").length;
+    const totalTasks = tasks.length;
+
+    const userStats: UserStats = {
+      totalFocusMinutes,
+      totalPomodoros,
+      totalTasks,
+      completedTasks,
+      currentStreak: 7,
+      longestStreak: 15,
+      studyDays: Math.max(1, new Set(
+        completedRecords.map((r) => toDateKey(r.endTime || r.startTime))
+      ).size),
+      todayFocusMinutes: todayFocusMinutes,
+      todayPomodoros: todayPomodoroCount,
+      todayTasks: todayCompletedTasks,
+    };
+    return ok(userStats);
   },
 };

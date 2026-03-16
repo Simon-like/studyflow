@@ -15,6 +15,21 @@ export type { CreateTaskRequest, UpdateTaskRequest } from "./services/taskServic
 export type { StartPomodoroRequest, StopPomodoroRequest, WeeklyDailyStat } from "./services/pomodoroService";
 export type { SendMessageRequest, GeneratePlanRequest } from "./services/chatService";
 
+// 导出统计 Hooks
+export {
+  useTodayStats,
+  useOverviewStats,
+  useDailyStats,
+  useWeeklyDailyStats,
+  useMonthlyDailyStats,
+  useSubjectStats,
+  useDashboardSummary,
+  useUserStats,
+  useRefreshStats,
+  usePomodoroSettlement,
+  STATS_KEYS,
+} from "./hooks/useStats";
+
 // 导出 Mock 服务 + 测试账号
 export { TEST_ACCOUNT } from "./mock/data";
 export {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import { useUser } from '@/hooks';
 import { usePomodoroStore } from '@/stores/pomodoroStore';
 import { formatDuration } from '@/lib/utils';
-import { api } from '@studyflow/api';
+import { api, useTodayStats } from '@studyflow/api';
 import type { Task, TodayStats, WeeklyOverview } from '@studyflow/shared';
 import type { DashboardStats } from './types';
 
@@ -51,29 +51,12 @@ interface UseDashboardStatsReturn {
   stats: DashboardStats[];
   todayStats: TodayStats | null;
   isLoading: boolean;
-  refetch: () => Promise<void>;
+  refetch: () => void;
 }
 
 export function useDashboardStats(): UseDashboardStatsReturn {
-  const [todayStats, setTodayStats] = useState<TodayStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchStats = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const response = await api.pomodoro.getTodayStats();
-      setTodayStats(response.data);
-    } catch (error) {
-      console.error('Failed to fetch today stats:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
-
+  const { data: todayStats, isLoading, refetch } = useTodayStats();
+  
   // 转换为 DashboardStats 格式
   const stats = useMemo<DashboardStats[]>(() => {
     if (!todayStats) {
@@ -111,9 +94,9 @@ export function useDashboardStats(): UseDashboardStatsReturn {
 
   return {
     stats,
-    todayStats,
+    todayStats: todayStats || null,
     isLoading,
-    refetch: fetchStats,
+    refetch,
   };
 }
 

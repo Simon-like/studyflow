@@ -150,11 +150,7 @@ export default function HomeScreen() {
       </View>
 
       {/* 统计行 */}
-      <StatsRow
-        stats={stats}
-        isLoading={isLoading}
-        todayStats={todayStats}
-      />
+      <StatsRow />
 
       {/* 任务列表 */}
       <SortableTaskList

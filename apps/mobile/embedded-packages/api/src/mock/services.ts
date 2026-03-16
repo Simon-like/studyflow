@@ -288,11 +288,25 @@ export const mockTaskService = {
     
     if (currentStatus === "completed") {
       newStatus = "todo";
+      // 取消完成时，从已完成的任务集合中移除
+      if (todayCompletedTaskIds.has(id)) {
+        todayCompletedTaskIds.delete(id);
+        todayCompletedTasks = Math.max(0, todayCompletedTasks - 1);
+      }
     } else if (currentStatus === "in_progress") {
       newStatus = "completed";
+      // 标记为完成时，如果今天还没有计数，则增加
+      if (!todayCompletedTaskIds.has(id)) {
+        todayCompletedTaskIds.add(id);
+        todayCompletedTasks++;
+      }
     } else {
       // todo -> completed (点击完成)
       newStatus = "completed";
+      if (!todayCompletedTaskIds.has(id)) {
+        todayCompletedTaskIds.add(id);
+        todayCompletedTasks++;
+      }
     }
 
     tasks[idx] = {
@@ -382,6 +396,10 @@ export const mockTaskService = {
 // 模拟今日统计数据
 let todayPomodoroCount = 3;
 let todayFocusMinutes = 75;
+let todayCompletedTasks = 1;
+
+// 记录今天已经完成的任务ID（避免重复计数）
+const todayCompletedTaskIds = new Set<string>();
 
 export const mockPomodoroService = {
   start: async (
@@ -463,7 +481,7 @@ export const mockPomodoroService = {
       todayStats: {
         focusMinutes: todayFocusMinutes,
         completedPomodoros: todayPomodoroCount,
-        completedTasks: tasks.filter((t) => t.status === "completed").length,
+        completedTasks: todayCompletedTasks,
         streakDays: 7,
       },
     };
@@ -484,7 +502,7 @@ export const mockPomodoroService = {
     return ok({
       focusMinutes: todayFocusMinutes,
       completedPomodoros: todayPomodoroCount,
-      completedTasks: tasks.filter((t) => t.status === "completed").length,
+      completedTasks: todayCompletedTasks,
       streakDays: 7,
     });
   },
@@ -626,6 +644,7 @@ export const mockCommunityService = {
 import type { 
   UserProfile,
   UserStats,
+  UserTag,
   UpdateProfileRequest,
   PomodoroSettings,
   SystemSettings,
@@ -671,11 +690,20 @@ export const mockUserService = {
   // 更新用户资料
   updateProfile: async (data: UpdateProfileRequest): Promise<ApiResponse<UserProfile>> => {
     await mockDelay(400);
+    // 排除 tags 字段，单独处理
+    const { tags, ...otherData } = data;
+    
     userProfile = {
       ...userProfile,
-      ...data,
+      ...otherData,
       updatedAt: new Date().toISOString(),
     };
+    
+    // 如果 tags 存在且是 UserTag 数组（非字符串数组），则更新
+    if (tags && Array.isArray(tags) && tags.length > 0 && typeof tags[0] !== 'string') {
+      userProfile.tags = tags as unknown as UserTag[];
+    }
+    
     return ok(userProfile, "更新成功");
   },
 
@@ -810,7 +838,7 @@ export const mockStatsService = {
       todayStats: {
         focusMinutes: todayFocusMinutes,
         completedPomodoros: todayPomodoroCount,
-        completedTasks: tasks.filter((t) => t.status === "completed").length,
+        completedTasks: todayCompletedTasks,
         streakDays: 7,
       },
       weeklyStats: {

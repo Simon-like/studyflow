@@ -416,8 +416,17 @@ export default function SettingsPage() {
           </div>
         </Card>
 
-        {/* 外观设置 */}
-        <Card className="p-7">
+        {/* 外观设置 - 暂时锁定 */}
+        <Card className="p-7 relative overflow-hidden">
+          {/* 锁定遮罩 */}
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
+            <div className="text-center">
+              <Lock className="w-8 h-8 text-stone/40 mx-auto mb-2" />
+              <p className="text-stone font-medium">外观设置</p>
+              <p className="text-sm text-stone/60">该功能即将推出，敬请期待</p>
+            </div>
+          </div>
+          
           <div className="flex items-center gap-4 mb-5">
             <div className="w-10 h-10 bg-warm rounded-lg flex items-center justify-center">
               <Moon className="w-5 h-5 text-charcoal" />
@@ -427,11 +436,11 @@ export default function SettingsPage() {
               <p className="text-sm text-stone">自定义您的界面外观</p>
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-3 flex flex-col gap-4">
             {(["light", "dark", "system"] as const).map((theme) => (
               <button
                 key={theme}
-                onClick={() => handleSystemChange("theme", theme)}
+                onClick={() => {}} // 禁用操作
                 className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${
                   localSystemSettings?.theme === theme
                     ? "border-coral bg-coral/5"

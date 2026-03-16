@@ -3,24 +3,20 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Card } from '../../../components/ui/Card';
 import { SectionHeader } from '../../../components/layout/SectionHeader';
 import { colors, radius, spacing, fontSize } from '../../../theme';
-import { useWeeklyDailyStats } from '@studyflow/api';
+
+interface WeeklyChartProps {
+  data: number[];
+  isLoading?: boolean;
+}
 
 const WEEK_DAYS = ['一', '二', '三', '四', '五', '六', '日'];
 
-export function WeeklyChart() {
-  const { data: dailyStats, isLoading } = useWeeklyDailyStats();
-
-  // 转换数据为小时
-  const weeklyData = React.useMemo(() => {
-    if (!dailyStats) return [];
-    return dailyStats.map(item => item.focusMinutes / 60);
-  }, [dailyStats]);
-
-  const maxValue = Math.max(...(weeklyData.length > 0 ? weeklyData : [1]), 1);
+export function WeeklyChart({ data, isLoading }: WeeklyChartProps) {
+  const maxValue = Math.max(...(data.length > 0 ? data : [1]), 1);
 
   if (isLoading) {
     return (
-      <Card>
+      <Card style={styles.container}>
         <SectionHeader title="本周学习时长" />
         <View style={styles.chart}>
           {Array.from({ length: 7 }).map((_, i) => (
@@ -35,9 +31,9 @@ export function WeeklyChart() {
     );
   }
 
-  if (weeklyData.length === 0) {
+  if (data.length === 0) {
     return (
-      <Card>
+      <Card style={styles.container}>
         <SectionHeader title="本周学习时长" />
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>暂无数据</Text>
@@ -47,10 +43,10 @@ export function WeeklyChart() {
   }
 
   return (
-    <Card>
+    <Card style={styles.container}>
       <SectionHeader title="本周学习时长" />
       <View style={styles.chart}>
-        {weeklyData.map((value, index) => (
+        {data.map((value, index) => (
           <View key={index} style={styles.barItem}>
             <Text style={styles.value}>{value.toFixed(1)}h</Text>
             <View style={styles.track}>
@@ -70,11 +66,15 @@ export function WeeklyChart() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    marginHorizontal: spacing.lg,
+  },
   chart: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     height: 100,
     gap: 6,
+    marginTop: spacing.sm,
   },
   barItem: {
     flex: 1,

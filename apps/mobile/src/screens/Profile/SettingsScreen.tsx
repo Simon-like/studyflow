@@ -213,7 +213,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           <>
             <View style={styles.lockedOverlay}>
               <View style={styles.lockedContent}>
-                <Icon name="lock" size={24} color={colors.textMuted} />
+                <Icon name="shield" size={24} color={colors.textMuted} />
                 <Text style={styles.lockedTitle}>通知设置</Text>
                 <Text style={styles.lockedSubtitle}>该功能即将推出，敬请期待</Text>
               </View>
@@ -236,26 +236,33 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           </>
         ))}
 
-        {/* 外观设置 */}
+        {/* 外观设置 - 暂时锁定 */}
         {renderSection('外观', 'palette', (
           <>
+            <View style={styles.lockedOverlay}>
+              <View style={styles.lockedContent}>
+                <Icon name="shield" size={24} color={colors.textMuted} />
+                <Text style={styles.lockedTitle}>外观设置</Text>
+                <Text style={styles.lockedSubtitle}>该功能即将推出，敬请期待</Text>
+              </View>
+            </View>
             {renderThemeItem(
               '浅色模式',
               'light',
               systemSettings?.theme || 'light',
-              () => handleSystemChange('theme', 'light')
+              () => {} // 禁用操作
             )}
             {renderThemeItem(
               '深色模式',
               'dark',
               systemSettings?.theme || 'light',
-              () => handleSystemChange('theme', 'dark')
+              () => {} // 禁用操作
             )}
             {renderThemeItem(
               '跟随系统',
               'system',
               systemSettings?.theme || 'light',
-              () => handleSystemChange('theme', 'system')
+              () => {} // 禁用操作
             )}
           </>
         ))}
