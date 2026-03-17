@@ -1,8 +1,10 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { api } from '@studyflow/api';
+import toast from 'react-hot-toast';
 import type { Task as SharedTask } from '@studyflow/shared';
 import type { TaskFilter, TaskFormData, TaskCounts } from './types';
 import { DEFAULT_FORM_DATA } from './constants';
+import { getApiErrorMessage } from '@/lib/utils';
 
 export function useTasks() {
   const [allTasks, setAllTasks] = useState<SharedTask[]>([]);
@@ -18,6 +20,7 @@ export function useTasks() {
       setAllTasks(response.data.list);
     } catch (err) {
       console.error('Failed to fetch tasks:', err);
+      toast.error(getApiErrorMessage(err, '获取任务列表失败'));
     } finally {
       setIsLoading(false);
     }
@@ -66,6 +69,7 @@ export function useTasks() {
       await fetchTasks();
     } catch (err) {
       console.error('Failed to add task:', err);
+      toast.error(getApiErrorMessage(err, '添加任务失败'));
     }
   }, [fetchTasks]);
 
@@ -76,6 +80,7 @@ export function useTasks() {
       await fetchTasks();
     } catch (err) {
       console.error('Failed to toggle task:', err);
+      toast.error(getApiErrorMessage(err, '更新任务状态失败'));
     }
   }, [fetchTasks]);
 
@@ -86,6 +91,7 @@ export function useTasks() {
       await fetchTasks();
     } catch (err) {
       console.error('Failed to delete task:', err);
+      toast.error(getApiErrorMessage(err, '删除任务失败'));
     }
   }, [fetchTasks]);
 

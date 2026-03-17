@@ -12,6 +12,7 @@ import { api } from '@studyflow/api';
 import type { Task } from '@studyflow/shared';
 import toast from 'react-hot-toast';
 import { useDialog } from '@/providers/DialogProvider';
+import { getApiErrorMessage } from '@/lib/utils';
 
 const DEFAULT_POMODORO_SECONDS = 25 * 60;
 
@@ -65,6 +66,7 @@ export default function DashboardPage() {
       return true;
     } catch (err) {
       console.error('Failed to settle pomodoro:', err);
+      toast.error(getApiErrorMessage(err, '番茄钟结算失败'));
       return false;
     } finally {
       setActivePomodoroId(null);
@@ -122,7 +124,7 @@ export default function DashboardPage() {
         toast.success('专注完成，已计入统计！');
       } catch (err) {
         console.error('Failed to auto complete pomodoro:', err);
-        toast.error('专注结算失败，请稍后重试');
+        toast.error(getApiErrorMessage(err, '专注结算失败，请稍后重试'));
       } finally {
         onStop();
         isAutoSettlingRef.current = false;
@@ -168,6 +170,7 @@ export default function DashboardPage() {
           await refetch();
         } catch (err) {
           console.error('Failed to start task:', err);
+          toast.error(getApiErrorMessage(err, '开始任务失败'));
         }
       }
 
@@ -180,7 +183,7 @@ export default function DashboardPage() {
         setActivePomodoroId(response.data?.id || null);
       } catch (err) {
         console.error('Failed to start pomodoro record:', err);
-        toast.error('开始专注失败，请稍后重试');
+        toast.error(getApiErrorMessage(err, '开始专注失败，请稍后重试'));
         return;
       }
 
@@ -228,7 +231,7 @@ export default function DashboardPage() {
           await refetch();
         } catch (err) {
           console.error('Failed to complete task or pomodoro:', err);
-          toast.error('完成失败，请稍后重试');
+          toast.error(getApiErrorMessage(err, '完成失败，请稍后重试'));
         } finally {
           onStop();
         }
@@ -360,7 +363,7 @@ export default function DashboardPage() {
               onToggleTimer={handleToggleTimer}
               onCompleteTask={handleCompleteTask}
               onAbandonTask={handleAbandonTask}
-              onShowTaskDetail={displayTask ? handleShowTaskDetail : undefined}
+              onShowTaskDetail={isTaskBound && displayTask ? handleShowTaskDetail : undefined}
             />
           </Card>
         </div>

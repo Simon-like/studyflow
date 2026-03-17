@@ -8,6 +8,7 @@ import { PRESET_USER_TAGS } from '@studyflow/shared';
 import type { ProfileStats } from './types';
 import { Clock, Target, Flame, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getApiErrorMessage } from '@/lib/utils';
 
 // Profile 模块专用 Query keys
 const PROFILE_KEYS = {
@@ -74,8 +75,8 @@ export function useUpdateProfile() {
       setUser(data);
       toast.success('资料更新成功');
     },
-    onError: () => {
-      toast.error('资料更新失败');
+    onError: (err) => {
+      toast.error(getApiErrorMessage(err, '资料更新失败'));
     },
   });
 }
@@ -102,8 +103,8 @@ export function useUploadAvatar() {
       }
       toast.success('头像上传成功');
     },
-    onError: () => {
-      toast.error('头像上传失败');
+    onError: (err) => {
+      toast.error(getApiErrorMessage(err, '头像上传失败'));
     },
   });
 }

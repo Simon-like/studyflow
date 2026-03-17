@@ -235,8 +235,10 @@ export function SortableTaskList({
 
   const isTimerActive = pomodoroStatus === 'running' || pomodoroStatus === 'paused';
 
-  // 同步外部 tasks 变化
-  if (JSON.stringify(items.map((t) => t.id)) !== JSON.stringify(tasks.map((t) => t.id))) {
+  // 同步外部 tasks 变化（ID 变化或任务数据变化都需要同步）
+  const tasksKey = JSON.stringify(tasks.map((t) => `${t.id}:${t.status}:${t.title}`));
+  const itemsKey = JSON.stringify(items.map((t) => `${t.id}:${t.status}:${t.title}`));
+  if (tasksKey !== itemsKey) {
     setItems(tasks);
   }
 

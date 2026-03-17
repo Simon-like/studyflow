@@ -18,6 +18,7 @@ import {
   Lock,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { getApiErrorMessage } from "@/lib/utils";
 import type { PomodoroSettings, SystemSettings } from "@studyflow/shared";
 
 // Query keys
@@ -106,8 +107,8 @@ export default function SettingsPage() {
       });
       toast.success("番茄钟设置已更新，下次专注时生效");
     },
-    onError: () => {
-      toast.error("设置更新失败");
+    onError: (err) => {
+      toast.error(getApiErrorMessage(err, "番茄钟设置更新失败"));
     },
   });
 
@@ -122,8 +123,8 @@ export default function SettingsPage() {
       applyTheme(data.theme);
       toast.success("系统设置已更新");
     },
-    onError: () => {
-      toast.error("设置更新失败");
+    onError: (err) => {
+      toast.error(getApiErrorMessage(err, "系统设置更新失败"));
     },
   });
 
@@ -140,8 +141,8 @@ export default function SettingsPage() {
         confirmPassword: "",
       });
     },
-    onError: () => {
-      toast.error("密码修改失败，请检查当前密码");
+    onError: (err) => {
+      toast.error(getApiErrorMessage(err, "密码修改失败，请检查当前密码"));
     },
   });
 

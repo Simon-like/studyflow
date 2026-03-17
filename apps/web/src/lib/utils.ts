@@ -1,4 +1,18 @@
+import type { AxiosError } from 'axios';
+
 // 通用工具函数
+
+/**
+ * 从 API 错误中提取用户可读的错误消息
+ * 后端 ApiResponse 格式: { code, message, data, timestamp }
+ */
+export function getApiErrorMessage(err: unknown, fallback = '操作失败，请稍后重试'): string {
+  const error = err as AxiosError<{ message?: string | string[] }>;
+  const msg = error?.response?.data?.message;
+  if (Array.isArray(msg)) return msg[0] || fallback;
+  if (typeof msg === 'string' && msg) return msg;
+  return fallback;
+}
 
 /**
  * 格式化时间（秒 -> MM:SS）

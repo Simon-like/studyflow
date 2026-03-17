@@ -99,19 +99,23 @@ export default function EditProfilePage() {
   };
 
   const handleSave = async () => {
-    await updateProfile.mutateAsync({ ...formData, tags: selectedTags });
-    
-    // 显示保存成功提示
-    dialog.confirm({
-      variant: 'success',
-      title: '保存成功',
-      message: '您的个人资料已更新',
-      confirmText: '确定',
-      cancelText: '',
-      onConfirm: () => {
-        navigate('/profile');
-      },
-    });
+    try {
+      await updateProfile.mutateAsync({ ...formData, tags: selectedTags });
+
+      // 显示保存成功提示
+      dialog.confirm({
+        variant: 'success',
+        title: '保存成功',
+        message: '您的个人资料已更新',
+        confirmText: '确定',
+        cancelText: '',
+        onConfirm: () => {
+          navigate('/profile');
+        },
+      });
+    } catch {
+      // onError in useUpdateProfile already shows toast with backend message
+    }
   };
 
   const handleBack = useCallback(() => {
