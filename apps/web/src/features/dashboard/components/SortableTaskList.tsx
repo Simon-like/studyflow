@@ -101,9 +101,11 @@ function TaskItemContent({ task, index, isSelected, isTimerActive, isOverlay, on
           >
             {task.title}
           </p>
-          <p className="text-xs text-stone mt-1">
-            {task.category || '未分类'}
-          </p>
+          {task.description && (
+            <p className="text-xs text-stone mt-1 truncate">
+              {task.description}
+            </p>
+          )}
         </div>
 
         {/* 状态标签 */}

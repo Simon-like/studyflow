@@ -16,10 +16,11 @@ import {
   Platform,
   ScrollView,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { colors, spacing, radius, fontSize, fontWeight, shadows } from '../../theme';
 import { FormInput, SocialLogin } from './components';
-import { TEST_ACCOUNT } from '../../api';
+
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLoginForm } from './hooks';
@@ -27,6 +28,10 @@ import { useLoginForm } from './hooks';
 interface LoginScreenProps {
   onGoRegister: () => void;
 }
+
+// 屏幕高度检测
+const { height: screenHeight } = Dimensions.get('window');
+const isSmallScreen = screenHeight <= 667;
 
 export function LoginScreen({ onGoRegister }: LoginScreenProps) {
   const { login } = useAuth();
@@ -58,25 +63,30 @@ export function LoginScreen({ onGoRegister }: LoginScreenProps) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          isSmallScreen && styles.scrollContentSmall,
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         {/* Logo & 品牌 */}
-        <View style={styles.brandSection}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>💡</Text>
+        <View style={[styles.brandSection, isSmallScreen && styles.brandSectionSmall]}>
+          <View style={[styles.logo, isSmallScreen && styles.logoSmall]}>
+            <Text style={[styles.logoText, isSmallScreen && styles.logoTextSmall]}>💡</Text>
           </View>
-          <Text style={styles.appName}>StudyFlow</Text>
-          <Text style={styles.tagline}>你的智能学习伙伴</Text>
-          <View style={styles.features}>
-            {FEATURES.map((f) => (
-              <View key={f.text} style={styles.featureItem}>
-                <Text style={styles.featureEmoji}>{f.emoji}</Text>
-                <Text style={styles.featureText}>{f.text}</Text>
-              </View>
-            ))}
-          </View>
+          <Text style={[styles.appName, isSmallScreen && styles.appNameSmall]}>StudyFlow</Text>
+          {!isSmallScreen && <Text style={styles.tagline}>你的智能学习伙伴</Text>}
+          {!isSmallScreen && (
+            <View style={styles.features}>
+              {FEATURES.map((f) => (
+                <View key={f.text} style={styles.featureItem}>
+                  <Text style={styles.featureEmoji}>{f.emoji}</Text>
+                  <Text style={styles.featureText}>{f.text}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* 表单 */}
@@ -84,13 +94,6 @@ export function LoginScreen({ onGoRegister }: LoginScreenProps) {
           <Text style={styles.title}>欢迎回来</Text>
           <Text style={styles.subtitle}>登录开始今天的学习之旅</Text>
 
-          {/* 测试账号提示 */}
-          <View style={styles.testHint}>
-            <Text style={styles.testHintText}>
-              <Text style={styles.testHintLabel}>测试账号：</Text>
-              {TEST_ACCOUNT.username} / {TEST_ACCOUNT.password}
-            </Text>
-          </View>
 
           <FormInput
             label="手机号/邮箱"
@@ -150,10 +153,18 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: spacing['3xl'],
   },
+  scrollContentSmall: {
+    paddingTop: Platform.OS === 'ios' ? 20 : 16,
+    paddingBottom: spacing.lg,
+    justifyContent: 'center',
+  },
   brandSection: {
     alignItems: 'center',
     paddingHorizontal: spacing['3xl'],
     marginBottom: spacing['3xl'],
+  },
+  brandSectionSmall: {
+    marginBottom: spacing.lg,
   },
   logo: {
     width: 64,
@@ -165,14 +176,26 @@ const styles = StyleSheet.create({
     ...shadows.primary,
     marginBottom: spacing.md,
   },
+  logoSmall: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.xl,
+    marginBottom: spacing.sm,
+  },
   logoText: {
     fontSize: 32,
+  },
+  logoTextSmall: {
+    fontSize: 24,
   },
   appName: {
     fontSize: fontSize['4xl'],
     fontWeight: fontWeight.bold,
     color: colors.text,
     marginBottom: spacing.xs,
+  },
+  appNameSmall: {
+    fontSize: fontSize['2xl'],
   },
   tagline: {
     fontSize: fontSize.base,
@@ -208,22 +231,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: spacing['2xl'],
   },
-  testHint: {
-    backgroundColor: `${colors.secondary}15`,
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  testHintText: {
-    fontSize: fontSize.xs,
-    color: colors.text,
-    lineHeight: 18,
-  },
-  testHintLabel: {
-    fontWeight: fontWeight.semibold,
-    color: colors.secondary,
-  },
+
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',

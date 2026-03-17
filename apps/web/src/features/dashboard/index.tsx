@@ -100,7 +100,7 @@ export default function DashboardPage() {
   const isTaskBound = !!selectedTask;
   const taskTitle = isTaskBound ? (selectedTask?.title || '自由任务') : '自由任务';
   const taskSubtitle = isTaskBound
-    ? (selectedTask?.category || '专注模式')
+    ? '专注模式'
     : '专注当下，提升效率';
   const taskProgress = isTaskBound ? '任务模式中' : '自由模式';
 
@@ -315,12 +315,6 @@ export default function DashboardPage() {
                     {displayTask.priority === 'high' ? '高' : displayTask.priority === 'medium' ? '中' : '低'}
                   </span>
                 </div>
-                {displayTask.category && (
-                  <div>
-                    <p className="text-xs text-stone mb-1">分类</p>
-                    <p className="text-sm text-charcoal">{displayTask.category}</p>
-                  </div>
-                )}
               </div>
               <div>
                 <p className="text-xs text-stone mb-1">状态</p>

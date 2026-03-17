@@ -16,6 +16,7 @@ import {
   Platform,
   ScrollView,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { colors, spacing, radius, fontSize, fontWeight, shadows } from '../../theme';
 import { FormInput } from './components';
@@ -23,6 +24,10 @@ import { useRegisterForm } from './hooks';
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { api } from '../../api';
+
+// 屏幕高度检测
+const { height: screenHeight } = Dimensions.get('window');
+const isSmallScreen = screenHeight <= 667;
 
 interface RegisterScreenProps {
   onGoLogin: () => void;
@@ -71,22 +76,25 @@ export function RegisterScreen({ onGoLogin }: RegisterScreenProps) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          isSmallScreen && styles.scrollContentSmall,
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         {/* Logo */}
-        <View style={styles.brandSection}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>💡</Text>
+        <View style={[styles.brandSection, isSmallScreen && styles.brandSectionSmall]}>
+          <View style={[styles.logo, isSmallScreen && styles.logoSmall]}>
+            <Text style={[styles.logoText, isSmallScreen && styles.logoTextSmall]}>💡</Text>
           </View>
-          <Text style={styles.appName}>StudyFlow</Text>
+          <Text style={[styles.appName, isSmallScreen && styles.appNameSmall]}>StudyFlow</Text>
         </View>
 
         {/* 表单 */}
         <View style={styles.formSection}>
           <Text style={styles.title}>创建账号</Text>
-          <Text style={styles.subtitle}>开启你的高效学习之旅</Text>
+          <Text style={[styles.subtitle, isSmallScreen && styles.subtitleSmall]}>开启你的高效学习之旅</Text>
 
           <FormInput
             label="姓名"
@@ -130,8 +138,8 @@ export function RegisterScreen({ onGoLogin }: RegisterScreenProps) {
             注册
           </Button>
 
-          <View style={styles.agreement}>
-            <Text style={styles.agreementText}>
+          <View style={[styles.agreement, isSmallScreen && styles.agreementSmall]}>
+            <Text style={[styles.agreementText, isSmallScreen && styles.agreementTextSmall]}>
               注册即表示同意
               <Text style={styles.agreementLink}>《服务条款》</Text>
               和
@@ -139,7 +147,7 @@ export function RegisterScreen({ onGoLogin }: RegisterScreenProps) {
             </Text>
           </View>
 
-          <View style={styles.footer}>
+          <View style={[styles.footer, isSmallScreen && styles.footerSmall]}>
             <Text style={styles.footerText}>已有账号？</Text>
             <TouchableOpacity onPress={onGoLogin} activeOpacity={0.7}>
               <Text style={styles.footerLink}>立即登录</Text>
@@ -161,9 +169,17 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: spacing['3xl'],
   },
+  scrollContentSmall: {
+    paddingTop: Platform.OS === 'ios' ? 24 : 16,
+    paddingBottom: spacing.lg,
+    justifyContent: 'center',
+  },
   brandSection: {
     alignItems: 'center',
     marginBottom: spacing['2xl'],
+  },
+  brandSectionSmall: {
+    marginBottom: spacing.lg,
   },
   logo: {
     width: 56,
@@ -175,13 +191,24 @@ const styles = StyleSheet.create({
     ...shadows.primarySm,
     marginBottom: spacing.sm,
   },
+  logoSmall: {
+    width: 44,
+    height: 44,
+    marginBottom: spacing.xs,
+  },
   logoText: {
     fontSize: 28,
+  },
+  logoTextSmall: {
+    fontSize: 22,
   },
   appName: {
     fontSize: fontSize['2xl'],
     fontWeight: fontWeight.bold,
     color: colors.text,
+  },
+  appNameSmall: {
+    fontSize: fontSize.xl,
   },
   formSection: {
     paddingHorizontal: spacing['3xl'],
@@ -197,15 +224,25 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: spacing['2xl'],
   },
+  subtitleSmall: {
+    marginBottom: spacing.lg,
+  },
   agreement: {
     alignItems: 'center',
     marginTop: spacing.lg,
+  },
+  agreementSmall: {
+    marginTop: spacing.md,
   },
   agreementText: {
     fontSize: fontSize.xs,
     color: colors.textMuted,
     textAlign: 'center',
     lineHeight: 18,
+  },
+  agreementTextSmall: {
+    fontSize: 10,
+    lineHeight: 14,
   },
   agreementLink: {
     color: colors.primary,
@@ -216,6 +253,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.xl,
     gap: spacing.xs,
+  },
+  footerSmall: {
+    marginTop: spacing.md,
   },
   footerText: {
     fontSize: fontSize.sm,

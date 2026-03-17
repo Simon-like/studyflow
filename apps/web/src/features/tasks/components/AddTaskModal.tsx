@@ -44,30 +44,17 @@ export function AddTaskModal({
               className="w-full mt-1.5 px-4 py-3 bg-warm rounded-xl text-charcoal placeholder-mist focus:outline-none focus:ring-2 focus:ring-coral/40 transition-all text-sm"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-stone font-medium">优先级</label>
-              <select
-                value={formData.priority}
-                onChange={(e) => onFieldChange('priority', e.target.value as Priority)}
-                className="w-full mt-1.5 px-4 py-3 bg-warm rounded-xl text-charcoal focus:outline-none focus:ring-2 focus:ring-coral/40 transition-all text-sm"
-              >
-                <option value="high">高优先级</option>
-                <option value="medium">中优先级</option>
-                <option value="low">低优先级</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-sm text-stone font-medium">预估番茄数</label>
-              <input
-                type="number"
-                min="1"
-                max="20"
-                value={formData.pomodoros}
-                onChange={(e) => onFieldChange('pomodoros', parseInt(e.target.value) || 1)}
-                className="w-full mt-1.5 px-4 py-3 bg-warm rounded-xl text-charcoal focus:outline-none focus:ring-2 focus:ring-coral/40 transition-all text-sm"
-              />
-            </div>
+          <div>
+            <label className="text-sm text-stone font-medium">优先级</label>
+            <select
+              value={formData.priority}
+              onChange={(e) => onFieldChange('priority', e.target.value as Priority)}
+              className="w-full mt-1.5 px-4 py-3 bg-warm rounded-xl text-charcoal focus:outline-none focus:ring-2 focus:ring-coral/40 transition-all text-sm"
+            >
+              <option value="high">高优先级</option>
+              <option value="medium">中优先级</option>
+              <option value="low">低优先级</option>
+            </select>
           </div>
         </div>
         <div className="flex gap-3 mt-6">

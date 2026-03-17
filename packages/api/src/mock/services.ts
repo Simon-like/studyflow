@@ -235,7 +235,6 @@ export const mockTaskService = {
       userId: "user-001",
       title: data.title,
       description: data.description,
-      category: data.category,
       priority: data.priority || "medium",
       status: "todo",
       dueDate: data.dueDate,
@@ -322,20 +321,7 @@ export const mockTaskService = {
     const inProgress = tasks.filter((t) => t.status === "in_progress").length;
     const todo = tasks.filter((t) => t.status === "todo").length;
 
-    // 按分类统计
-    const categoryMap = new Map<string, { total: number; completed: number }>();
-    tasks.forEach((t) => {
-      const cat = t.category || "未分类";
-      const existing = categoryMap.get(cat) || { total: 0, completed: 0 };
-      existing.total++;
-      if (t.status === "completed") existing.completed++;
-      categoryMap.set(cat, existing);
-    });
-
-    const byCategory = Array.from(categoryMap.entries()).map(([category, stats]) => ({
-      category,
-      ...stats,
-    }));
+    const byCategory: Array<{ category: string; total: number; completed: number }> = [];
 
     return ok({
       total,
@@ -1036,10 +1022,10 @@ export const mockStatsService = {
 
     scopedRecords.forEach((record) => {
       const task = record.taskId ? tasks.find((t) => t.id === record.taskId) : null;
-      const category = task?.category || "未分类";
-      const current = categoryMinutes.get(category) || 0;
+      const label = task?.title || "未分类";
+      const current = categoryMinutes.get(label) || 0;
       categoryMinutes.set(
-        category,
+        label,
         current + toFocusMinutes(getCompletedDurationSeconds(record)),
       );
     });

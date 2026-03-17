@@ -8,7 +8,6 @@ export interface TaskFormData {
   title: string;
   description: string;
   priority: Priority;
-  pomodoros: number;
 }
 
 export interface FilterOption {

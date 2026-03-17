@@ -40,22 +40,26 @@ const createHttpClient = (baseURL: string): AxiosInstance => {
     (response: AxiosResponse) => response.data,
     async (error) => {
       const originalRequest = error.config;
+      const requestUrl = originalRequest?.url || "";
 
-      // Token 过期，尝试刷新
-      if (error.response?.status === 401 && !originalRequest._retry) {
+      // 不对 refresh / logout 请求做 401 重试，避免死循环
+      const isAuthRequest =
+        requestUrl.includes("/auth/refresh") ||
+        requestUrl.includes("/auth/logout");
+
+      if (
+        error.response?.status === 401 &&
+        !originalRequest._retry &&
+        !isAuthRequest
+      ) {
         originalRequest._retry = true;
 
-        try {
-          const refreshToken = storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN);
-          if (refreshToken) {
+        const refreshToken = storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN);
+        if (refreshToken) {
+          try {
             const response = await axios.post(
               `${baseURL}/api/v1/auth/refresh`,
-              {},
-              {
-                headers: {
-                  "X-Refresh-Token": refreshToken,
-                },
-              },
+              { refreshToken },
             );
 
             const { accessToken, refreshToken: newRefreshToken } =
@@ -65,17 +69,19 @@ const createHttpClient = (baseURL: string): AxiosInstance => {
 
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;
             return client(originalRequest);
+          } catch {
+            // refresh 失败，走下面的清理逻辑
           }
-        } catch (refreshError) {
-          // 刷新失败，清除登录状态
-          storage.remove(STORAGE_KEYS.TOKEN);
-          storage.remove(STORAGE_KEYS.REFRESH_TOKEN);
-          storage.remove(STORAGE_KEYS.USER);
-          if (typeof window !== "undefined" && window.location) {
-            window.location.href = "/login";
-          }
-          return Promise.reject(refreshError);
         }
+
+        // 无 refreshToken 或 refresh 失败 → 清除状态跳转登录
+        storage.remove(STORAGE_KEYS.TOKEN);
+        storage.remove(STORAGE_KEYS.REFRESH_TOKEN);
+        storage.remove(STORAGE_KEYS.USER);
+        if (typeof window !== "undefined" && window.location) {
+          window.location.href = "/auth/login";
+        }
+        return Promise.reject(error);
       }
 
       return Promise.reject(error);

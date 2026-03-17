@@ -138,17 +138,14 @@ export function useDashboardTasks(): UseDashboardTasksReturn {
     try {
       const response = await api.task.toggleStatus(id);
       const updatedTask = response.data;
-      
+
       // 乐观更新本地状态
       setTasks((prev) =>
         prev.map((t) => (t.id === id ? updatedTask : t))
       );
-      
-      // 如果任务变为已完成，可能需要从列表中移除（取决于业务需求）
-      if (updatedTask.status === 'completed') {
-        // 可选：延迟后移除或重新获取
-        setTimeout(() => fetchTasks(), 500);
-      }
+
+      // 状态变更后刷新列表
+      setTimeout(() => fetchTasks(), 500);
     } catch (err) {
       console.error('Failed to toggle task:', err);
       throw err;
@@ -242,13 +239,19 @@ export function useDashboardData() {
   const { displayName } = useUser();
 
   const { stats, todayStats, isLoading: statsLoading, refetch: refetchStats } = useDashboardStats();
-  const { tasks, isLoading: tasksLoading, error, toggleTask, reorderTasks, refetch: refetchTasks } = useDashboardTasks();
+  const { tasks, isLoading: tasksLoading, error, toggleTask: rawToggleTask, reorderTasks, refetch: refetchTasks } = useDashboardTasks();
 
   const isLoading = statsLoading || tasksLoading;
 
   const refetch = useCallback(async () => {
     await Promise.all([refetchStats(), refetchTasks()]);
   }, [refetchStats, refetchTasks]);
+
+  // 包装 toggleTask：完成/恢复后同时刷新统计
+  const toggleTask = useCallback(async (id: string) => {
+    await rawToggleTask(id);
+    refetchStats();
+  }, [rawToggleTask, refetchStats]);
 
   return {
     displayName,

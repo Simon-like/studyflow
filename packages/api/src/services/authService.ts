@@ -6,6 +6,7 @@ import type {
   RegisterRequest,
   TokenResponse,
 } from "@studyflow/shared";
+import { storage, STORAGE_KEYS } from "@studyflow/shared";
 
 export const authService = {
   // 登录
@@ -18,19 +19,16 @@ export const authService = {
 
   // 刷新 Token
   refresh: (refreshToken: string) =>
-    http.post<ApiResponse<TokenResponse>>(
-      "/api/v1/auth/refresh",
-      {},
-      {
-        headers: {
-          "X-Refresh-Token": refreshToken,
-        },
-      },
-    ),
+    http.post<ApiResponse<TokenResponse>>("/api/v1/auth/refresh", {
+      refreshToken,
+    }),
 
-  // 登出
-  logout: () => http.post<ApiResponse<void>>("/api/v1/auth/logout"),
+  // 登出 — 发送 refreshToken 以便后端加入黑名单
+  logout: () => {
+    const refreshToken = storage.get<string>(STORAGE_KEYS.REFRESH_TOKEN);
+    return http.post<ApiResponse<void>>("/api/v1/auth/logout", { refreshToken });
+  },
 
   // 获取当前用户
-  getCurrentUser: () => http.get<ApiResponse<User>>("/api/v1/user/profile"),
+  getCurrentUser: () => http.get<ApiResponse<User>>("/api/v1/auth/me"),
 };

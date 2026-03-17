@@ -10,6 +10,7 @@
     "dev": "turbo run dev --parallel",
     "dev:web": "turbo run dev --filter=@studyflow/web",
     "dev:mobile": "turbo run dev --filter=@studyflow/mobile",
+    "dev:server": "turbo run dev --filter=@studyflow/server",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint -- --fix",
     "test": "turbo run test",
@@ -19,7 +20,15 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "turbo run build --filter=docs^... && changeset publish",
-    "setup": "bash tooling/scripts/setup.sh"
+    "setup": "bash tooling/scripts/setup.sh",
+    "db:generate": "pnpm --filter @studyflow/server db:generate",
+    "db:migrate": "pnpm --filter @studyflow/server db:migrate",
+    "db:studio": "pnpm --filter @studyflow/server db:studio",
+    "db:seed": "pnpm --filter @studyflow/server db:seed",
+    "db:reset": "pnpm --filter @studyflow/server db:reset",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build"
   },
   "keywords": [],
   "author": "",
@@ -38,6 +47,13 @@
     "overrides": {
       "react": "^19.2.0",
       "react-dom": "^19.2.0"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "bcrypt",
+      "@nestjs/core"
+    ]
   }
 }

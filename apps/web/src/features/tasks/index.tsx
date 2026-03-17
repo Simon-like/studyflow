@@ -62,7 +62,6 @@ export default function TasksPage() {
               description={task.description}
               priority={task.priority}
               status={task.status}
-              category={task.category}
               dueDate={task.dueDate}
               onToggleStatus={toggleStatus}
             />

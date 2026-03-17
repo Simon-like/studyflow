@@ -51,9 +51,11 @@ function TaskItem({
         <p className={`text-sm font-medium ${isDone ? 'text-stone line-through' : 'text-charcoal'}`}>
           {task.title}
         </p>
-        <p className="text-xs text-stone mt-0.5">
-          {task.category || '未分类'}
-        </p>
+        {task.description && (
+          <p className="text-xs text-stone mt-0.5 truncate">
+            {task.description}
+          </p>
+        )}
       </div>
       {isActive && <span className="text-xs text-coral font-medium flex-shrink-0">进行中</span>}
       {task.priority === 'high' && !isDone && (

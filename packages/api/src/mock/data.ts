@@ -112,7 +112,7 @@ export const MOCK_TASKS: Task[] = [
     userId: "user-001",
     title: "高等数学 - 极限与连续",
     description: "复习第一章极限的定义、性质和求解方法",
-    category: "高等数学",
+
     priority: "high",
     status: "in_progress",
     dueDate: "2026-03-15T00:00:00Z",
@@ -124,7 +124,7 @@ export const MOCK_TASKS: Task[] = [
     userId: "user-001",
     title: "英语阅读理解 - 真题训练",
     description: "完成2024年英语一阅读真题",
-    category: "英语",
+
     priority: "medium",
     status: "todo",
     dueDate: "2026-03-14T00:00:00Z",
@@ -136,7 +136,7 @@ export const MOCK_TASKS: Task[] = [
     userId: "user-001",
     title: "线性代数 - 矩阵运算",
     description: "矩阵的加减乘除和逆矩阵求解练习",
-    category: "线性代数",
+
     priority: "high",
     status: "completed",
     createdAt: "2026-03-09T08:00:00Z",
@@ -147,7 +147,7 @@ export const MOCK_TASKS: Task[] = [
     userId: "user-001",
     title: "政治 - 马原重点背诵",
     description: "唯物辩证法核心考点梳理",
-    category: "政治",
+
     priority: "low",
     status: "todo",
     dueDate: "2026-03-20T00:00:00Z",
@@ -159,7 +159,7 @@ export const MOCK_TASKS: Task[] = [
     userId: "user-001",
     title: "概率论 - 条件概率",
     description: "贝叶斯公式及全概率公式练习",
-    category: "概率论",
+
     priority: "medium",
     status: "todo",
     createdAt: "2026-03-11T14:00:00Z",

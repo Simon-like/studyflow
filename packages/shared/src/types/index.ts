@@ -135,15 +135,12 @@ export interface Task {
   userId: string;
   title: string;
   description?: string;
-  category?: string;
   priority: TaskPriority;
   status: TaskStatus;
   dueDate?: string;
   parentId?: string;
   subtasks?: Task[];
   order?: number; // 任务排序序号
-  estimatedPomodoros?: number; // 预估番茄数
-  completedPomodoros?: number; // 已完成番茄数
   createdAt: string;
   updatedAt: string;
 }
@@ -314,7 +311,7 @@ export interface TaskProgress {
     category: string;
     total: number;
     completed: number;
-  }>;
+  }>; // deprecated, always empty
 }
 
 // ==================== 时间周期类型 ====================

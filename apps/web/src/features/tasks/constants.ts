@@ -11,5 +11,4 @@ export const DEFAULT_FORM_DATA = {
   title: '',
   description: '',
   priority: 'medium' as const,
-  pomodoros: 1,
 };

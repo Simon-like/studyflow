@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { api } from '@studyflow/api';
-import { authValidators } from '@studyflow/shared';
+import { authValidators, storage, STORAGE_KEYS } from '@studyflow/shared';
 
 interface FieldErrors {
   name?: string;
@@ -57,6 +57,12 @@ export default function RegisterPage() {
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = res.data as any;
+      if (data?.accessToken) {
+        storage.set(STORAGE_KEYS.TOKEN, data.accessToken);
+      }
+      if (data?.refreshToken) {
+        storage.set(STORAGE_KEYS.REFRESH_TOKEN, data.refreshToken);
+      }
       if (data?.user) {
         setUser(data.user);
       }

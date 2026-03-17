@@ -1,4 +1,4 @@
-import { Clock, Flag, MoreHorizontal } from 'lucide-react';
+import { Flag, MoreHorizontal } from 'lucide-react';
 import { Card } from '@/components/ui';
 import type { TaskCardProps } from './types';
 import { PRIORITY_CONFIG, STATUS_CONFIG } from './constants';
@@ -9,7 +9,6 @@ export function TaskCard({
   description,
   priority,
   status,
-  category,
   dueDate,
   onToggleStatus,
   onEdit,
@@ -58,7 +57,7 @@ export function TaskCard({
               {statusConfig.label}
             </span>
           </div>
-          <p className="text-stone text-xs mt-1 truncate">{category ? `${category} · ` : ''}{description}</p>
+          {description && <p className="text-stone text-xs mt-1 truncate">{description}</p>}
         </div>
 
         {/* Meta & Actions */}

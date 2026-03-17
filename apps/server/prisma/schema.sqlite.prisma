@@ -1,0 +1,292 @@
+// ==========================================
+// StudyFlow SQLite 数据库 Schema
+// 用于无 Docker 开发环境
+// ==========================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// 核心表（与 PostgreSQL 版本一致）
+// ==========================================
+
+model User {
+  id          String   @id @default(uuid())
+  username    String   @unique
+  email       String?  @unique
+  phone       String?  @unique
+  passwordHash String  @map("password_hash")
+  
+  nickname    String?
+  avatarUrl   String?  @map("avatar_url")
+  studyGoal   String?  @map("study_goal")
+  
+  focusDuration       Int      @default(1500) @map("focus_duration")
+  shortBreakDuration  Int      @default(300) @map("short_break_duration")
+  longBreakDuration   Int      @default(900) @map("long_break_duration")
+  autoStartBreak      Boolean  @default(false) @map("auto_start_break")
+  autoStartPomodoro   Boolean  @default(false) @map("auto_start_pomodoro")
+  longBreakInterval   Int      @default(4) @map("long_break_interval")
+  
+  theme                String   @default("light")
+  notificationEnabled  Boolean  @default(true) @map("notification_enabled")
+  soundEnabled         Boolean  @default(true) @map("sound_enabled")
+  vibrationEnabled     Boolean  @default(true) @map("vibration_enabled")
+  language             String   @default("zh-CN")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  
+  tasks           Task[]
+  pomodoroRecords PomodoroRecord[]
+  pomodoroStats   PomodoroDailyStat[]
+  taskStats       TaskDailyStat[]
+  userStreak      UserStreak?
+  chatSessions    ChatSession[]
+  aiStudyPlans    AiStudyPlan[]
+  posts           Post[]
+  comments        Comment[]
+  likes           Like[]
+  groupMembers    GroupMember[]
+  studyGroups     StudyGroup[] @relation("GroupCreator")
+  
+  @@index([username])
+  @@index([email])
+  @@map("users")
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  
+  title       String
+  description String?
+  category    String?
+  
+  priority    String   @default("medium")
+  status      String   @default("todo")
+  
+  displayOrder Int     @default(0) @map("display_order")
+  dueDate     DateTime? @map("due_date")
+  parentId    String?  @map("parent_id")
+  isToday     Boolean  @default(true) @map("is_today")
+  
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  completedAt DateTime? @map("completed_at")
+  deletedAt   DateTime? @map("deleted_at")
+  
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent          Task?            @relation("TaskSubtasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks        Task[]           @relation("TaskSubtasks")
+  pomodoroRecords PomodoroRecord[]
+  
+  @@index([userId, status])
+  @@index([userId, isToday])
+  @@map("tasks")
+}
+
+model PomodoroRecord {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  taskId      String?  @map("task_id")
+  
+  startTime   DateTime @default(now()) @map("start_time")
+  endTime     DateTime? @map("end_time")
+  
+  plannedDuration Int  @map("planned_duration")
+  actualDuration  Int? @map("actual_duration")
+  
+  status          String  @default("running")
+  isLocked        Boolean @default(false) @map("is_locked")
+  abandonReason   String? @map("abandon_reason")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  
+  @@index([userId, createdAt])
+  @@index([userId, status])
+  @@map("pomodoro_records")
+}
+
+model PomodoroDailyStat {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  statDate    DateTime @map("stat_date")
+  
+  completedCount   Int @default(0) @map("completed_count")
+  totalFocusSeconds Int @default(0) @map("total_focus_seconds")
+  stoppedCount     Int @default(0) @map("stopped_count")
+  relatedTaskCount Int @default(0) @map("related_task_count")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, statDate])
+  @@index([userId, statDate])
+  @@map("pomodoro_daily_stats")
+}
+
+model TaskDailyStat {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  statDate    DateTime @map("stat_date")
+  
+  completedCount Int @default(0) @map("completed_count")
+  createdCount   Int @default(0) @map("created_count")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, statDate])
+  @@index([userId, statDate])
+  @@map("task_daily_stats")
+}
+
+model UserStreak {
+  id      String @id @default(uuid())
+  userId  String @unique @map("user_id")
+  
+  currentStreak Int      @default(0) @map("current_streak")
+  longestStreak Int      @default(0) @map("longest_streak")
+  
+  lastStudyDate   DateTime? @map("last_study_date")
+  streakStartDate DateTime? @map("streak_start_date")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_streaks")
+}
+
+// AI 和社区模块（简化版）
+model ChatSession {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  title       String?
+  messageCount Int     @default(0) @map("message_count")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+  
+  @@index([userId, createdAt])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id          String   @id @default(uuid())
+  sessionId   String   @map("session_id")
+  role        String
+  content     String
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  @@index([sessionId, createdAt])
+  @@map("chat_messages")
+}
+
+model AiStudyPlan {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  title       String?
+  description String?
+  status      String   @default("active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("ai_study_plans")
+}
+
+model Post {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  content     String
+  likeCount   Int      @default(0) @map("like_count")
+  commentCount Int     @default(0) @map("comment_count")
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments Comment[]
+  likes Like[]
+  
+  @@map("posts")
+}
+
+model Comment {
+  id          String   @id @default(uuid())
+  postId      String   @map("post_id")
+  userId      String   @map("user_id")
+  content     String
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("comments")
+}
+
+model Like {
+  id          String   @id @default(uuid())
+  postId      String   @map("post_id")
+  userId      String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([postId, userId])
+  @@map("likes")
+}
+
+model StudyGroup {
+  id          String   @id @default(uuid())
+  createdBy   String   @map("created_by")
+  name        String
+  description String?
+  memberCount Int      @default(0) @map("member_count")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  creator User @relation("GroupCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  members GroupMember[]
+  
+  @@map("study_groups")
+}
+
+model GroupMember {
+  id          String   @id @default(uuid())
+  groupId     String   @map("group_id")
+  userId      String   @map("user_id")
+  role        String   @default("member")
+  joinedAt DateTime @default(now()) @map("joined_at")
+  
+  group StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([groupId, userId])
+  @@map("group_members")
+}

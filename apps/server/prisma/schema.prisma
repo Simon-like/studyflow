@@ -1,0 +1,433 @@
+// ==========================================
+// StudyFlow 数据库 Schema
+// 对应原 Spring Boot 的 JPA Entity 设计
+// ==========================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// 核心表
+// ==========================================
+
+model User {
+  id          String   @id @default(uuid()) @db.Uuid
+  username    String   @unique @db.VarChar(50)
+  email       String?  @unique @db.VarChar(100)
+  phone       String?  @unique @db.VarChar(20)
+  passwordHash String  @map("password_hash") @db.VarChar(255)
+  
+  // 个人资料
+  nickname    String?  @db.VarChar(50)
+  avatarUrl   String?  @map("avatar_url") @db.VarChar(500)
+  studyGoal   String?  @map("study_goal") @db.VarChar(200)
+  
+  // 番茄钟个性化设置（单位：秒）
+  focusDuration       Int      @default(1500) @map("focus_duration")
+  shortBreakDuration  Int      @default(300) @map("short_break_duration")
+  longBreakDuration   Int      @default(900) @map("long_break_duration")
+  autoStartBreak      Boolean  @default(false) @map("auto_start_break")
+  autoStartPomodoro   Boolean  @default(false) @map("auto_start_pomodoro")
+  longBreakInterval   Int      @default(4) @map("long_break_interval")
+  
+  // 系统设置
+  theme                String   @default("light") @db.VarChar(20)
+  notificationEnabled  Boolean  @default(true) @map("notification_enabled")
+  soundEnabled         Boolean  @default(true) @map("sound_enabled")
+  vibrationEnabled     Boolean  @default(true) @map("vibration_enabled")
+  language             String   @default("zh-CN") @db.VarChar(10)
+  
+  // 时间戳
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz()
+  
+  // 关联
+  tasks           Task[]
+  pomodoroRecords PomodoroRecord[]
+  pomodoroStats   PomodoroDailyStat[]
+  taskStats       TaskDailyStat[]
+  userStreak      UserStreak?
+  chatSessions    ChatSession[]
+  aiStudyPlans    AiStudyPlan[]
+  posts           Post[]
+  comments        Comment[]
+  likes           Like[]
+  groupMembers    GroupMember[]
+  studyGroups     StudyGroup[] @relation("GroupCreator")
+  
+  @@index([username])
+  @@index([email])
+  @@index([phone])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model Task {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  
+  // 基本信息
+  title       String   @db.VarChar(200)
+  description String?  @db.Text
+  category    String?  @db.VarChar(50)
+  
+  // 状态
+  priority    TaskPriority @default(medium)
+  status      TaskStatus   @default(todo)
+  
+  // 排序与组织
+  displayOrder Int       @default(0) @map("display_order")
+  dueDate     DateTime?  @map("due_date") @db.Date
+  parentId    String?    @map("parent_id") @db.Uuid
+  isToday     Boolean    @default(true) @map("is_today")
+  
+  // 时间戳
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  completedAt DateTime? @map("completed_at") @db.Timestamptz()
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz()
+  
+  // 关联
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent          Task?            @relation("TaskSubtasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks        Task[]           @relation("TaskSubtasks")
+  pomodoroRecords PomodoroRecord[]
+  
+  @@index([userId, status])
+  @@index([userId, isToday])
+  @@index([userId, category])
+  @@index([completedAt])
+  @@index([userId, createdAt])
+  @@map("tasks")
+}
+
+model PomodoroRecord {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  taskId      String?  @map("task_id") @db.Uuid
+  
+  // 时间
+  startTime   DateTime @default(now()) @map("start_time") @db.Timestamptz()
+  endTime     DateTime? @map("end_time") @db.Timestamptz()
+  
+  // 时长（秒）
+  plannedDuration Int      @map("planned_duration")
+  actualDuration  Int?     @map("actual_duration")
+  
+  // 状态
+  status          PomodoroStatus @default(running)
+  isLocked        Boolean        @default(false) @map("is_locked")
+  abandonReason   String?        @map("abandon_reason") @db.VarChar(500)
+  
+  // 时间戳
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  
+  // 关联
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  
+  @@index([userId, createdAt])
+  @@index([userId, status])
+  @@index([taskId])
+  @@index([startTime])
+  @@map("pomodoro_records")
+}
+
+// ==========================================
+// 统计预聚合表
+// ==========================================
+
+model PomodoroDailyStat {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  statDate    DateTime @map("stat_date") @db.Date
+  
+  // 统计
+  completedCount   Int @default(0) @map("completed_count")
+  totalFocusSeconds Int @default(0) @map("total_focus_seconds")
+  stoppedCount     Int @default(0) @map("stopped_count")
+  relatedTaskCount Int @default(0) @map("related_task_count")
+  
+  // 时间戳
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  
+  // 关联
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, statDate])
+  @@index([userId, statDate])
+  @@map("pomodoro_daily_stats")
+}
+
+model TaskDailyStat {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  statDate    DateTime @map("stat_date") @db.Date
+  
+  // 统计
+  completedCount Int @default(0) @map("completed_count")
+  createdCount   Int @default(0) @map("created_count")
+  
+  // 时间戳
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  
+  // 关联
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, statDate])
+  @@index([userId, statDate])
+  @@map("task_daily_stats")
+}
+
+model UserStreak {
+  id      String @id @default(uuid()) @db.Uuid
+  userId  String @unique @map("user_id") @db.Uuid
+  
+  // 连续天数
+  currentStreak Int      @default(0) @map("current_streak")
+  longestStreak Int      @default(0) @map("longest_streak")
+  
+  // 关键日期
+  lastStudyDate   DateTime? @map("last_study_date") @db.Date
+  streakStartDate DateTime? @map("streak_start_date") @db.Date
+  
+  // 时间戳
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  
+  // 关联
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@map("user_streaks")
+}
+
+// ==========================================
+// AI 数字人模块
+// ==========================================
+
+model ChatSession {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  
+  title           String? @db.VarChar(100)
+  contextSummary  String? @map("context_summary") @db.Text
+  messageCount    Int     @default(0) @map("message_count")
+  
+  // 时间戳
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  
+  // 关联
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+  
+  @@index([userId, createdAt])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id          String   @id @default(uuid()) @db.Uuid
+  sessionId   String   @map("session_id") @db.Uuid
+  
+  role    ChatRole @default(user)
+  content String   @db.Text
+  type    ChatMessageType @default(text)
+  metadata Json?  @db.JsonB
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  
+  // 关联
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  @@index([sessionId, createdAt])
+  @@map("chat_messages")
+}
+
+model AiStudyPlan {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  
+  title       String?  @db.VarChar(200)
+  description String?  @db.Text
+  startDate   DateTime? @map("start_date") @db.Date
+  endDate     DateTime? @map("end_date") @db.Date
+  goals       Json?    @db.JsonB
+  tasks       Json?    @db.JsonB
+  status      PlanStatus @default(active)
+  
+  // 时间戳
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  
+  // 关联
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, status])
+  @@map("ai_study_plans")
+}
+
+// ==========================================
+// 社区模块
+// ==========================================
+
+model Post {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  
+  content     String   @db.Text
+  images      Json?    @db.JsonB
+  tags        Json?    @db.JsonB
+  studyTime   Int?     @map("study_time")
+  taskCount   Int?     @map("task_count")
+  likeCount   Int      @default(0) @map("like_count")
+  commentCount Int     @default(0) @map("comment_count")
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  
+  // 时间戳
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  
+  // 关联
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments Comment[]
+  likes    Like[]
+  
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("posts")
+}
+
+model Comment {
+  id          String   @id @default(uuid()) @db.Uuid
+  postId      String   @map("post_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  parentId    String?  @map("parent_id") @db.Uuid
+  
+  content     String   @db.Text
+  isDeleted   Boolean  @default(false) @map("is_deleted")
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  
+  // 关联
+  post   Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("CommentReplies")
+  
+  @@index([postId, createdAt])
+  @@map("comments")
+}
+
+model Like {
+  id          String   @id @default(uuid()) @db.Uuid
+  postId      String   @map("post_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  
+  // 关联
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+  @@map("likes")
+}
+
+model StudyGroup {
+  id          String   @id @default(uuid()) @db.Uuid
+  createdBy   String   @map("created_by") @db.Uuid
+  
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  coverImage  String?  @map("cover_image") @db.VarChar(500)
+  category    String?  @db.VarChar(50)
+  memberCount Int      @default(0) @map("member_count")
+  
+  // 时间戳
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  
+  // 关联
+  creator User          @relation("GroupCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  members GroupMember[]
+  
+  @@index([category])
+  @@map("study_groups")
+}
+
+model GroupMember {
+  id          String   @id @default(uuid()) @db.Uuid
+  groupId     String   @map("group_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  
+  role    GroupRole @default(member)
+  joinedAt DateTime @default(now()) @map("joined_at") @db.Timestamptz()
+  
+  // 关联
+  group StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+  @@map("group_members")
+}
+
+// ==========================================
+// 枚举定义
+// ==========================================
+
+enum TaskStatus {
+  todo
+  in_progress
+  completed
+  abandoned
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+}
+
+enum PomodoroStatus {
+  running
+  paused
+  completed
+  stopped
+}
+
+enum ChatRole {
+  user
+  assistant
+}
+
+enum ChatMessageType {
+  text
+  plan
+  reminder
+}
+
+enum PlanStatus {
+  active
+  completed
+  archived
+}
+
+enum GroupRole {
+  admin
+  member
+}

@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
-import { api, TEST_ACCOUNT } from '@studyflow/api';
-import { authValidators } from '@studyflow/shared';
+import { api } from '@studyflow/api';
+import { authValidators, storage, STORAGE_KEYS } from '@studyflow/shared';
 
 interface FieldErrors {
   account?: string;
@@ -47,6 +47,13 @@ export default function LoginPage() {
       const res = await api.auth.login({ username: account, password });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = res.data as any;
+      // 保存 JWT tokens
+      if (data?.accessToken) {
+        storage.set(STORAGE_KEYS.TOKEN, data.accessToken);
+      }
+      if (data?.refreshToken) {
+        storage.set(STORAGE_KEYS.REFRESH_TOKEN, data.refreshToken);
+      }
       if (data?.user) {
         setUser(data.user);
       }
@@ -70,11 +77,6 @@ export default function LoginPage() {
       <h2 className="font-display text-2xl font-bold text-charcoal mb-2">欢迎回来</h2>
       <p className="text-stone mb-8">登录开始今天的学习之旅</p>
 
-      {/* 测试账号提示 */}
-      <div className="bg-sage/10 text-charcoal text-xs rounded-xl px-4 py-3 mb-6 leading-relaxed">
-        <span className="font-semibold text-sage">测试账号：</span>
-        {TEST_ACCOUNT.username} / {TEST_ACCOUNT.password}
-      </div>
 
       {serverError && (
         <div className="bg-red-50 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">
