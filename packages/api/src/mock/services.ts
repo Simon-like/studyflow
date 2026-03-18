@@ -2,7 +2,7 @@
  * Mock 服务实现
  * 与 services/ 下的真实服务接口完全一致
  *
- * 测试账号: test@studyflow.com / Test1234
+ * 测试账号: 手机号 13800138000 / 密码 Test1234
  */
 
 import type {
@@ -90,16 +90,13 @@ export const mockAuthService = {
   login: async (data: LoginRequest): Promise<AuthLoginResponse> => {
     await mockDelay();
 
+    // 仅通过手机号登录
     const found = registeredUsers.find(
-      (u) =>
-        (u.user.username === data.username ||
-          u.user.email === data.username ||
-          u.user.phone === data.username) &&
-        u.password === data.password,
+      (u) => u.user.phone === data.phone && u.password === data.password,
     );
 
     if (!found) {
-      throw { response: { status: 401, data: fail(401, "账号或密码错误") } };
+      throw { response: { status: 401, data: fail(401, "手机号或密码错误") } };
     }
 
     currentUser = found.user;
@@ -113,27 +110,29 @@ export const mockAuthService = {
   register: async (data: RegisterRequest): Promise<AuthRegisterResponse> => {
     await mockDelay();
 
-    // 检查唯一性
-    const exists = registeredUsers.some(
-      (u) =>
-        u.user.username === data.username ||
-        u.user.email === data.username ||
-        u.user.phone === data.username,
-    );
+    // 检查手机号是否已注册
+    const exists = registeredUsers.some((u) => u.user.phone === data.phone);
     if (exists) {
       throw {
-        response: { status: 409, data: fail(409, "该手机号/邮箱已被注册") },
+        response: { status: 409, data: fail(409, "该手机号已被注册") },
       };
     }
 
-    const isEmailAddr = data.username.includes("@");
+    // 生成唯一用户名和 PIN
+    const username = `user_${Date.now().toString().slice(-6)}_${Math.floor(100 + Math.random() * 900)}`;
+    const pin = Math.floor(10000000 + Math.random() * 90000000).toString();
+
     const newUser: User = {
       id: genId(),
-      username: data.username,
-      email: isEmailAddr ? data.username : (data.email || ""),
-      phone: isEmailAddr ? (data.phone || "") : data.username,
-      nickname: data.nickname || data.username.split("@")[0],
+      username,
+      email: "",
+      phone: data.phone,
+      pin,
+      nickname: data.nickname || `用户${pin.slice(-4)}`,
       avatar: "",
+      focusDuration: 1500,
+      shortBreakDuration: 300,
+      longBreakDuration: 900,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

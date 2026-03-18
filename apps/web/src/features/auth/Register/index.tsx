@@ -3,11 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
 import { api } from '@studyflow/api';
-import { authValidators, storage, STORAGE_KEYS } from '@studyflow/shared';
+import { storage, STORAGE_KEYS } from '@studyflow/shared';
 
 interface FieldErrors {
-  name?: string;
-  account?: string;
+  nickname?: string;
+  phone?: string;
   password?: string;
   confirmPassword?: string;
 }
@@ -22,11 +22,47 @@ function FormField({ label, error, children }: { label: string; error?: string; 
   );
 }
 
+/**
+ * 验证昵称
+ */
+function validateNickname(nickname: string): string | undefined {
+  if (!nickname) return undefined; // 昵称可选
+  if (nickname.length > 50) return '昵称最多 50 个字符';
+  return undefined;
+}
+
+/**
+ * 验证手机号格式
+ */
+function validatePhone(phone: string): string | undefined {
+  if (!phone) return '请输入手机号';
+  if (!/^1[3-9]\d{9}$/.test(phone)) return '手机号格式不正确';
+  return undefined;
+}
+
+/**
+ * 验证密码
+ */
+function validatePassword(password: string): string | undefined {
+  if (!password) return '请输入密码';
+  if (password.length < 6) return '密码至少需要 6 个字符';
+  return undefined;
+}
+
+/**
+ * 验证确认密码
+ */
+function validateConfirmPassword(confirmPassword: string, password: string): string | undefined {
+  if (!confirmPassword) return '请再次输入密码';
+  if (confirmPassword !== password) return '两次输入的密码不一致';
+  return undefined;
+}
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { setUser, setAuthenticated } = useAuthStore();
-  const [name, setName] = useState('');
-  const [account, setAccount] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -34,14 +70,14 @@ export default function RegisterPage() {
 
   const runValidation = useCallback(() => {
     const e: FieldErrors = {
-      name: authValidators.name(name),
-      account: authValidators.account(account),
-      password: authValidators.password(password),
-      confirmPassword: authValidators.confirmPassword(confirmPassword, password),
+      nickname: validateNickname(nickname),
+      phone: validatePhone(phone),
+      password: validatePassword(password),
+      confirmPassword: validateConfirmPassword(confirmPassword, password),
     };
     setErrors(e);
-    return !e.name && !e.account && !e.password && !e.confirmPassword;
-  }, [name, account, password, confirmPassword]);
+    return !e.nickname && !e.phone && !e.password && !e.confirmPassword;
+  }, [nickname, phone, password, confirmPassword]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,9 +86,9 @@ export default function RegisterPage() {
     setIsLoading(true);
     try {
       const res = await api.auth.register({
-        username: account,
+        phone,
         password,
-        nickname: name,
+        nickname: nickname || undefined,
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = res.data as any;
@@ -64,6 +100,17 @@ export default function RegisterPage() {
       }
       if (data?.user) {
         setUser(data.user);
+        // 显示注册成功信息，包含自动生成的账号和 PIN
+        const { username, pin } = data.user;
+        toast.success(
+          <div>
+            <p>注册成功！</p>
+            <p className="text-sm mt-1">您的账号: <strong>{username}</strong></p>
+            <p className="text-sm">您的 PIN: <strong>{pin}</strong></p>
+            <p className="text-xs mt-1 text-gray-300">请牢记您的账号和 PIN</p>
+          </div>,
+          { duration: 6000 }
+        );
       }
       setAuthenticated(true);
       navigate('/dashboard');
@@ -86,36 +133,45 @@ export default function RegisterPage() {
       <p className="text-stone mb-8">开启你的高效学习之旅</p>
 
       <form onSubmit={handleSubmit} className="space-y-4 flex flex-col gap-4" noValidate>
-        <FormField label="姓名" error={errors.name}>
+        <FormField label="昵称" error={errors.nickname}>
           <input
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className={errors.name ? inputError : inputNormal}
-            placeholder="你的姓名"
+            name="nickname"
+            autoComplete="off"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            className={errors.nickname ? inputError : inputNormal}
+            placeholder="设置一个昵称"
           />
         </FormField>
-        <FormField label="手机号/邮箱" error={errors.account}>
+        <FormField label="手机号" error={errors.phone}>
           <input
-            type="text"
-            value={account}
-            onChange={(e) => setAccount(e.target.value)}
-            className={errors.account ? inputError : inputNormal}
-            placeholder="请输入"
+            type="tel"
+            name="phone"
+            autoComplete="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className={errors.phone ? inputError : inputNormal}
+            placeholder="请输入手机号"
+            maxLength={11}
           />
         </FormField>
         <FormField label="密码" error={errors.password}>
           <input
             type="password"
+            name="password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={errors.password ? inputError : inputNormal}
-            placeholder="至少6位，包含字母和数字"
+            placeholder="至少6位"
           />
         </FormField>
         <FormField label="确认密码" error={errors.confirmPassword}>
           <input
             type="password"
+            name="confirmPassword"
+            autoComplete="new-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             className={errors.confirmPassword ? inputError : inputNormal}

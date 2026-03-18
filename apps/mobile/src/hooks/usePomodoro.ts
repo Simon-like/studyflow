@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { POMODORO_CONFIG } from '../constants';
+import { useUser } from './useUser';
 
 export type PomodoroStatus = 'idle' | 'running' | 'paused' | 'completed';
 
@@ -36,13 +37,18 @@ interface UsePomodoroReturn {
 }
 
 export function usePomodoro(options: UsePomodoroOptions = {}): UsePomodoroReturn {
-  const { 
+  const { pomodoroSettings } = useUser();
+  const {
     initialDuration = POMODORO_CONFIG.DEFAULT_DURATION,
     onComplete,
-    onTick 
+    onTick
   } = options;
+
+  // 使用用户的番茄钟设置，如果没有则使用默认设置
+  const userFocusDuration = pomodoroSettings?.focusDuration || POMODORO_CONFIG.DEFAULT_DURATION;
+  const effectiveInitialDuration = options.initialDuration || userFocusDuration;
   
-  const [timeLeft, setTimeLeft] = useState(initialDuration);
+  const [timeLeft, setTimeLeft] = useState(effectiveInitialDuration);
   const [status, setStatus] = useState<PomodoroStatus>('idle');
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
@@ -76,16 +82,24 @@ export function usePomodoro(options: UsePomodoroOptions = {}): UsePomodoroReturn
   const stop = useCallback(() => {
     clearTimer();
     setStatus('idle');
-    setTimeLeft(initialDuration);
-  }, [clearTimer, initialDuration]);
+    setTimeLeft(effectiveInitialDuration);
+  }, [clearTimer, effectiveInitialDuration]);
   
   // 重置
   const reset = useCallback(() => {
     clearTimer();
     setStatus('idle');
-    setTimeLeft(initialDuration);
-  }, [clearTimer, initialDuration]);
+    setTimeLeft(effectiveInitialDuration);
+  }, [clearTimer, effectiveInitialDuration]);
   
+  // 监听用户设置变化，更新计时器时长
+  useEffect(() => {
+    if (status === 'idle') {
+      const newDuration = pomodoroSettings?.focusDuration || POMODORO_CONFIG.DEFAULT_DURATION;
+      setTimeLeft(newDuration);
+    }
+  }, [pomodoroSettings?.focusDuration, status]);
+
   // 计时逻辑
   useEffect(() => {
     if (status === 'running') {
@@ -113,8 +127,8 @@ export function usePomodoro(options: UsePomodoroOptions = {}): UsePomodoroReturn
   const formattedTime = formatTime(timeLeft);
   
   // 计算进度
-  const elapsed = initialDuration - timeLeft;
-  const progress = elapsed / initialDuration;
+  const elapsed = effectiveInitialDuration - timeLeft;
+  const progress = elapsed / effectiveInitialDuration;
   const progressPercent = Math.round(progress * 100);
   
   return {

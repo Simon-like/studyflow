@@ -30,22 +30,20 @@ export const userService = {
     http.put<ApiResponse<User>>("/api/v1/users/profile", data),
 
   /**
-   * 上传头像
+   * 上传头像（自动将 File 转为 Base64）
    * POST /api/v1/users/avatar
    */
-  uploadAvatar: (file: File | FormData) => {
-    const formData = file instanceof FormData 
-      ? file 
-      : (() => {
-          const fd = new FormData();
-          fd.append("avatar", file);
-          return fd;
-        })();
+  uploadAvatar: async (file: File): Promise<ApiResponse<{ avatarUrl: string }>> => {
+    // 将文件转为 Base64
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
     
-    return http.post<ApiResponse<{ avatarUrl: string }>>("/api/v1/users/avatar", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+    return http.post<ApiResponse<{ avatarUrl: string }>>("/api/v1/users/avatar", {
+      avatar: base64,
     });
   },
 

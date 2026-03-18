@@ -54,9 +54,11 @@ export class UsersService {
       username: user.username,
       email: user.email || '',
       phone: user.phone || undefined,
+      pin: user.pin,
       avatar: user.avatarUrl || undefined,
       nickname: user.nickname || undefined,
       studyGoal: user.studyGoal || undefined,
+      tags: [],
       focusDuration: user.focusDuration,
       breakDuration: user.breakDuration,
       shortBreakDuration: user.shortBreakDuration,
@@ -82,38 +84,51 @@ export class UsersService {
     userId: string,
     dto: UpdateProfileDto,
   ): Promise<UserProfile> {
-    // 检查邮箱和手机号是否已被其他用户使用
-    if (dto.email || dto.phone) {
+    // 检查手机号是否已被其他用户使用（手机号唯一）
+    if (dto.phone) {
       const existingUser = await this.prisma.user.findFirst({
         where: {
-          OR: [
-            ...(dto.email ? [{ email: dto.email }] : []),
-            ...(dto.phone ? [{ phone: dto.phone }] : []),
-          ],
+          phone: dto.phone,
           NOT: { id: userId },
           deletedAt: null,
         },
       });
 
       if (existingUser) {
-        if (dto.email && existingUser.email === dto.email) {
-          throw new BadRequestException('邮箱已被其他用户使用');
-        }
-        if (dto.phone && existingUser.phone === dto.phone) {
-          throw new BadRequestException('手机号已被其他用户使用');
-        }
+        throw new BadRequestException('手机号已被其他用户使用');
       }
+    }
+
+    // 检查邮箱是否已被其他用户使用（邮箱可选，但如果提供则必须唯一）
+    if (dto.email) {
+      const existingUser = await this.prisma.user.findFirst({
+        where: {
+          email: dto.email,
+          NOT: { id: userId },
+          deletedAt: null,
+        },
+      });
+
+      if (existingUser) {
+        throw new BadRequestException('邮箱已被其他用户使用');
+      }
+    }
+
+    const updateData: Record<string, unknown> = {
+      nickname: dto.nickname,
+      avatarUrl: dto.avatar,
+      studyGoal: dto.studyGoal,
+      email: dto.email,
+      phone: dto.phone,
+    };
+
+    if (dto.tags !== undefined) {
+      updateData.tags = dto.tags;
     }
 
     await this.prisma.user.update({
       where: { id: userId },
-      data: {
-        nickname: dto.nickname,
-        avatarUrl: dto.avatar,
-        studyGoal: dto.studyGoal,
-        email: dto.email,
-        phone: dto.phone,
-      },
+      data: updateData,
     });
 
     return this.getUserProfile(userId);

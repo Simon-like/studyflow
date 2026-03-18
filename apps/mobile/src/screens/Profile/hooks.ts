@@ -12,13 +12,19 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { Alert, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../contexts/AuthContext';
-import { api } from '../../../embedded-packages/api/src';
+import { api } from '../../api';
 import { USER_KEYS, useUserProfile, useUserStats } from '../../hooks/useUser';
 import type { UpdateProfileRequest, PomodoroSettings, SystemSettings } from '@studyflow/shared';
 import { PRESET_USER_TAGS } from '@studyflow/shared';
-import toast from 'react-hot-toast';
+
+// 轻量 toast 替代（RN 中 react-hot-toast 不可用）
+const toast = {
+  success: (msg: string) => Alert.alert('成功', msg),
+  error: (msg: string) => Alert.alert('提示', msg),
+};
 
 // 设置相关的独立 Query Keys
 const SETTINGS_KEYS = {
@@ -209,13 +215,7 @@ export function usePomodoroSettings() {
         autoStartPomodoro: variables.autoStartPomodoro,
         longBreakInterval: variables.longBreakInterval,
       };
-      // 使用AsyncStorage或全局状态管理
-      try {
-        const { AsyncStorage } = require('react-native');
-        AsyncStorage.setItem('pomodoro_settings', JSON.stringify(localSettings));
-      } catch {
-        // Web环境忽略
-      }
+      AsyncStorage.setItem('pomodoro_settings', JSON.stringify(localSettings)).catch(() => {});
       toast.success('设置已保存，下次专注时生效');
     },
     onError: () => {
@@ -262,11 +262,8 @@ export function useSystemSettings() {
       queryClient.invalidateQueries({ queryKey: USER_KEYS.profile() });
       
       // 应用主题设置到本地存储
-      try {
-        const { AsyncStorage } = require('react-native');
-        AsyncStorage.setItem('theme', variables.theme);
-      } catch {
-        // Web环境忽略
+      if (variables.theme) {
+        AsyncStorage.setItem('theme', variables.theme).catch(() => {});
       }
       toast.success('设置已保存');
     },

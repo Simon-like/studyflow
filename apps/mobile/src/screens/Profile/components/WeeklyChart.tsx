@@ -3,7 +3,33 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Card } from '../../../components/ui/Card';
 import { SectionHeader } from '../../../components/layout/SectionHeader';
 import { colors, radius, spacing, fontSize } from '../../../theme';
-import { useWeeklyDailyStats } from '@studyflow/api';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../../api';
+import type { DailyStat } from '@studyflow/shared';
+
+function getWeekRange() {
+  const now = new Date();
+  const day = now.getDay();
+  const start = new Date(now);
+  start.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return { startDate: fmt(start), endDate: fmt(end) };
+}
+
+function useWeeklyDailyStats() {
+  const { startDate, endDate } = getWeekRange();
+  return useQuery<DailyStat[]>({
+    queryKey: ['stats', 'daily', startDate, endDate],
+    queryFn: async () => {
+      const res = await api.stats.getDaily(startDate, endDate);
+      return res.data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
 
 const WEEK_DAYS = ['一', '二', '三', '四', '五', '六', '日'];
 

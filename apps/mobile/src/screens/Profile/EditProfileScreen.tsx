@@ -37,6 +37,7 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
     studyGoal: profile?.studyGoal || '',
     email: profile?.email || '',
     phone: profile?.phone || '',
+    pin: profile?.pin || '',
     tags: profile?.tags?.map(t => t.id) || [],
   });
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -51,6 +52,7 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
         studyGoal: profile.studyGoal || '',
         email: profile.email || '',
         phone: profile.phone || '',
+        pin: profile.pin || '',
         tags: profile.tags?.map(t => t.id) || [],
       });
       setSelectedTags(profile.tags?.map(t => t.id) || []);
@@ -110,7 +112,9 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
   };
 
   const handleSubmit = async () => {
-    await updateProfile.mutateAsync({ ...formData, tags: selectedTags });
+    // 移除PIN字段，因为PIN不可更改
+    const { pin, ...updateData } = formData;
+    await updateProfile.mutateAsync({ ...updateData, tags: selectedTags });
     onBack();
   };
 
@@ -181,21 +185,19 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
             </Text>
           </View>
 
-          {/* Email */}
+          {/* PIN - 只读 */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>邮箱</Text>
+            <Text style={styles.label}>用户PIN</Text>
             <TextInput
-              value={formData.email}
-              onChangeText={(text) => handleInputChange('email', text)}
-              placeholder="example@email.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              style={styles.input}
+              value={profile?.pin || ''}
+              editable={false}
+              style={[styles.input, styles.readOnlyInput]}
               placeholderTextColor={colors.textMuted}
             />
+            <Text style={styles.helperText}>PIN是您的唯一标识，不可更改</Text>
           </View>
 
-          {/* Phone */}
+          {/* Phone - 只读 */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>手机号</Text>
             <TextInput
@@ -203,6 +205,20 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
               onChangeText={(text) => handleInputChange('phone', text)}
               placeholder="138xxxxxxxxx"
               keyboardType="phone-pad"
+              style={styles.input}
+              placeholderTextColor={colors.textMuted}
+            />
+          </View>
+
+          {/* Email - 可选 */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>邮箱（可选）</Text>
+            <TextInput
+              value={formData.email}
+              onChangeText={(text) => handleInputChange('email', text)}
+              placeholder="example@email.com（可选）"
+              keyboardType="email-address"
+              autoCapitalize="none"
               style={styles.input}
               placeholderTextColor={colors.textMuted}
             />
@@ -511,6 +527,15 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     color: colors.textMuted,
     textAlign: 'right',
+  },
+  helperText: {
+    fontSize: fontSize.xs,
+    color: colors.textMuted,
+    marginTop: spacing.xs,
+  },
+  readOnlyInput: {
+    backgroundColor: colors.border,
+    color: colors.textMuted,
   },
   modalButtons: {
     flexDirection: 'row',

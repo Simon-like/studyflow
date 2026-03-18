@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
 import { JwtConfigModule } from './common/jwt-config.module';
+import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TasksModule } from './tasks/tasks.module';
@@ -23,6 +24,8 @@ import { HealthController } from './common/health.controller';
     }),
     // 全局 JWT（供 JwtAuthGuard 使用）
     JwtConfigModule,
+    // 通用服务（OSS 等）
+    CommonModule,
     // 数据库和缓存
     PrismaModule,
     RedisModule,

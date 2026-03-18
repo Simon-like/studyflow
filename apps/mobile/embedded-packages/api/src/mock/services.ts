@@ -2,7 +2,7 @@
  * Mock 服务实现
  * 与 services/ 下的真实服务接口完全一致
  *
- * 测试账号: test@studyflow.com / Test1234
+ * 测试账号: 手机号 13800138000 / 密码 Test1234
  */
 
 import type {
@@ -20,6 +20,8 @@ import type {
   PaginatedData,
   PaginationParams,
   ReorderTasksRequest,
+  StatsPeriod,
+  PomodoroSettlement,
 } from "@studyflow/shared";
 import { STORAGE_KEYS } from "@studyflow/shared";
 import {
@@ -84,23 +86,17 @@ let posts = [...MOCK_POSTS];
 
 // ==================== Auth Mock ====================
 
-type AuthLoginResponse = ApiResponse<TokenResponse & { user: User }>;
-type AuthRegisterResponse = AuthLoginResponse;
-
 export const mockAuthService = {
-  login: async (data: LoginRequest): Promise<AuthLoginResponse> => {
+  login: async (data: LoginRequest): Promise<ApiResponse<TokenResponse>> => {
     await mockDelay();
 
+    // 仅通过手机号登录
     const found = registeredUsers.find(
-      (u) =>
-        (u.user.username === data.username ||
-          u.user.email === data.username ||
-          u.user.phone === data.username) &&
-        u.password === data.password,
+      (u) => u.user.phone === data.phone && u.password === data.password,
     );
 
     if (!found) {
-      throw { response: { status: 401, data: fail(401, "账号或密码错误") } };
+      throw { response: { status: 401, data: fail(401, "手机号或密码错误") } };
     }
 
     currentUser = found.user;
@@ -108,32 +104,31 @@ export const mockAuthService = {
     safeStorage.set(STORAGE_KEYS.REFRESH_TOKEN, MOCK_TOKENS.refreshToken);
     safeStorage.set(STORAGE_KEYS.USER, found.user);
 
-    return ok({ ...MOCK_TOKENS, user: found.user });
+    return ok(MOCK_TOKENS);
   },
 
-  register: async (data: RegisterRequest): Promise<AuthRegisterResponse> => {
+  register: async (data: RegisterRequest): Promise<ApiResponse<TokenResponse>> => {
     await mockDelay();
 
-    // 检查唯一性
-    const exists = registeredUsers.some(
-      (u) =>
-        u.user.username === data.username ||
-        u.user.email === data.username ||
-        u.user.phone === data.username,
-    );
+    // 检查手机号是否已注册
+    const exists = registeredUsers.some((u) => u.user.phone === data.phone);
     if (exists) {
       throw {
-        response: { status: 409, data: fail(409, "该手机号/邮箱已被注册") },
+        response: { status: 409, data: fail(409, "该手机号已被注册") },
       };
     }
 
-    const isEmailAddr = data.username.includes("@");
+    // 生成唯一用户名和 PIN
+    const username = `user_${Date.now().toString().slice(-6)}_${Math.floor(100 + Math.random() * 900)}`;
+    const pin = Math.floor(10000000 + Math.random() * 90000000).toString();
+
     const newUser: User = {
       id: genId(),
-      username: data.username,
-      email: isEmailAddr ? data.username : (data.email || ""),
-      phone: isEmailAddr ? (data.phone || "") : data.username,
-      nickname: data.nickname || data.username.split("@")[0],
+      username,
+      email: "",
+      phone: data.phone,
+      pin,
+      nickname: data.nickname || `用户${pin.slice(-4)}`,
       avatar: "",
       focusDuration: 1500,
       shortBreakDuration: 300,
@@ -149,10 +144,10 @@ export const mockAuthService = {
     safeStorage.set(STORAGE_KEYS.REFRESH_TOKEN, MOCK_TOKENS.refreshToken);
     safeStorage.set(STORAGE_KEYS.USER, newUser);
 
-    return ok({ ...MOCK_TOKENS, user: newUser });
+    return ok(MOCK_TOKENS);
   },
 
-  refresh: async (): Promise<ApiResponse<TokenResponse>> => {
+  refresh: async (_refreshToken: string): Promise<ApiResponse<TokenResponse>> => {
     await mockDelay(200);
     return ok(MOCK_TOKENS);
   },
@@ -239,10 +234,7 @@ export const mockTaskService = {
       userId: "user-001",
       title: data.title,
       description: data.description,
-      category: data.category,
       priority: data.priority || "medium",
-      estimatedPomodoros: data.estimatedPomodoros || 1,
-      completedPomodoros: 0,
       status: "todo",
       dueDate: data.dueDate,
       parentId: data.parentId,
@@ -351,7 +343,7 @@ export const mockTaskService = {
     // 按分类统计
     const categoryMap = new Map<string, { total: number; completed: number }>();
     tasks.forEach((t) => {
-      const cat = t.category || "未分类";
+      const cat = "未分类";
       const existing = categoryMap.get(cat) || { total: 0, completed: 0 };
       existing.total++;
       if (t.status === "completed") existing.completed++;
@@ -431,7 +423,7 @@ export const mockPomodoroService = {
   stop: async (
     id: string,
     data: StopPomodoroRequest,
-  ): Promise<ApiResponse<import("@studyflow/shared").PomodoroSettlement>> => {
+  ): Promise<ApiResponse<PomodoroSettlement>> => {
     await mockDelay();
     const idx = pomodoroRecords.findIndex((r) => r.id === id);
     if (idx === -1)
@@ -460,7 +452,6 @@ export const mockPomodoroService = {
       if (taskIdx !== -1) {
         tasks[taskIdx] = {
           ...tasks[taskIdx],
-          completedPomodoros: (tasks[taskIdx].completedPomodoros || 0) + 1,
           status: tasks[taskIdx].status === "todo" ? "in_progress" : tasks[taskIdx].status,
           updatedAt: now.toISOString(),
         };
@@ -475,7 +466,7 @@ export const mockPomodoroService = {
     }
 
     // 构建结算摘要
-    const settlement: import("@studyflow/shared").PomodoroSettlement = {
+    const settlement: PomodoroSettlement = {
       record,
       task: updatedTask,
       todayStats: {
@@ -507,7 +498,7 @@ export const mockPomodoroService = {
     });
   },
 
-  getWeeklyStats: async () => {
+  getWeeklyStats: async (): Promise<ApiResponse<{ dailyStats: import("../services/pomodoroService").WeeklyDailyStat[] }>> => {
     await mockDelay(400);
     return ok({
       dailyStats: MOCK_DAILY_STATS.map((d) => ({
@@ -724,6 +715,7 @@ export const mockUserService = {
     await mockDelay(200);
     return ok({
       focusDuration: userProfile.focusDuration,
+      breakDuration: userProfile.breakDuration || userProfile.shortBreakDuration,
       shortBreakDuration: userProfile.shortBreakDuration,
       longBreakDuration: userProfile.longBreakDuration,
       autoStartBreak: userProfile.autoStartBreak,
@@ -785,7 +777,7 @@ import type {
 export const mockStatsService = {
   // 获取总览统计
   getOverview: async (
-    period?: string,
+    period: StatsPeriod = "week",
   ): Promise<ApiResponse<OverviewStats>> => {
     await mockDelay(400);
     const stats: OverviewStats = {
@@ -800,8 +792,8 @@ export const mockStatsService = {
 
   // 获取每日学习数据 (用于柱状图/热力图)
   getDaily: async (
-    startDate?: string,
-    endDate?: string,
+    startDate: string,
+    endDate: string,
   ): Promise<ApiResponse<DailyStat[]>> => {
     await mockDelay(400);
     // 转换为 DailyStat 格式
@@ -816,7 +808,7 @@ export const mockStatsService = {
 
   // 获取学科分布统计
   getSubjects: async (
-    period?: string,
+    period: StatsPeriod = "week",
   ): Promise<ApiResponse<SubjectStat[]>> => {
     await mockDelay(300);
     const subjectStats: SubjectStat[] = MOCK_SUBJECT_STATS.map((s) => ({

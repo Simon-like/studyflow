@@ -256,9 +256,9 @@ export default function SettingsPage() {
           </div>
           <div className="space-y-4">
             <div className="flex justify-between items-center py-2 border-b border-mist/20">
-              <span className="text-stone">用户名</span>
+              <span className="text-stone">PIN</span>
               <span className="text-charcoal font-medium">
-                {user?.username || "未设置"}
+                {user?.pin || "未设置"}
               </span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-mist/20">
@@ -268,9 +268,9 @@ export default function SettingsPage() {
               </span>
             </div>
             <div className="flex justify-between items-center py-2">
-              <span className="text-stone">邮箱</span>
+              <span className="text-stone">手机号</span>
               <span className="text-charcoal font-medium">
-                {user?.email || "未设置"}
+                {user?.phone || "未设置"}
               </span>
             </div>
           </div>

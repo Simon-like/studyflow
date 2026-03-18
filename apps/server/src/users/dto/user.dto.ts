@@ -5,6 +5,7 @@ import {
   IsInt,
   IsBoolean,
   IsArray,
+  IsObject,
   Min,
   Max,
   MinLength,
@@ -48,11 +49,17 @@ export class UpdateProfileDto {
   @Matches(/^1[3-9]\d{9}$/, { message: '手机号格式不正确' })
   phone?: string;
 
-  @ApiPropertyOptional({ description: '用户标签 ID 列表', example: ['tag1', 'tag2'] })
+  @ApiPropertyOptional({ description: '用户PIN', example: '12345678' })
+  @IsOptional()
+  @IsString({ message: 'PIN必须是字符串' })
+  @MaxLength(20, { message: 'PIN最多20个字符' })
+  pin?: string;
+
+  @ApiPropertyOptional({ description: '用户标签列表 [{id, name, type}]', example: [{ id: 'tag_kaoyan', name: '考研上岸', type: 'custom' }] })
   @IsOptional()
   @IsArray({ message: 'tags 必须是数组' })
-  @IsString({ each: true, message: 'tags 中每项必须是字符串' })
-  tags?: string[];
+  @IsObject({ each: true, message: 'tags 中每项必须是对象' })
+  tags?: { id: string; name: string; type: string }[];
 }
 
 /**
@@ -152,4 +159,16 @@ export class ChangePasswordDto {
   @ApiProperty({ description: '确认新密码', example: 'newpassword123' })
   @IsString({ message: '确认密码必须是字符串' })
   confirmPassword: string;
+}
+
+/**
+ * 上传头像 DTO（Base64 格式）
+ */
+export class UploadAvatarDto {
+  @ApiProperty({ 
+    description: '头像图片 Base64 编码（支持 jpeg, png, gif, webp）', 
+    example: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQ...'
+  })
+  @IsString({ message: 'avatar 必须是字符串' })
+  avatar: string;
 }

@@ -8,11 +8,9 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@studyflow/api';
+import { api } from '../api';
 import type { UserProfile, UpdateProfileRequest, PomodoroSettings, SystemSettings } from '@studyflow/shared';
 import { PRESET_USER_TAGS } from '@studyflow/shared';
-import { useAuth } from '../contexts/AuthContext';
-
 // ==================== Query Keys ====================
 export const USER_KEYS = {
   all: ['user'] as const,

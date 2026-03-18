@@ -21,6 +21,9 @@ interface PomodoroState {
   shortBreakDuration: number;
   longBreakDuration: number;
 
+  // 持久化状态
+  hasHydrated: boolean;
+
   // 动作
   start: (task?: Task) => void;
   pause: () => void;
@@ -34,7 +37,7 @@ interface PomodoroState {
     settings: Partial<
       Omit<
         PomodoroState,
-        "status" | "timeRemaining" | "currentTask" | "currentRecord"
+        "status" | "timeRemaining" | "currentTask" | "currentRecord" | "hasHydrated"
       >
     >,
   ) => void;
@@ -43,6 +46,10 @@ interface PomodoroState {
   startRest: () => void;
   extendRest: () => void;
   endRest: () => void;
+  // 设置 hydration 状态
+  setHasHydrated: (hydrated: boolean) => void;
+  // 同步 timeRemaining 到 focusDuration（用于初始化）
+  syncTimeRemaining: () => void;
 }
 
 export const usePomodoroStore = create<PomodoroState>()(
@@ -59,6 +66,7 @@ export const usePomodoroStore = create<PomodoroState>()(
       breakDuration: DEFAULT_BREAK_DURATION,
       shortBreakDuration: 5 * 60,
       longBreakDuration: 15 * 60,
+      hasHydrated: false,
 
       start: (task) => {
         const { focusDuration } = get();
@@ -151,6 +159,18 @@ export const usePomodoroStore = create<PomodoroState>()(
           activePomodoroId: null,
         });
       },
+
+      // 设置 hydration 状态
+      setHasHydrated: (hydrated: boolean) => set({ hasHydrated: hydrated }),
+
+      // 同步 timeRemaining 到 focusDuration（用于 hydration 后初始化）
+      syncTimeRemaining: () => {
+        const { focusDuration, status } = get();
+        // 只有在空闲状态时才同步，避免影响正在进行的计时
+        if (status === "idle") {
+          set({ timeRemaining: focusDuration });
+        }
+      },
     }),
     {
       name: STORAGE_KEYS.POMODORO_SETTINGS,
@@ -163,10 +183,11 @@ export const usePomodoroStore = create<PomodoroState>()(
         totalFocusTime: state.totalFocusTime,
         activePomodoroId: state.activePomodoroId,
       }),
-      onRehydrateStorage: () => (state) => {
-        // 页面加载后，timeRemaining（未持久化）需要和 focusDuration（已持久化）同步
+      onRehydrateStorage: (state) => {
+        // 标记 hydration 完成，由组件调用 syncTimeRemaining 来同步
+        // 这样可以确保在组件中正确处理初始状态
         if (state) {
-          usePomodoroStore.setState({ timeRemaining: state.focusDuration });
+          usePomodoroStore.setState({ hasHydrated: true });
         }
       },
     },

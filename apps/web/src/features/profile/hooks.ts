@@ -4,7 +4,6 @@ import { api } from '@studyflow/api';
 import { useAuthStore } from '@/stores/authStore';
 import { USER_KEYS } from '@/hooks';
 import type { UserProfile, UpdateProfileRequest, UserStats } from '@studyflow/shared';
-import { PRESET_USER_TAGS } from '@studyflow/shared';
 import type { ProfileStats } from './types';
 import { Clock, Target, Flame, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -58,15 +57,10 @@ export function useUpdateProfile() {
       return response.data;
     },
     onSuccess: (data, variables) => {
-      // 更新本地缓存 - 需要保留原有的tags，因为从API返回的data可能不包含完整的tags信息
       queryClient.setQueryData(USER_KEYS.profile(), (old: UserProfile | undefined) => {
         if (!old) return old;
-        // 如果更新了tags，从variables中获取最新的tags数据
-        const updatedTags = variables.tags 
-          ? PRESET_USER_TAGS
-              .filter(tag => variables.tags?.includes(tag.id))
-              .map(tag => ({ ...tag, unlockedAt: new Date().toISOString() }))
-          : old.tags;
+        // variables.tags 已经是完整的 UserTag[] 对象，直接使用
+        const updatedTags = variables.tags !== undefined ? variables.tags : old.tags;
         return { ...old, ...data, tags: updatedTags };
       });
       // 同时使 profile 模块的 stats 缓存失效
@@ -93,13 +87,12 @@ export function useUploadAvatar() {
       const response = await api.user.uploadAvatar(file);
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: USER_KEYS.profile() });
       queryClient.invalidateQueries({ queryKey: PROFILE_KEYS.stats() });
-      // 创建临时URL用于预览
-      const avatarUrl = URL.createObjectURL(variables);
-      if (user) {
-        setUser({ ...user, avatar: avatarUrl });
+      // 使用返回的 URL 更新本地用户状态
+      if (user && data.avatarUrl) {
+        setUser({ ...user, avatar: data.avatarUrl });
       }
       toast.success('头像上传成功');
     },

@@ -3,7 +3,20 @@ import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Card } from '../../../components/ui/Card';
 import { StatItem } from '../../../components/business/StatItem';
 import { colors, spacing } from '../../../theme';
-import { useTodayStats } from '@studyflow/api';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../../api';
+import type { TodayStats } from '@studyflow/shared';
+
+function useTodayStats() {
+  return useQuery<TodayStats>({
+    queryKey: ['stats', 'today'],
+    queryFn: async () => {
+      const res = await api.pomodoro.getTodayStats();
+      return res.data;
+    },
+    staleTime: 30 * 1000,
+  });
+}
 
 interface StatsRowProps {
   // 可选的外部统计数据（用于兼容旧代码）

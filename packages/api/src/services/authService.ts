@@ -9,13 +9,13 @@ import type {
 import { storage, STORAGE_KEYS } from "@studyflow/shared";
 
 export const authService = {
-  // 登录
+  // 登录（仅使用手机号）
   login: (data: LoginRequest) =>
-    http.post<ApiResponse<TokenResponse>>("/api/v1/auth/login", data),
+    http.post<ApiResponse<TokenResponse & { user: User }>>("/api/v1/auth/login", data),
 
-  // 注册
+  // 注册（手机号必填，自动生成账号和PIN）
   register: (data: RegisterRequest) =>
-    http.post<ApiResponse<TokenResponse>>("/api/v1/auth/register", data),
+    http.post<ApiResponse<TokenResponse & { user: User }>>("/api/v1/auth/register", data),
 
   // 刷新 Token
   refresh: (refreshToken: string) =>

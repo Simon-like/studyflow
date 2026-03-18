@@ -6,7 +6,10 @@
       "Bash(npm ls react-dom)",
       "Bash(pnpm install)",
       "Bash(pnpm install --force)",
-      "Bash(pnpm update react react-dom --recursive)"
+      "Bash(pnpm update react react-dom --recursive)",
+      "Bash(grep -r \"createApi\\\\|shouldUseMock\" /Users/yingdonglin.1/personal-proj/studyflow --include=*.ts --include=*.tsx --include=*.js --include=*.jsx)",
+      "Bash(grep -n \"@Controller\" /Users/yingdonglin.1/personal-proj/studyflow/apps/server/src/**/*.ts)",
+      "Bash(psql postgresql://studyflow:studyflow_password@localhost:5432/studyflow -c \"ALTER TABLE \"\"users\"\" ADD COLUMN IF NOT EXISTS \"\"tags\"\" JSONB;\")"
     ]
   }
 }

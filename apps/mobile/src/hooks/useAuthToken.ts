@@ -29,8 +29,8 @@ interface AuthState {
 }
 
 interface UseAuthTokenReturn extends AuthState {
-  // 登录（使用 mock）
-  login: (username: string, password: string) => Promise<void>;
+  // 登录（使用手机号）
+  login: (phone: string, password: string) => Promise<void>;
   // 登出
   logout: () => Promise<void>;
   // 手动刷新 token
@@ -165,11 +165,11 @@ export function useAuthToken(): UseAuthTokenReturn {
   }, []);
 
   /**
-   * 登录（mock 模式）
+   * 登录（使用手机号）
    */
-  const login = useCallback(async (username: string, password: string): Promise<void> => {
+  const login = useCallback(async (phone: string, password: string): Promise<void> => {
     try {
-      const response = await api.auth.login({ username, password });
+      const response = await api.auth.login({ phone, password });
       
       if (response.data) {
         const { accessToken, refreshToken, expiresIn, user } = response.data as TokenData & { user: User };

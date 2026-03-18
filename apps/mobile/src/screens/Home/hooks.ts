@@ -317,7 +317,7 @@ export function useHomeScreen() {
     if (selectedTask) {
       return {
         title: selectedTask.title,
-        subtitle: selectedTask.category || '专注模式',
+        subtitle: '专注模式',
         count: '任务模式中',
       };
     }

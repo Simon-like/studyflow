@@ -1,6 +1,6 @@
 /**
  * Mock 数据
- * 测试账号: test@studyflow.com / Test1234
+ * 测试账号: 手机号 13800138000 / 密码 Test1234
  */
 
 import type {
@@ -20,7 +20,7 @@ import type {
 // ==================== 测试账号 ====================
 
 export const TEST_ACCOUNT = {
-  username: "test@studyflow.com",
+  phone: "13800138000",
   password: "Test1234",
 };
 
@@ -28,9 +28,9 @@ export const TEST_ACCOUNT = {
 
 export const MOCK_USER: User = {
   id: "user-001",
-  username: "test@studyflow.com",
-  email: "test@studyflow.com",
+  username: "user_380000_001",
   phone: "13800138000",
+  pin: "12345678",
   nickname: "学习达人",
   avatar: "",
   studyGoal: "考研上岸",
@@ -247,8 +247,13 @@ export const MOCK_POSTS: SocialPost[] = [
       id: "user-002",
       username: "mathlover",
       email: "math@example.com",
+      phone: "13900139000",
+      pin: "23456789",
       nickname: "数学小王子",
       avatar: "",
+      focusDuration: 1500,
+      shortBreakDuration: 300,
+      longBreakDuration: 900,
       createdAt: "2026-01-01T00:00:00Z",
       updatedAt: "2026-03-12T00:00:00Z",
     },
@@ -268,8 +273,13 @@ export const MOCK_POSTS: SocialPost[] = [
       id: "user-003",
       username: "englishpro",
       email: "eng@example.com",
+      phone: "14000140000",
+      pin: "34567890",
       nickname: "英语冲冲冲",
       avatar: "",
+      focusDuration: 1500,
+      shortBreakDuration: 300,
+      longBreakDuration: 900,
       createdAt: "2026-01-01T00:00:00Z",
       updatedAt: "2026-03-12T00:00:00Z",
     },

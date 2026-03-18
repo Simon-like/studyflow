@@ -26,7 +26,7 @@ const PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: string; bgCo
 
 function formatTaskSubtitle(task: Task): string {
   // 只显示分类，不再显示番茄数
-  return task.category || '未分类';
+  return '未分类';
 }
 
 // ==================== 任务卡片 ====================

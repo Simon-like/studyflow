@@ -6,8 +6,9 @@
 export interface User {
   id: string;
   username: string;
-  email: string;
+  email?: string;
   phone?: string;
+  pin?: string; // 用户PIN，唯一标识
   avatar?: string;
   nickname?: string;
   studyGoal?: string;
@@ -79,9 +80,7 @@ export interface UpdateProfileRequest {
   nickname?: string;
   avatar?: string;
   studyGoal?: string;
-  email?: string;
-  phone?: string;
-  tags?: string[];  // 用户选择的标签ID列表
+  tags?: UserTag[];  // 完整标签对象（含自定义标签名称）
 }
 
 /**
@@ -213,16 +212,14 @@ export interface ApiResponse<T> {
 
 // 认证相关类型
 export interface LoginRequest {
-  username: string;
+  phone: string;
   password: string;
 }
 
 export interface RegisterRequest {
-  username: string;
+  phone: string;
   password: string;
   nickname?: string;
-  email?: string;
-  phone?: string;
 }
 
 export interface TokenResponse {

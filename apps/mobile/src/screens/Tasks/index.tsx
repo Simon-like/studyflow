@@ -162,7 +162,7 @@ export default function TasksScreen() {
               key={task.id}
               id={task.id}
               title={task.title}
-              subtitle={task.category || '未分类'}
+              subtitle={'未分类'}
               status={
                 task.status === 'completed'
                   ? 'completed'

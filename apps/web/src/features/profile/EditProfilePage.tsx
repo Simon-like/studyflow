@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, User, Tag, Mail, Phone, Plus } from 'lucide-react';
+import { ArrowLeft, User, Tag, Phone, Plus, Target } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { useDialog } from '@/providers/DialogProvider';
+import { Portal } from '@/components/Portal';
 import { useUser } from '@/hooks';
 import { useUpdateProfile, useUploadAvatar } from './hooks';
 import type { UpdateProfileRequest } from '@studyflow/shared';
@@ -25,12 +26,12 @@ export default function EditProfilePage() {
   const [formData, setFormData] = useState<UpdateProfileRequest>({
     nickname: profile?.nickname || '',
     studyGoal: profile?.studyGoal || '',
-    email: profile?.email || '',
-    phone: profile?.phone || '',
-    tags: profile?.tags?.map((t) => t.id) || [],
   });
   const [avatarPreview, setAvatarPreview] = useState<string>('');
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  // selectedTagIds: 当前已选中的标签 ID 集合
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  // customTags: 用户在此次编辑中新增的自定义标签（不污染 PRESET_USER_TAGS）
+  const [customTags, setCustomTags] = useState<{ id: string; name: string; type: 'custom' }[]>([]);
   const [isDirty, setIsDirty] = useState(false);
   const [showCustomTagDialog, setShowCustomTagDialog] = useState(false);
   const [customTagName, setCustomTagName] = useState('');
@@ -38,15 +39,18 @@ export default function EditProfilePage() {
   // 初始化表单数据
   useEffect(() => {
     if (profile) {
-      const initialData = {
+      setFormData({
         nickname: profile.nickname || '',
         studyGoal: profile.studyGoal || '',
-        email: profile.email || '',
-        phone: profile.phone || '',
-        tags: profile.tags?.map((t) => t.id) || [],
-      };
-      setFormData(initialData);
-      setSelectedTags(initialData.tags);
+      });
+      const savedIds = profile.tags?.map((t) => t.id) || [];
+      setSelectedTagIds(savedIds);
+      // 从已保存的标签中还原出不在预设列表里的自定义标签
+      const presetIds = new Set(PRESET_USER_TAGS.map((t) => t.id));
+      const savedCustom = (profile.tags || [])
+        .filter((t) => !presetIds.has(t.id))
+        .map((t) => ({ id: t.id, name: t.name, type: 'custom' as const }));
+      setCustomTags(savedCustom);
       setAvatarPreview(profile.avatar || avatarUrl || '');
     }
   }, [profile, avatarUrl]);
@@ -54,44 +58,33 @@ export default function EditProfilePage() {
   // 检测表单是否被修改
   useEffect(() => {
     if (!profile) return;
-
-    const initialData = {
-      nickname: profile.nickname || '',
-      studyGoal: profile.studyGoal || '',
-      email: profile.email || '',
-      phone: profile.phone || '',
-      tags: profile.tags?.map((t) => t.id) || [],
-    };
-
+    const initialIds = (profile.tags || []).map((t) => t.id).sort().join(',');
+    const currentIds = [...selectedTagIds].sort().join(',');
     const hasChanges =
-      formData.nickname !== initialData.nickname ||
-      formData.studyGoal !== initialData.studyGoal ||
-      formData.email !== initialData.email ||
-      formData.phone !== initialData.phone ||
-      JSON.stringify(selectedTags.sort()) !== JSON.stringify(initialData.tags.sort());
-
+      formData.nickname !== (profile.nickname || '') ||
+      formData.studyGoal !== (profile.studyGoal || '') ||
+      currentIds !== initialIds;
     setIsDirty(hasChanges);
-  }, [formData, selectedTags, profile]);
+  }, [formData, selectedTagIds, profile]);
 
   const handleInputChange = (field: keyof UpdateProfileRequest, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleTagToggle = (tagId: string) => {
-    setSelectedTags((prev) => {
-      const newTags = prev.includes(tagId)
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId)
         ? prev.filter((id) => id !== tagId)
         : prev.length < MAX_USER_TAGS
           ? [...prev, tagId]
-          : prev;
-      return newTags;
-    });
+          : prev,
+    );
   };
 
   const handleAddCustomTag = () => {
     if (!customTagName.trim()) return;
-    
-    if (selectedTags.length >= MAX_USER_TAGS) {
+
+    if (selectedTagIds.length >= MAX_USER_TAGS) {
       dialog.confirm({
         variant: 'warning',
         title: '标签数量限制',
@@ -103,19 +96,8 @@ export default function EditProfilePage() {
     }
 
     const customTagId = `custom_${Date.now()}`;
-    const newTag = {
-      id: customTagId,
-      name: customTagName.trim(),
-      type: 'custom' as const,
-      description: '用户自定义标签'
-    };
-
-    // 添加到预设标签列表（临时）
-    (PRESET_USER_TAGS as any).push(newTag);
-    
-    // 添加到选中的标签
-    setSelectedTags(prev => [...prev, customTagId]);
-    
+    setCustomTags((prev) => [...prev, { id: customTagId, name: customTagName.trim(), type: 'custom' }]);
+    setSelectedTagIds((prev) => [...prev, customTagId]);
     setCustomTagName('');
     setShowCustomTagDialog(false);
   };
@@ -134,7 +116,16 @@ export default function EditProfilePage() {
 
   const handleSave = async () => {
     try {
-      await updateProfile.mutateAsync({ ...formData, tags: selectedTags });
+      // 将选中的 ID 解析为完整的 UserTag 对象（含自定义标签的名称）
+      const allTags = [
+        ...PRESET_USER_TAGS.map((t) => ({ id: t.id, name: t.name, type: t.type })),
+        ...customTags,
+      ];
+      const resolvedTags = selectedTagIds
+        .map((id) => allTags.find((t) => t.id === id))
+        .filter((t): t is NonNullable<typeof t> => !!t);
+
+      await updateProfile.mutateAsync({ ...formData, tags: resolvedTags });
 
       // 显示保存成功提示
       dialog.confirm({
@@ -198,37 +189,41 @@ export default function EditProfilePage() {
 
       {/* Form Card */}
       <Card padding="lg" className="space-y-8">
-        {/* Avatar */}
+        {/* Avatar - 点击头像直接上传 */}
         <div className="flex flex-col items-center gap-4">
-          <div className="relative">
-            <Avatar
-              name={formData.nickname || profile?.username || 'U'}
-              src={avatarPreview}
-              size="2xl"
-              color="bg-coral"
-            />
+          <div className="relative group">
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isSubmitting}
-              className="absolute -bottom-1 -right-1 w-10 h-10 bg-coral text-white rounded-full flex items-center justify-center shadow-medium hover:bg-coral/90 transition-colors disabled:opacity-50"
+              className="relative focus:outline-none focus:ring-4 focus:ring-coral/30 rounded-full transition-all"
             >
-              <Camera className="w-5 h-5" />
+              <Avatar
+                name={formData.nickname || profile?.username || 'U'}
+                src={avatarPreview}
+                size="2xl"
+                color="bg-coral"
+                className="group-hover:opacity-80 transition-opacity"
+              />
+              {/* 悬停时的遮罩提示 */}
+              <div className="absolute inset-0 rounded-full bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <span className="text-white text-xs font-medium">更换</span>
+              </div>
             </button>
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/gif,image/webp"
               className="hidden"
               onChange={handleFileChange}
               disabled={isSubmitting}
             />
           </div>
-          <p className="text-sm text-stone">点击更换头像</p>
+          <p className="text-sm text-stone">点击头像更换</p>
         </div>
 
         {/* Form Fields */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Nickname */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-charcoal">
@@ -251,9 +246,31 @@ export default function EditProfilePage() {
             </p>
           </div>
 
+          {/* Phone - Read Only */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-charcoal">
+              <span className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-stone" />
+                手机号
+              </span>
+            </label>
+            <input
+              type="tel"
+              value={profile?.phone || ''}
+              disabled
+              className="w-full px-4 py-3 bg-mist/30 rounded-xl border-0 text-stone cursor-not-allowed"
+            />
+            <p className="text-xs text-stone/60">手机号不可修改</p>
+          </div>
+
           {/* Study Goal */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-charcoal">学习目标</label>
+            <label className="block text-sm font-medium text-charcoal">
+              <span className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-stone" />
+                学习目标（可选）
+              </span>
+            </label>
             <textarea
               value={formData.studyGoal}
               onChange={(e) => handleInputChange('studyGoal', e.target.value)}
@@ -268,45 +285,6 @@ export default function EditProfilePage() {
             </p>
           </div>
 
-          {/* Email & Phone - Two columns */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Email */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-charcoal">
-                <span className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-stone" />
-                  邮箱
-                </span>
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="example@email.com"
-                disabled={isSubmitting}
-                className="w-full px-4 py-3 bg-warm rounded-xl border-0 text-charcoal placeholder:text-stone/50 focus:ring-2 focus:ring-coral/30 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-            </div>
-
-            {/* Phone */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-charcoal">
-                <span className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-stone" />
-                  手机号
-                </span>
-              </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                placeholder="138xxxxxxxxx"
-                disabled={isSubmitting}
-                className="w-full px-4 py-3 bg-warm rounded-xl border-0 text-charcoal placeholder:text-stone/50 focus:ring-2 focus:ring-coral/30 disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-            </div>
-          </div>
-
           {/* Tags */}
           <div className="space-y-3">
             <label className="block text-sm font-medium text-charcoal">
@@ -317,23 +295,23 @@ export default function EditProfilePage() {
               </span>
             </label>
             <div className="flex flex-wrap gap-2">
-              {PRESET_USER_TAGS.map((tag) => (
+              {[...PRESET_USER_TAGS, ...customTags].map((tag) => (
                 <button
                   key={tag.id}
                   type="button"
                   onClick={() => handleTagToggle(tag.id)}
                   disabled={
                     isSubmitting ||
-                    (!selectedTags.includes(tag.id) && selectedTags.length >= MAX_USER_TAGS)
+                    (!selectedTagIds.includes(tag.id) && selectedTagIds.length >= MAX_USER_TAGS)
                   }
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                    selectedTags.includes(tag.id)
+                    selectedTagIds.includes(tag.id)
                       ? 'bg-coral text-white'
-                      : selectedTags.length >= MAX_USER_TAGS
+                      : selectedTagIds.length >= MAX_USER_TAGS
                         ? 'bg-mist/30 text-stone/40 cursor-not-allowed'
                         : 'bg-warm text-stone hover:bg-coral/10 hover:text-coral'
                   }`}
-                  title={tag.description}
+                  title={'description' in tag ? tag.description : undefined}
                 >
                   {tag.name}
                 </button>
@@ -341,9 +319,9 @@ export default function EditProfilePage() {
               <button
                 type="button"
                 onClick={() => setShowCustomTagDialog(true)}
-                disabled={isSubmitting || selectedTags.length >= MAX_USER_TAGS}
+                disabled={isSubmitting || selectedTagIds.length >= MAX_USER_TAGS}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1 ${
-                  selectedTags.length >= MAX_USER_TAGS
+                  selectedTagIds.length >= MAX_USER_TAGS
                     ? 'bg-mist/30 text-stone/40 cursor-not-allowed'
                     : 'bg-warm text-stone hover:bg-coral/10 hover:text-coral'
                 }`}
@@ -354,7 +332,7 @@ export default function EditProfilePage() {
               </button>
             </div>
             <p className="text-xs text-stone/60">
-              已选择 {selectedTags.length}/{MAX_USER_TAGS} 个标签
+              已选择 {selectedTagIds.length}/{MAX_USER_TAGS} 个标签
             </p>
           </div>
         </div>
@@ -386,45 +364,64 @@ export default function EditProfilePage() {
 
       {/* Custom Tag Dialog */}
       {showCustomTagDialog && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-charcoal mb-4">添加自定义标签</h3>
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  value={customTagName}
-                  onChange={(e) => setCustomTagName(e.target.value)}
-                  placeholder="请输入标签名称"
-                  maxLength={20}
-                  className="w-full px-4 py-3 bg-warm rounded-xl border-0 text-charcoal placeholder:text-stone/50 focus:ring-2 focus:ring-coral/30"
-                  autoFocus
-                />
-                <p className="text-xs text-stone/60 text-right">
-                  {(customTagName?.length || 0)}/20
-                </p>
-              </div>
-              <div className="flex gap-3 justify-center mt-6">
-                <button
-                  onClick={() => {
-                    setShowCustomTagDialog(false);
-                    setCustomTagName('');
-                  }}
-                  className="px-5 py-2.5 text-sm font-medium text-stone bg-warm hover:bg-warm/80 rounded-xl transition-colors"
-                >
-                  取消
-                </button>
-                <button
-                  onClick={handleAddCustomTag}
-                  disabled={!customTagName.trim()}
-                  className="px-5 py-2.5 text-sm font-medium text-white bg-coral hover:bg-coral/90 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  添加
-                </button>
+        <Portal>
+          <div 
+            className="fixed inset-0 z-50"
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+          >
+            {/* 遮罩层 */}
+            <div 
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => {
+                setShowCustomTagDialog(false);
+                setCustomTagName('');
+              }}
+            />
+            {/* 弹窗内容 - 居中 */}
+            <div className="absolute inset-0 flex items-center justify-center p-6 pointer-events-none">
+              <div 
+                className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl pointer-events-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-charcoal mb-4">添加自定义标签</h3>
+                  <div className="space-y-4">
+                    <input
+                      type="text"
+                      value={customTagName}
+                      onChange={(e) => setCustomTagName(e.target.value)}
+                      placeholder="请输入标签名称"
+                      maxLength={20}
+                      className="w-full px-4 py-3 bg-warm rounded-xl border-0 text-charcoal placeholder:text-stone/50 focus:ring-2 focus:ring-coral/30"
+                      autoFocus
+                    />
+                    <p className="text-xs text-stone/60 text-right">
+                      {(customTagName?.length || 0)}/20
+                    </p>
+                  </div>
+                  <div className="flex gap-3 justify-center mt-6">
+                    <button
+                      onClick={() => {
+                        setShowCustomTagDialog(false);
+                        setCustomTagName('');
+                      }}
+                      className="px-5 py-2.5 text-sm font-medium text-stone bg-warm hover:bg-warm/80 rounded-xl transition-colors"
+                    >
+                      取消
+                    </button>
+                    <button
+                      onClick={handleAddCustomTag}
+                      disabled={!customTagName.trim()}
+                      className="px-5 py-2.5 text-sm font-medium text-white bg-coral hover:bg-coral/90 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      添加
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </Portal>
       )}
     </div>
   );

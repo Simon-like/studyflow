@@ -6,45 +6,51 @@ import {
   Body,
   Query,
   UseGuards,
-  HttpCode,
-  HttpStatus,
+  Request,
+  Post,
+  BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
-import { UsersService } from './users.service';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { CurrentUser, UserPayload } from '../common/decorators/current-user.decorator';
+import { UsersService } from './users.service';
+import { OSSService } from '../common/services/oss.service';
 import {
   UpdateProfileDto,
   UpdatePomodoroSettingsDto,
   UpdateSystemSettingsDto,
   ChangePasswordDto,
+  UploadAvatarDto,
 } from './dto/user.dto';
-import {
-  UserProfile,
-  PomodoroSettings,
-  SystemSettings,
-  StudyCalendarData,
-} from '@studyflow/shared';
+
+interface RequestWithUser {
+  user: {
+    userId: string;
+    username: string;
+  };
+}
 
 /**
  * 用户控制器
- * 处理用户资料、设置相关的接口
+ * 处理用户资料、设置相关的 HTTP 请求
  */
 @ApiTags('用户')
-@Controller('users')
+@Controller('/api/v1/users')
 @UseGuards(JwtAuthGuard)
-@ApiBearerAuth('JWT')
+@ApiBearerAuth()
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly ossService: OSSService,
+  ) {}
 
   /**
-   * 获取用户完整资料
+   * 获取当前用户完整资料
    */
   @Get('profile')
-  @ApiOperation({ summary: '获取用户完整资料' })
-  @ApiResponse({ status: 200, description: '获取成功' })
-  async getProfile(@CurrentUser('userId') userId: string): Promise<UserProfile> {
-    return this.usersService.getUserProfile(userId);
+  @ApiOperation({ summary: '获取用户资料' })
+  async getProfile(@Request() req: RequestWithUser) {
+    const profile = await this.usersService.getUserProfile(req.user.userId);
+    return profile;
   }
 
   /**
@@ -52,12 +58,51 @@ export class UsersController {
    */
   @Put('profile')
   @ApiOperation({ summary: '更新用户资料' })
-  @ApiResponse({ status: 200, description: '更新成功' })
   async updateProfile(
-    @CurrentUser('userId') userId: string,
+    @Request() req: RequestWithUser,
     @Body() dto: UpdateProfileDto,
-  ): Promise<UserProfile> {
-    return this.usersService.updateProfile(userId, dto);
+  ) {
+    const profile = await this.usersService.updateProfile(req.user.userId, dto);
+    return profile;
+  }
+
+  /**
+   * 上传头像到 OSS
+   * 前端将图片转为 Base64 后上传，后端上传到阿里云 OSS
+   */
+  @Post('avatar')
+  @ApiOperation({ summary: '上传头像到 OSS' })
+  async uploadAvatar(
+    @Request() req: RequestWithUser,
+    @Body() dto: UploadAvatarDto,
+  ) {
+    // 如果 OSS 未配置，使用数据库存储方案
+    if (!this.ossService.isAvailable()) {
+      // 简单的 Base64 验证
+      if (!dto.avatar || !dto.avatar.startsWith('data:image/')) {
+        throw new BadRequestException('无效的图片格式，请上传 Base64 编码的图片');
+      }
+
+      // 限制图片大小（Base64 字符串长度约 2MB 限制）
+      if (dto.avatar.length > 2 * 1024 * 1024 * 1.37) {
+        throw new BadRequestException('图片大小不能超过 2MB');
+      }
+
+      const profile = await this.usersService.updateProfile(req.user.userId, {
+        avatar: dto.avatar,
+      });
+      return { avatarUrl: profile.avatar };
+    }
+
+    // 使用 OSS 上传
+    const avatarUrl = await this.ossService.uploadAvatar(req.user.userId, dto.avatar);
+    
+    // 更新用户资料中的头像 URL
+    await this.usersService.updateProfile(req.user.userId, {
+      avatar: avatarUrl,
+    });
+
+    return { avatarUrl };
   }
 
   /**
@@ -65,10 +110,8 @@ export class UsersController {
    */
   @Get('settings/pomodoro')
   @ApiOperation({ summary: '获取番茄钟设置' })
-  async getPomodoroSettings(
-    @CurrentUser('userId') userId: string,
-  ): Promise<PomodoroSettings> {
-    return this.usersService.getPomodoroSettings(userId);
+  async getPomodoroSettings(@Request() req: RequestWithUser) {
+    return this.usersService.getPomodoroSettings(req.user.userId);
   }
 
   /**
@@ -77,10 +120,10 @@ export class UsersController {
   @Put('settings/pomodoro')
   @ApiOperation({ summary: '更新番茄钟设置' })
   async updatePomodoroSettings(
-    @CurrentUser('userId') userId: string,
+    @Request() req: RequestWithUser,
     @Body() dto: UpdatePomodoroSettingsDto,
-  ): Promise<PomodoroSettings> {
-    return this.usersService.updatePomodoroSettings(userId, dto);
+  ) {
+    return this.usersService.updatePomodoroSettings(req.user.userId, dto);
   }
 
   /**
@@ -88,10 +131,8 @@ export class UsersController {
    */
   @Get('settings/system')
   @ApiOperation({ summary: '获取系统设置' })
-  async getSystemSettings(
-    @CurrentUser('userId') userId: string,
-  ): Promise<SystemSettings> {
-    return this.usersService.getSystemSettings(userId);
+  async getSystemSettings(@Request() req: RequestWithUser) {
+    return this.usersService.getSystemSettings(req.user.userId);
   }
 
   /**
@@ -100,26 +141,33 @@ export class UsersController {
   @Put('settings/system')
   @ApiOperation({ summary: '更新系统设置' })
   async updateSystemSettings(
-    @CurrentUser('userId') userId: string,
+    @Request() req: RequestWithUser,
     @Body() dto: UpdateSystemSettingsDto,
-  ): Promise<SystemSettings> {
-    return this.usersService.updateSystemSettings(userId, dto);
+  ) {
+    return this.usersService.updateSystemSettings(req.user.userId, dto);
   }
 
   /**
    * 修改密码
    */
   @Put('password')
-  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: '修改密码' })
-  @ApiResponse({ status: 200, description: '修改成功' })
-  @ApiResponse({ status: 400, description: '当前密码错误' })
   async changePassword(
-    @CurrentUser('userId') userId: string,
+    @Request() req: RequestWithUser,
     @Body() dto: ChangePasswordDto,
-  ): Promise<{ success: boolean }> {
-    await this.usersService.changePassword(userId, dto);
+  ) {
+    await this.usersService.changePassword(req.user.userId, dto);
     return { success: true };
+  }
+
+  /**
+   * 获取用户统计
+   */
+  @Get('stats')
+  @ApiOperation({ summary: '获取用户统计' })
+  async getUserStats(@Request() req: RequestWithUser) {
+    const profile = await this.usersService.getUserProfile(req.user.userId);
+    return profile.stats;
   }
 
   /**
@@ -127,25 +175,25 @@ export class UsersController {
    */
   @Get('calendar')
   @ApiOperation({ summary: '获取学习日历' })
-  async getCalendar(
-    @CurrentUser('userId') userId: string,
+  async getStudyCalendar(
+    @Request() req: RequestWithUser,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
-  ): Promise<StudyCalendarData[]> {
-    return this.usersService.getCalendar(userId, startDate, endDate);
+  ) {
+    return this.usersService.getCalendar(
+      req.user.userId,
+      startDate,
+      endDate,
+    );
   }
 
   /**
    * 删除账号
    */
   @Delete('account')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: '删除账号（软删除）' })
-  @ApiResponse({ status: 200, description: '删除成功' })
-  async deleteAccount(
-    @CurrentUser('userId') userId: string,
-  ): Promise<{ success: boolean }> {
-    await this.usersService.deleteAccount(userId);
+  @ApiOperation({ summary: '删除账号' })
+  async deleteAccount(@Request() req: RequestWithUser) {
+    await this.usersService.deleteAccount(req.user.userId);
     return { success: true };
   }
 }

@@ -59,6 +59,19 @@ export default function DashboardPage() {
     onEndRest,
   } = useDashboardTimer();
 
+  // 同步 timeRemaining 到 focusDuration（解决页面刷新后显示不正确的问题）
+  const hasHydrated = usePomodoroStore(s => s.hasHydrated);
+  const syncTimeRemaining = usePomodoroStore(s => s.syncTimeRemaining);
+  const syncAttemptedRef = useRef(false);
+  
+  useEffect(() => {
+    // 只在 hydration 完成后执行一次同步
+    if (hasHydrated && !syncAttemptedRef.current && status === 'idle') {
+      syncAttemptedRef.current = true;
+      syncTimeRemaining();
+    }
+  }, [hasHydrated, status, syncTimeRemaining]);
+
   // 恢复：组件挂载时检查后端是否有活跃的番茄钟，如有则恢复计时状态
   const recoveryAttemptedRef = useRef(false);
   useEffect(() => {

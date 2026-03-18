@@ -19,7 +19,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { colors, spacing, radius, fontSize, fontWeight, shadows } from '../../theme';
-import { FormInput, SocialLogin } from './components';
+import { FormInput } from './components';
 
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
@@ -36,7 +36,7 @@ const isSmallScreen = screenHeight <= 667;
 export function LoginScreen({ onGoRegister }: LoginScreenProps) {
   const { login } = useAuth();
   const {
-    account, setAccount,
+    phone, setPhone,
     password, setPassword,
     isLoading,
     errors,
@@ -47,7 +47,7 @@ export function LoginScreen({ onGoRegister }: LoginScreenProps) {
     if (!validateAndSubmit()) return;
     
     try {
-      await login(account, password);
+      await login(phone, password);
       // 登录成功由 AuthContext 自动处理状态更新
     } catch (err: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -94,14 +94,14 @@ export function LoginScreen({ onGoRegister }: LoginScreenProps) {
           <Text style={styles.title}>欢迎回来</Text>
           <Text style={styles.subtitle}>登录开始今天的学习之旅</Text>
 
-
           <FormInput
-            label="手机号/邮箱"
-            placeholder="请输入"
-            value={account}
-            onChangeText={setAccount}
-            keyboardType="email-address"
-            error={errors.account}
+            label="手机号"
+            placeholder="请输入手机号"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            maxLength={11}
+            error={errors.phone}
           />
           <FormInput
             label="密码"
@@ -121,8 +121,6 @@ export function LoginScreen({ onGoRegister }: LoginScreenProps) {
           >
             登录
           </Button>
-
-          <SocialLogin />
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>还没有账号？</Text>

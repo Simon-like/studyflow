@@ -1,6 +1,6 @@
 /**
  * Mock 数据
- * 测试账号: test@studyflow.com / Test1234
+ * 测试账号: 手机号 13800138000 / 密码 Test1234
  */
 
 import type {
@@ -15,7 +15,7 @@ import type {
 // ==================== 测试账号 ====================
 
 export const TEST_ACCOUNT = {
-  username: "test@studyflow.com",
+  phone: "13800138000",
   password: "Test1234",
 };
 
@@ -23,9 +23,9 @@ export const TEST_ACCOUNT = {
 
 export const MOCK_USER: User = {
   id: "user-001",
-  username: "test@studyflow.com",
-  email: "test@studyflow.com",
+  username: "user_380000_001",
   phone: "13800138000",
+  pin: "12345678",
   nickname: "学习达人",
   avatar: "",
   focusDuration: 1500,
@@ -52,10 +52,7 @@ export const MOCK_TASKS: Task[] = [
     userId: "user-001",
     title: "高等数学 - 极限与连续",
     description: "复习第一章极限的定义、性质和求解方法",
-    category: "高等数学",
     priority: "high",
-    estimatedPomodoros: 4,
-    completedPomodoros: 2,
     status: "in_progress",
     dueDate: "2026-03-15T00:00:00Z",
     createdAt: "2026-03-10T08:00:00Z",
@@ -66,10 +63,7 @@ export const MOCK_TASKS: Task[] = [
     userId: "user-001",
     title: "英语阅读理解 - 真题训练",
     description: "完成2024年英语一阅读真题",
-    category: "英语",
     priority: "medium",
-    estimatedPomodoros: 3,
-    completedPomodoros: 0,
     status: "todo",
     dueDate: "2026-03-14T00:00:00Z",
     createdAt: "2026-03-11T08:00:00Z",
@@ -80,10 +74,7 @@ export const MOCK_TASKS: Task[] = [
     userId: "user-001",
     title: "线性代数 - 矩阵运算",
     description: "矩阵的加减乘除和逆矩阵求解练习",
-    category: "线性代数",
     priority: "high",
-    estimatedPomodoros: 3,
-    completedPomodoros: 3,
     status: "completed",
     createdAt: "2026-03-09T08:00:00Z",
     updatedAt: "2026-03-11T16:00:00Z",
@@ -93,10 +84,7 @@ export const MOCK_TASKS: Task[] = [
     userId: "user-001",
     title: "政治 - 马原重点背诵",
     description: "唯物辩证法核心考点梳理",
-    category: "政治",
     priority: "low",
-    estimatedPomodoros: 2,
-    completedPomodoros: 0,
     status: "todo",
     dueDate: "2026-03-20T00:00:00Z",
     createdAt: "2026-03-12T08:00:00Z",
@@ -107,10 +95,7 @@ export const MOCK_TASKS: Task[] = [
     userId: "user-001",
     title: "概率论 - 条件概率",
     description: "贝叶斯公式及全概率公式练习",
-    category: "概率论",
     priority: "medium",
-    estimatedPomodoros: 2,
-    completedPomodoros: 1,
     status: "todo",
     createdAt: "2026-03-11T14:00:00Z",
     updatedAt: "2026-03-12T09:00:00Z",
@@ -195,6 +180,8 @@ export const MOCK_POSTS: SocialPost[] = [
       id: "user-002",
       username: "mathlover",
       email: "math@example.com",
+      phone: "13900139000",
+      pin: "23456789",
       nickname: "数学小王子",
       avatar: "",
       focusDuration: 1500,
@@ -219,6 +206,8 @@ export const MOCK_POSTS: SocialPost[] = [
       id: "user-003",
       username: "englishpro",
       email: "eng@example.com",
+      phone: "14000140000",
+      pin: "34567890",
       nickname: "英语冲冲冲",
       avatar: "",
       focusDuration: 1500,

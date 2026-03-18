@@ -13,17 +13,8 @@ export type { CreateTaskRequest, UpdateTaskRequest } from "./services/taskServic
 export type { StartPomodoroRequest, StopPomodoroRequest, WeeklyDailyStat } from "./services/pomodoroService";
 export type { SendMessageRequest, GeneratePlanRequest } from "./services/chatService";
 
-// 导出 Mock 服务 + 测试账号
-export { TEST_ACCOUNT } from "./mock/data";
-export {
-  mockAuthService,
-  mockTaskService,
-  mockPomodoroService,
-  mockChatService,
-  mockCommunityService,
-  mockStatsService,
-  mockUserService,
-} from "./mock/services";
+// 社区模块 mock（后端暂未实现）
+export { mockCommunityService } from "./mock/services";
 
 // ==================== 统一 API 门面 ====================
 
@@ -32,37 +23,16 @@ import { taskService } from "./services/taskService";
 import { pomodoroService } from "./services/pomodoroService";
 import { chatService } from "./services/chatService";
 import { statsService } from "./services/statsService";
-import {
-  mockAuthService,
-  mockTaskService,
-  mockPomodoroService,
-  mockChatService,
-  mockCommunityService,
-  mockStatsService,
-  mockUserService,
-} from "./mock/services";
+import { mockCommunityService } from "./mock/services";
 
 /**
- * 创建 API 门面
- * @param useMock 是否使用 mock 数据（默认 true，后端就绪后传 false）
+ * 默认 API 实例 — 使用真实后端
  */
-export function createApi(useMock = true) {
-  return {
-    auth: useMock ? mockAuthService : authService,
-    task: useMock ? mockTaskService : taskService,
-    pomodoro: useMock ? mockPomodoroService : pomodoroService,
-    chat: useMock ? mockChatService : chatService,
-    community: mockCommunityService,
-    stats: useMock ? mockStatsService : statsService,
-    user: mockUserService,
-  };
-}
-
-/**
- * 默认 API 实例 — 当前使用 mock
- *
- * 用法:
- *   import { api } from '@studyflow/api';
- *   const res = await api.auth.login({ username, password });
- */
-export const api = createApi(true);
+export const api = {
+  auth: authService,
+  task: taskService,
+  pomodoro: pomodoroService,
+  chat: chatService,
+  community: mockCommunityService, // 社区模块后端未实现，暂用 mock
+  stats: statsService,
+};

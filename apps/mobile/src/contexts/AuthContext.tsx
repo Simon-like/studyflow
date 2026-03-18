@@ -19,7 +19,7 @@ interface AuthContextValue {
   user: User | null;
   
   // 方法
-  login: (username: string, password: string) => Promise<void>;
+  login: (phone: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshAccessToken: () => Promise<boolean>;
   getValidAccessToken: () => Promise<string | null>;

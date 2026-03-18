@@ -28,6 +28,7 @@ export interface User {
   username: string;
   email?: string;
   phone?: string;
+  pin: string;
   nickname: string;
   avatar?: string;
   focusDuration?: number;

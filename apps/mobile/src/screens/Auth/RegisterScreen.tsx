@@ -1,9 +1,9 @@
 /**
  * 注册页面
- * 
- * 使用双 Token 认证：
- * - 注册成功后自动登录
- * - 使用 AuthContext 管理登录状态
+ *
+ * 字段：昵称（可选）、手机号、密码、确认密码
+ * 注册成功后自动登录（双 token）
+ * 系统自动生成账号和 PIN
  */
 
 import React from 'react';
@@ -36,8 +36,8 @@ interface RegisterScreenProps {
 export function RegisterScreen({ onGoLogin }: RegisterScreenProps) {
   const { login } = useAuth();
   const {
-    name, setName,
-    account, setAccount,
+    nickname, setNickname,
+    phone, setPhone,
     password, setPassword,
     confirmPassword, setConfirmPassword,
     isLoading, setIsLoading,
@@ -47,19 +47,28 @@ export function RegisterScreen({ onGoLogin }: RegisterScreenProps) {
 
   const handleSubmit = async () => {
     if (!validateAndSubmit()) return;
-    
+
     setIsLoading(true);
     try {
-      // 1. 先注册
-      await api.auth.register({ 
-        username: account, 
-        password, 
-        nickname: name 
+      // 1. 注册（仅发送手机号 + 密码 + 可选昵称）
+      const res = await api.auth.register({
+        phone,
+        password,
+        nickname: nickname || undefined,
       });
-      
-      // 2. 注册成功后自动登录（使用双 token）
-      await login(account, password);
-      // 登录成功由 AuthContext 自动处理状态更新
+
+      // 2. 注册成功后用手机号自动登录
+      await login(phone, password);
+
+      // 3. 显示注册成功信息
+      const user = res.data?.user;
+      if (user) {
+        Alert.alert(
+          '注册成功！',
+          `您的账号: ${user.username}\n您的 PIN: ${user.pin}\n\n请牢记您的账号和 PIN，可用于找回密码。`,
+          [{ text: '知道了', style: 'default' }]
+        );
+      }
     } catch (err: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const error = err as any;
@@ -94,26 +103,29 @@ export function RegisterScreen({ onGoLogin }: RegisterScreenProps) {
         {/* 表单 */}
         <View style={styles.formSection}>
           <Text style={styles.title}>创建账号</Text>
-          <Text style={[styles.subtitle, isSmallScreen && styles.subtitleSmall]}>开启你的高效学习之旅</Text>
+          <Text style={[styles.subtitle, isSmallScreen && styles.subtitleSmall]}>
+            开启你的高效学习之旅
+          </Text>
 
           <FormInput
-            label="姓名"
-            placeholder="你的姓名"
-            value={name}
-            onChangeText={setName}
-            error={errors.name}
+            label="昵称（可选）"
+            placeholder="设置一个昵称"
+            value={nickname}
+            onChangeText={setNickname}
+            error={errors.nickname}
           />
           <FormInput
-            label="手机号/邮箱"
-            placeholder="请输入"
-            value={account}
-            onChangeText={setAccount}
-            keyboardType="email-address"
-            error={errors.account}
+            label="手机号"
+            placeholder="1开头的11位手机号"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            maxLength={11}
+            error={errors.phone}
           />
           <FormInput
             label="密码"
-            placeholder="至少6位，包含字母和数字"
+            placeholder="至少6位"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
