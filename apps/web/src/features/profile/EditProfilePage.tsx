@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, User, Tag, Mail, Phone } from 'lucide-react';
+import { ArrowLeft, Camera, User, Tag, Mail, Phone, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
@@ -23,15 +23,17 @@ export default function EditProfilePage() {
 
   // 表单状态
   const [formData, setFormData] = useState<UpdateProfileRequest>({
-    nickname: '',
-    studyGoal: '',
-    email: '',
-    phone: '',
-    tags: [],
+    nickname: profile?.nickname || '',
+    studyGoal: profile?.studyGoal || '',
+    email: profile?.email || '',
+    phone: profile?.phone || '',
+    tags: profile?.tags?.map((t) => t.id) || [],
   });
   const [avatarPreview, setAvatarPreview] = useState<string>('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isDirty, setIsDirty] = useState(false);
+  const [showCustomTagDialog, setShowCustomTagDialog] = useState(false);
+  const [customTagName, setCustomTagName] = useState('');
 
   // 初始化表单数据
   useEffect(() => {
@@ -84,6 +86,38 @@ export default function EditProfilePage() {
           : prev;
       return newTags;
     });
+  };
+
+  const handleAddCustomTag = () => {
+    if (!customTagName.trim()) return;
+    
+    if (selectedTags.length >= MAX_USER_TAGS) {
+      dialog.confirm({
+        variant: 'warning',
+        title: '标签数量限制',
+        message: `最多只能添加${MAX_USER_TAGS}个标签，请先删除一些标签再添加。`,
+        confirmText: '确定',
+        cancelText: '',
+      });
+      return;
+    }
+
+    const customTagId = `custom_${Date.now()}`;
+    const newTag = {
+      id: customTagId,
+      name: customTagName.trim(),
+      type: 'custom' as const,
+      description: '用户自定义标签'
+    };
+
+    // 添加到预设标签列表（临时）
+    (PRESET_USER_TAGS as any).push(newTag);
+    
+    // 添加到选中的标签
+    setSelectedTags(prev => [...prev, customTagId]);
+    
+    setCustomTagName('');
+    setShowCustomTagDialog(false);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -304,6 +338,20 @@ export default function EditProfilePage() {
                   {tag.name}
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={() => setShowCustomTagDialog(true)}
+                disabled={isSubmitting || selectedTags.length >= MAX_USER_TAGS}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1 ${
+                  selectedTags.length >= MAX_USER_TAGS
+                    ? 'bg-mist/30 text-stone/40 cursor-not-allowed'
+                    : 'bg-warm text-stone hover:bg-coral/10 hover:text-coral'
+                }`}
+                title="添加自定义标签"
+              >
+                <Plus className="w-3 h-3" />
+                自定义
+              </button>
             </div>
             <p className="text-xs text-stone/60">
               已选择 {selectedTags.length}/{MAX_USER_TAGS} 个标签
@@ -335,6 +383,49 @@ export default function EditProfilePage() {
           </Button>
         </div>
       </Card>
+
+      {/* Custom Tag Dialog */}
+      {showCustomTagDialog && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-charcoal mb-4">添加自定义标签</h3>
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  value={customTagName}
+                  onChange={(e) => setCustomTagName(e.target.value)}
+                  placeholder="请输入标签名称"
+                  maxLength={20}
+                  className="w-full px-4 py-3 bg-warm rounded-xl border-0 text-charcoal placeholder:text-stone/50 focus:ring-2 focus:ring-coral/30"
+                  autoFocus
+                />
+                <p className="text-xs text-stone/60 text-right">
+                  {(customTagName?.length || 0)}/20
+                </p>
+              </div>
+              <div className="flex gap-3 justify-center mt-6">
+                <button
+                  onClick={() => {
+                    setShowCustomTagDialog(false);
+                    setCustomTagName('');
+                  }}
+                  className="px-5 py-2.5 text-sm font-medium text-stone bg-warm hover:bg-warm/80 rounded-xl transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleAddCustomTag}
+                  disabled={!customTagName.trim()}
+                  className="px-5 py-2.5 text-sm font-medium text-white bg-coral hover:bg-coral/90 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  添加
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

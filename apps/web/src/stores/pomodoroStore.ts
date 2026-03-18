@@ -1,9 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { DEFAULT_FOCUS_DURATION, STORAGE_KEYS } from "@studyflow/shared";
+import { DEFAULT_FOCUS_DURATION, DEFAULT_BREAK_DURATION, REST_EXTEND_SECONDS, STORAGE_KEYS } from "@studyflow/shared";
 import type { Task, PomodoroRecord } from "@studyflow/shared";
 
-type PomodoroStatus = "idle" | "running" | "paused" | "completed";
+type PomodoroStatus = "idle" | "running" | "paused" | "completed" | "resting";
 
 interface PomodoroState {
   // 状态
@@ -11,11 +11,13 @@ interface PomodoroState {
   timeRemaining: number;
   currentTask: Task | null;
   currentRecord: PomodoroRecord | null;
+  activePomodoroId: string | null;
   todayPomodoros: number;
   totalFocusTime: number;
 
   // 设置
   focusDuration: number;
+  breakDuration: number;
   shortBreakDuration: number;
   longBreakDuration: number;
 
@@ -27,6 +29,7 @@ interface PomodoroState {
   complete: () => void;
   tick: () => void;
   setTask: (task: Task | null) => void;
+  setActivePomodoroId: (id: string | null) => void;
   updateSettings: (
     settings: Partial<
       Omit<
@@ -36,6 +39,10 @@ interface PomodoroState {
     >,
   ) => void;
   reset: () => void;
+  // 休息相关
+  startRest: () => void;
+  extendRest: () => void;
+  endRest: () => void;
 }
 
 export const usePomodoroStore = create<PomodoroState>()(
@@ -45,9 +52,11 @@ export const usePomodoroStore = create<PomodoroState>()(
       timeRemaining: DEFAULT_FOCUS_DURATION,
       currentTask: null,
       currentRecord: null,
+      activePomodoroId: null,
       todayPomodoros: 0,
       totalFocusTime: 0,
       focusDuration: DEFAULT_FOCUS_DURATION,
+      breakDuration: DEFAULT_BREAK_DURATION,
       shortBreakDuration: 5 * 60,
       longBreakDuration: 15 * 60,
 
@@ -70,6 +79,7 @@ export const usePomodoroStore = create<PomodoroState>()(
           timeRemaining: get().focusDuration,
           currentTask: null,
           currentRecord: null,
+          activePomodoroId: null,
         }),
 
       complete: () => {
@@ -81,19 +91,30 @@ export const usePomodoroStore = create<PomodoroState>()(
           totalFocusTime: totalFocusTime + focusDuration,
           currentTask: null,
           currentRecord: null,
+          activePomodoroId: null,
         });
       },
 
       tick: () => {
         const { status, timeRemaining } = get();
-        if (status === "running" && timeRemaining > 0) {
+        if ((status === "running" || status === "resting") && timeRemaining > 0) {
           set({ timeRemaining: timeRemaining - 1 });
         }
       },
 
       setTask: (task) => set({ currentTask: task }),
 
-      updateSettings: (settings) => set((state) => ({ ...state, ...settings })),
+      setActivePomodoroId: (id) => set({ activePomodoroId: id }),
+
+      updateSettings: (settings) => {
+        const state = get();
+        // 空闲时同步 timeRemaining，让首页立即显示新时长
+        if (settings.focusDuration && state.status === "idle") {
+          set({ ...settings, timeRemaining: settings.focusDuration as number });
+        } else {
+          set(settings);
+        }
+      },
 
       reset: () =>
         set({
@@ -101,17 +122,53 @@ export const usePomodoroStore = create<PomodoroState>()(
           timeRemaining: get().focusDuration,
           currentTask: null,
           currentRecord: null,
+          activePomodoroId: null,
         }),
+
+      // 进入休息状态：专注结束后调用，保留 currentTask 不清除
+      startRest: () => {
+        const { breakDuration } = get();
+        set({
+          status: "resting",
+          timeRemaining: breakDuration,
+          activePomodoroId: null,
+        });
+      },
+
+      // 延长休息 5 分钟
+      extendRest: () => {
+        const { timeRemaining } = get();
+        set({ timeRemaining: timeRemaining + REST_EXTEND_SECONDS });
+      },
+
+      // 提前结束休息，回到 idle
+      endRest: () => {
+        set({
+          status: "idle",
+          timeRemaining: get().focusDuration,
+          currentTask: null,
+          currentRecord: null,
+          activePomodoroId: null,
+        });
+      },
     }),
     {
       name: STORAGE_KEYS.POMODORO_SETTINGS,
       partialize: (state) => ({
         focusDuration: state.focusDuration,
+        breakDuration: state.breakDuration,
         shortBreakDuration: state.shortBreakDuration,
         longBreakDuration: state.longBreakDuration,
         todayPomodoros: state.todayPomodoros,
         totalFocusTime: state.totalFocusTime,
+        activePomodoroId: state.activePomodoroId,
       }),
+      onRehydrateStorage: () => (state) => {
+        // 页面加载后，timeRemaining（未持久化）需要和 focusDuration（已持久化）同步
+        if (state) {
+          usePomodoroStore.setState({ timeRemaining: state.focusDuration });
+        }
+      },
     },
   ),
 );

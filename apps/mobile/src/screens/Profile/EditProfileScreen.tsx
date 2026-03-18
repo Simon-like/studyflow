@@ -12,6 +12,7 @@ import {
   ScrollView,
   Image,
   Alert,
+  Modal,
 } from 'react-native';
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { Button } from '../../components/ui/Button';
@@ -32,13 +33,15 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
   const uploadAvatar = useUploadAvatar();
 
   const [formData, setFormData] = useState<UpdateProfileRequest>({
-    nickname: '',
-    studyGoal: '',
-    email: '',
-    phone: '',
-    tags: [],
+    nickname: profile?.nickname || '',
+    studyGoal: profile?.studyGoal || '',
+    email: profile?.email || '',
+    phone: profile?.phone || '',
+    tags: profile?.tags?.map(t => t.id) || [],
   });
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [showCustomTagModal, setShowCustomTagModal] = useState(false);
+  const [customTagName, setCustomTagName] = useState('');
 
   // 初始化表单数据
   useEffect(() => {
@@ -69,6 +72,32 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
       }
       return [...prev, tagId];
     });
+  };
+
+  const handleAddCustomTag = () => {
+    if (!customTagName.trim()) return;
+    
+    if (selectedTags.length >= MAX_USER_TAGS) {
+      Alert.alert('提示', `最多只能添加${MAX_USER_TAGS}个标签，请先删除一些标签再添加。`);
+      return;
+    }
+
+    const customTagId = `custom_${Date.now()}`;
+    const newTag = {
+      id: customTagId,
+      name: customTagName.trim(),
+      type: 'custom' as const,
+      description: '用户自定义标签'
+    };
+
+    // 添加到预设标签列表（临时）
+    (PRESET_USER_TAGS as any).push(newTag);
+    
+    // 添加到选中的标签
+    setSelectedTags(prev => [...prev, customTagId]);
+    
+    setCustomTagName('');
+    setShowCustomTagModal(false);
   };
 
   const handleAvatarPress = () => {
@@ -207,6 +236,23 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
                   </Text>
                 </TouchableOpacity>
               ))}
+              <TouchableOpacity
+                onPress={() => setShowCustomTagModal(true)}
+                disabled={isSubmitting || selectedTags.length >= MAX_USER_TAGS}
+                style={[
+                  styles.tagButton,
+                  selectedTags.length >= MAX_USER_TAGS && styles.tagButtonDisabled,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.tagButtonText,
+                    selectedTags.length >= MAX_USER_TAGS && styles.tagButtonTextDisabled,
+                  ]}
+                >
+                  ＋ 自定义
+                </Text>
+              </TouchableOpacity>
             </View>
             <Text style={styles.tagCount}>
               已选择 {selectedTags.length}/{MAX_USER_TAGS} 个标签
@@ -225,6 +271,55 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
           </Button>
         </View>
       </ScrollView>
+
+      {/* Custom Tag Modal */}
+      <Modal
+        visible={showCustomTagModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {
+          setShowCustomTagModal(false);
+          setCustomTagName('');
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>添加自定义标签</Text>
+            <View style={styles.modalInputContainer}>
+              <TextInput
+                value={customTagName}
+                onChangeText={setCustomTagName}
+                placeholder="请输入标签名称"
+                maxLength={20}
+                style={styles.modalInput}
+                placeholderTextColor={colors.textMuted}
+                autoFocus
+              />
+              <Text style={styles.modalCharCount}>
+                {(customTagName?.length || 0)}/20
+              </Text>
+            </View>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowCustomTagModal(false);
+                  setCustomTagName('');
+                }}
+                style={[styles.modalButton, styles.modalButtonCancel]}
+              >
+                <Text style={styles.modalButtonText}>取消</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleAddCustomTag}
+                disabled={!customTagName.trim()}
+                style={[styles.modalButton, styles.modalButtonConfirm, !customTagName.trim() && styles.modalButtonDisabled]}
+              >
+                <Text style={[styles.modalButtonText, styles.modalButtonTextConfirm]}>添加</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 }
@@ -371,5 +466,79 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     color: colors.textMuted,
     marginTop: spacing.sm,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  modalContent: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    width: '100%',
+    maxWidth: 320,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  modalInputContainer: {
+    marginBottom: spacing.lg,
+  },
+  modalInput: {
+    backgroundColor: colors.background,
+    borderRadius: radius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    fontSize: fontSize.base,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.sm,
+  },
+  modalCharCount: {
+    fontSize: fontSize.xs,
+    color: colors.textMuted,
+    textAlign: 'right',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    justifyContent: 'center',
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+  },
+  modalButtonCancel: {
+    backgroundColor: colors.background,
+  },
+  modalButtonConfirm: {
+    backgroundColor: colors.primary,
+  },
+  modalButtonDisabled: {
+    backgroundColor: colors.textMuted,
+    opacity: 0.5,
+  },
+  modalButtonText: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.medium,
+    color: colors.text,
+  },
+  modalButtonTextConfirm: {
+    color: colors.surface,
   },
 });

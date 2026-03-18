@@ -6,6 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import { statsService } from '../services/statsService';
 import { pomodoroService } from '../services/pomodoroService';
 import type {
@@ -265,29 +266,26 @@ export function useUserStats(options?: UseUserStatsOptions) {
 export function useRefreshStats() {
   const queryClient = useQueryClient();
 
-  const refreshAllStats = () => {
-    // 使所有统计相关缓存失效
+  const refreshAllStats = useCallback(() => {
+    // 使所有统计相关缓存失效（STATS_KEYS.all 是前缀，会匹配所有子 key）
     queryClient.invalidateQueries({ queryKey: STATS_KEYS.all });
-    queryClient.invalidateQueries({ queryKey: STATS_KEYS.today() });
-    queryClient.invalidateQueries({ queryKey: STATS_KEYS.dashboard() });
     queryClient.invalidateQueries({ queryKey: STATS_KEYS.userStats() });
-  };
+  }, [queryClient]);
 
-  const refreshTodayStats = () => {
+  const refreshTodayStats = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: STATS_KEYS.today() });
     queryClient.invalidateQueries({ queryKey: STATS_KEYS.dashboard() });
-  };
+  }, [queryClient]);
 
-  const refreshOverviewStats = (period?: StatsPeriod) => {
+  const refreshOverviewStats = useCallback((period?: StatsPeriod) => {
     if (period) {
       queryClient.invalidateQueries({ queryKey: STATS_KEYS.overview(period) });
     } else {
-      // 刷新所有周期的总览数据
       (['today', 'week', 'month', 'year'] as StatsPeriod[]).forEach(p => {
         queryClient.invalidateQueries({ queryKey: STATS_KEYS.overview(p) });
       });
     }
-  };
+  }, [queryClient]);
 
   return {
     refreshAllStats,
@@ -318,14 +316,14 @@ interface UsePomodoroSettlementOptions {
  * // 完成番茄钟
  * stop({ id: 'pomo-123', status: 'completed' });
  * // 放弃番茄钟
- * stop({ id: 'pomo-123', status: 'abandoned', abandonReason: '被打断' });
+ * stop({ id: 'pomo-123', status: 'stopped', abandonReason: '被打断' });
  * ```
  */
 export function usePomodoroSettlement(options?: UsePomodoroSettlementOptions) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, status, abandonReason }: { id: string; status: 'completed' | 'abandoned'; abandonReason?: string }) => {
+    mutationFn: async ({ id, status, abandonReason }: { id: string; status: 'completed' | 'stopped'; abandonReason?: string }) => {
       const response = await pomodoroService.stop(id, { status, abandonReason });
       return response.data;
     },

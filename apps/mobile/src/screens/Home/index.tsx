@@ -87,12 +87,6 @@ export default function HomeScreen() {
                   </Text>
                 </View>
               </View>
-              {displayTask.category ? (
-                <View style={styles.detailSection}>
-                  <Text style={styles.detailLabel}>分类</Text>
-                  <Text style={styles.detailText}>{displayTask.category}</Text>
-                </View>
-              ) : null}
             </View>
 
             <View style={styles.detailSection}>

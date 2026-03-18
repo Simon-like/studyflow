@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui';
 import type { TimerStatus } from '../types';
-import { Play, Pause, CheckCircle, Square } from 'lucide-react';
+import { Play, Pause, CheckCircle, Square, Clock, Coffee } from 'lucide-react';
 
 interface TimerControlsProps {
   status: TimerStatus;
@@ -8,6 +8,9 @@ interface TimerControlsProps {
   onToggleTimer: () => void;
   onCompleteTask: () => void;
   onAbandonTask: () => void;
+  onExtendRest?: () => void;
+  onEndRestEarly?: () => void;
+  onCompleteTaskFromRest?: () => void;
 }
 
 export function TimerControls({
@@ -16,11 +19,58 @@ export function TimerControls({
   onToggleTimer,
   onCompleteTask,
   onAbandonTask,
+  onExtendRest,
+  onEndRestEarly,
+  onCompleteTaskFromRest,
 }: TimerControlsProps) {
+  const isResting = status === 'resting';
+
+  // 休息状态的操作区域
+  if (isResting) {
+    return (
+      <div className="space-y-3 flex flex-col gap-4">
+        {/* 延长休息 5 分钟 */}
+        <Button
+          onClick={onExtendRest}
+          fullWidth
+          className="bg-sage hover:bg-sage/80"
+        >
+          <Clock className="w-4 h-4 mr-2" />
+          延长5min
+        </Button>
+
+        {/* 次要操作 */}
+        <div className="flex gap-2">
+          {isTaskBound ? (
+            /* 任务模式：提前结束休息并完成任务 */
+            <Button
+              variant="secondary"
+              onClick={onCompleteTaskFromRest}
+              className="flex-1"
+            >
+              <CheckCircle className="w-4 h-4 mr-1.5 text-sage" />
+              <span className="text-xs">完成任务</span>
+            </Button>
+          ) : (
+            /* 自由模式：提前结束休息 */
+            <Button
+              variant="secondary"
+              onClick={onEndRestEarly}
+              className="flex-1"
+            >
+              <Coffee className="w-4 h-4 mr-1.5 text-stone" />
+              <span className="text-xs">提前结束休息</span>
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // 专注状态的操作区域（原有逻辑）
   const isRunning = status === 'running';
   const isPaused = status === 'paused';
   const isIdle = status === 'idle';
-  // 完成按钮禁用条件：未绑定任务且计时器未运行（自由模式下必须开始计时后才能完成）
   const isCompleteDisabled = !isTaskBound && isIdle;
 
   return (

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Portal } from "@/components/Portal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@studyflow/api";
 import { useUser, USER_KEYS } from "@/hooks";
@@ -102,6 +103,7 @@ export default function SettingsPage() {
       // 同步到番茄钟Store
       pomodoroStore.updateSettings({
         focusDuration: data.focusDuration,
+        breakDuration: data.breakDuration,
         shortBreakDuration: data.shortBreakDuration,
         longBreakDuration: data.longBreakDuration,
       });
@@ -310,44 +312,22 @@ export default function SettingsPage() {
                 ))}
               </select>
             </div>
-            {/* 短休息 */}
-            <div className="flex justify-between items-center py-2 border-b border-mist/20">
-              <span className="text-stone">短休息时长</span>
-              <select
-                value={Math.floor(
-                  (localPomodoroSettings?.shortBreakDuration || 300) / 60,
-                )}
-                onChange={(e) =>
-                  handlePomodoroChange(
-                    "shortBreakDuration",
-                    parseInt(e.target.value) * 60,
-                  )
-                }
-                className="bg-warm rounded-lg px-3 py-1.5 text-charcoal text-sm focus:ring-2 focus:ring-coral/30 outline-none"
-              >
-                {[3, 5, 10, 15].map((min) => (
-                  <option key={min} value={min}>
-                    {min}分钟
-                  </option>
-                ))}
-              </select>
-            </div>
-            {/* 长休息 */}
+            {/* 休息时长 */}
             <div className="flex justify-between items-center py-2">
-              <span className="text-stone">长休息时长</span>
+              <span className="text-stone">休息时长</span>
               <select
                 value={Math.floor(
-                  (localPomodoroSettings?.longBreakDuration || 900) / 60,
+                  (localPomodoroSettings?.breakDuration || 300) / 60,
                 )}
                 onChange={(e) =>
                   handlePomodoroChange(
-                    "longBreakDuration",
+                    "breakDuration",
                     parseInt(e.target.value) * 60,
                   )
                 }
                 className="bg-warm rounded-lg px-3 py-1.5 text-charcoal text-sm focus:ring-2 focus:ring-coral/30 outline-none"
               >
-                {[10, 15, 20, 25, 30].map((min) => (
+                {[3, 5, 10, 15, 20].map((min) => (
                   <option key={min} value={min}>
                     {min}分钟
                   </option>
@@ -511,6 +491,7 @@ export default function SettingsPage() {
 
       {/* 修改密码弹窗 */}
       {showPasswordModal && (
+        <Portal>
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card className="w-full max-w-md">
             <div className="flex items-center justify-between p-6 border-b border-mist/20">
@@ -607,6 +588,7 @@ export default function SettingsPage() {
             </form>
           </Card>
         </div>
+        </Portal>
       )}
     </div>
   );

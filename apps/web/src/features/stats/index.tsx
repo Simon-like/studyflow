@@ -3,7 +3,6 @@ import { useStats } from './hooks';
 import { StatsHeader } from './components/StatsHeader';
 import { OverviewCards } from './components/OverviewCards';
 import { WeeklyChart } from './components/WeeklyChart';
-import { SubjectDistribution } from './components/SubjectDistribution';
 import { MonthlyHeatmap } from './components/MonthlyHeatmap';
 import { EmptyState, Button } from '@/components/ui';
 
@@ -13,7 +12,6 @@ export default function StatsPage() {
     setPeriod,
     chartData,
     maxPomodoros,
-    subjectData,
     heatmapData,
     overviewStats,
     isLoading,
@@ -50,17 +48,12 @@ export default function StatsPage() {
             isLoading={isLoading}
           />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <WeeklyChart
-              data={chartData}
-              maxValue={maxPomodoros}
-              isLoading={isLoading}
-            />
-            <SubjectDistribution
-              data={subjectData}
-              isLoading={isLoading}
-            />
-          </div>
+          <WeeklyChart
+            data={chartData}
+            maxValue={maxPomodoros}
+            period={period}
+            isLoading={isLoading}
+          />
 
           <MonthlyHeatmap data={heatmapData} />
         </>

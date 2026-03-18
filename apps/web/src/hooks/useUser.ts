@@ -2,7 +2,7 @@ import { useMemo, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@studyflow/api';
 import { useAuthStore } from '@/stores/authStore';
-import type { UserProfile } from '@studyflow/shared';
+import type { UserProfile, UserStats } from '@studyflow/shared';
 import { Clock, Target, Flame, Award } from 'lucide-react';
 import type { ProfileStats } from '@/features/profile/types';
 
@@ -85,7 +85,7 @@ export function useUser() {
       {
         icon: Award,
         label: '获得成就',
-        value: '3个', // TODO: 接入真实成就数据
+        value: `${countUnlockedAchievements(stats)}个`,
         color: 'sage',
       },
     ];
@@ -118,6 +118,7 @@ export function useUser() {
     pomodoroSettings: profile
       ? {
           focusDuration: profile.focusDuration,
+          breakDuration: profile.breakDuration ?? profile.shortBreakDuration ?? 300,
           shortBreakDuration: profile.shortBreakDuration,
           longBreakDuration: profile.longBreakDuration,
           autoStartBreak: profile.autoStartBreak,
@@ -142,6 +143,19 @@ export function useUser() {
     syncUser,
     logout,
   };
+}
+
+/** 与 Achievements 组件保持一致的成就解锁条件 */
+function countUnlockedAchievements(stats: UserStats): number {
+  const checks: ((s: UserStats) => boolean)[] = [
+    (s) => s.totalFocusMinutes >= 60,
+    (s) => s.completedTasks >= 10,
+    (s) => s.longestStreak >= 7,
+    (s) => s.totalFocusMinutes >= 6000,
+    (s) => s.totalPomodoros >= 100,
+    (s) => s.studyDays >= 30,
+  ];
+  return checks.filter((check) => check(stats)).length;
 }
 
 // 导出 query keys 供其他 hooks 使用

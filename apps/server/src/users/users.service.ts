@@ -58,6 +58,7 @@ export class UsersService {
       nickname: user.nickname || undefined,
       studyGoal: user.studyGoal || undefined,
       focusDuration: user.focusDuration,
+      breakDuration: user.breakDuration,
       shortBreakDuration: user.shortBreakDuration,
       longBreakDuration: user.longBreakDuration,
       autoStartBreak: user.autoStartBreak,
@@ -126,6 +127,7 @@ export class UsersService {
       where: { id: userId, deletedAt: null },
       select: {
         focusDuration: true,
+        breakDuration: true,
         shortBreakDuration: true,
         longBreakDuration: true,
         autoStartBreak: true,
@@ -140,6 +142,7 @@ export class UsersService {
 
     return {
       focusDuration: user.focusDuration,
+      breakDuration: user.breakDuration,
       shortBreakDuration: user.shortBreakDuration,
       longBreakDuration: user.longBreakDuration,
       autoStartBreak: user.autoStartBreak,
@@ -159,8 +162,9 @@ export class UsersService {
       where: { id: userId },
       data: {
         focusDuration: dto.focusDuration,
-        shortBreakDuration: dto.shortBreakDuration,
-        longBreakDuration: dto.longBreakDuration,
+        breakDuration: dto.breakDuration,
+        shortBreakDuration: dto.shortBreakDuration ?? dto.breakDuration,
+        longBreakDuration: dto.longBreakDuration ?? dto.breakDuration,
         autoStartBreak: dto.autoStartBreak ?? false,
         autoStartPomodoro: dto.autoStartPomodoro ?? false,
         longBreakInterval: dto.longBreakInterval ?? 4,
@@ -255,7 +259,7 @@ export class UsersService {
     }
 
     // 加密新密码
-    const bcryptRounds = this.configService.get<number>('BCRYPT_ROUNDS', 12);
+    const bcryptRounds = Number(this.configService.get('BCRYPT_ROUNDS', '12'));
     const newPasswordHash = await bcrypt.hash(dto.newPassword, bcryptRounds);
 
     // 更新密码
@@ -358,7 +362,7 @@ export class UsersService {
    * 计算用户统计数据
    */
   private async calculateUserStats(userId: string): Promise<UserStats> {
-    const today = DateUtil.today();
+    const todayDate = DateUtil.localDateAsUTC();
 
     // 并行查询统计数据
     const [
@@ -396,7 +400,7 @@ export class UsersService {
         where: {
           userId_statDate: {
             userId,
-            statDate: new Date(today),
+            statDate: todayDate,
           },
         },
       }),
@@ -405,7 +409,7 @@ export class UsersService {
         where: {
           userId_statDate: {
             userId,
-            statDate: new Date(today),
+            statDate: todayDate,
           },
         },
       }),

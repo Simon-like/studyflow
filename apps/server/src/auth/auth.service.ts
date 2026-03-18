@@ -94,7 +94,7 @@ export class AuthService {
     }
 
     // 加密密码
-    const bcryptRounds = this.configService.get<number>('BCRYPT_ROUNDS', 12);
+    const bcryptRounds = Number(this.configService.get('BCRYPT_ROUNDS', '12'));
     const passwordHash = await bcrypt.hash(dto.password, bcryptRounds);
 
     // 创建用户

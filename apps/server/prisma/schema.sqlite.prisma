@@ -28,6 +28,7 @@ model User {
   studyGoal   String?  @map("study_goal")
   
   focusDuration       Int      @default(1500) @map("focus_duration")
+  breakDuration       Int      @default(300) @map("break_duration")
   shortBreakDuration  Int      @default(300) @map("short_break_duration")
   longBreakDuration   Int      @default(900) @map("long_break_duration")
   autoStartBreak      Boolean  @default(false) @map("auto_start_break")

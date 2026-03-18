@@ -4,10 +4,14 @@ interface TimerRingProps {
   progress: number;
   timeText: string;
   label?: string;
+  isResting?: boolean;
 }
 
-export function TimerRing({ progress, timeText, label = '剩余时间' }: TimerRingProps) {
+export function TimerRing({ progress, timeText, label, isResting = false }: TimerRingProps) {
   const strokeDashoffset = CIRCUMFERENCE - progress;
+  const displayLabel = label ?? (isResting ? '休息中' : '剩余时间');
+  const trackColor = isResting ? '#C8E6C9' : '#F5C9A8';
+  const progressColor = isResting ? '#9DB5A0' : '#E8A87C';
 
   return (
     <div className="relative w-44 h-44 flex-shrink-0">
@@ -17,7 +21,7 @@ export function TimerRing({ progress, timeText, label = '剩余时间' }: TimerR
           cy="100"
           r="90"
           fill="none"
-          stroke="#F5C9A8"
+          stroke={trackColor}
           strokeWidth="8"
         />
         <circle
@@ -25,7 +29,7 @@ export function TimerRing({ progress, timeText, label = '剩余时间' }: TimerR
           cy="100"
           r="90"
           fill="none"
-          stroke="#E8A87C"
+          stroke={progressColor}
           strokeWidth="8"
           strokeDasharray={CIRCUMFERENCE}
           strokeDashoffset={strokeDashoffset}
@@ -35,7 +39,7 @@ export function TimerRing({ progress, timeText, label = '剩余时间' }: TimerR
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="font-display text-4xl font-bold text-charcoal">{timeText}</span>
-        <span className="text-stone text-xs mt-1">{label}</span>
+        <span className="text-stone text-xs mt-1">{displayLabel}</span>
       </div>
     </div>
   );

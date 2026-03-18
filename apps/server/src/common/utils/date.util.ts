@@ -26,6 +26,17 @@ export class DateUtil {
   }
 
   /**
+   * 获取本地今日对应的 UTC 午夜 Date，专用于 Prisma @db.Date 字段。
+   *
+   * Prisma 对 @db.Date 字段会取 Date 的 UTC 日期部分存入 PostgreSQL DATE 列。
+   * 若直接用 startOfDay（本地午夜），UTC 日期部分会偏移一天（UTC+N 时区）。
+   * 此方法保证 UTC 日期 === 本地日期，写入和查询始终一致。
+   */
+  static localDateAsUTC(date: Date = new Date()): Date {
+    return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  }
+
+  /**
    * 获取昨日日期字符串
    */
   static yesterday(): string {

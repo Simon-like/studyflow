@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui';
+import { Portal } from '@/components/Portal';
 import type { TaskFormData, Priority } from '../types';
 
 interface AddTaskModalProps {
@@ -19,6 +20,7 @@ export function AddTaskModal({
   if (!isOpen) return null;
 
   return (
+    <Portal>
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-strong animate-slide-up">
         <h3 className="font-display text-xl font-bold text-charcoal mb-6">添加新任务</h3>
@@ -67,5 +69,6 @@ export function AddTaskModal({
         </div>
       </div>
     </div>
+    </Portal>
   );
 }

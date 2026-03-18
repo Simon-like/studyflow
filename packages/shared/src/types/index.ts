@@ -28,8 +28,9 @@ export interface UserProfile extends User {
   
   // 番茄钟个性化设置
   focusDuration: number;           // 默认专注时长（秒）
-  shortBreakDuration: number;      // 短休息时长（秒）
-  longBreakDuration: number;       // 长休息时长（秒）
+  breakDuration?: number;          // 休息时长（秒）
+  shortBreakDuration: number;      // 短休息时长（秒）— 兼容旧数据
+  longBreakDuration: number;       // 长休息时长（秒）— 兼容旧数据
   autoStartBreak: boolean;         // 是否自动开始休息
   autoStartPomodoro: boolean;      // 是否自动开始下一个番茄
   longBreakInterval: number;       // 几个番茄后长休息
@@ -88,8 +89,9 @@ export interface UpdateProfileRequest {
  */
 export interface PomodoroSettings {
   focusDuration: number;           // 专注时长（秒）
-  shortBreakDuration: number;      // 短休息时长（秒）
-  longBreakDuration: number;       // 长休息时长（秒）
+  breakDuration: number;           // 休息时长（秒）
+  shortBreakDuration: number;      // 短休息时长（秒）— 兼容旧数据
+  longBreakDuration: number;       // 长休息时长（秒）— 兼容旧数据
   autoStartBreak: boolean;         // 是否自动开始休息
   autoStartPomodoro: boolean;      // 是否自动开始下一个番茄
   longBreakInterval: number;       // 几个番茄后长休息

@@ -39,6 +39,14 @@ export class PomodoroController {
     return this.pomodoroService.startPomodoro(userId, dto);
   }
 
+  @Get('active')
+  @ApiOperation({ summary: '获取当前进行中的番茄钟' })
+  async getActivePomodoro(
+    @CurrentUser('userId') userId: string,
+  ): Promise<PomodoroRecord | null> {
+    return this.pomodoroService.getActivePomodoro(userId);
+  }
+
   @Post(':id/stop')
   @ApiOperation({ summary: '停止番茄钟' })
   async stopPomodoro(

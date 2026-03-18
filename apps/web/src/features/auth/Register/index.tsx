@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
 import { api } from '@studyflow/api';
 import { authValidators, storage, STORAGE_KEYS } from '@studyflow/shared';
@@ -30,7 +31,6 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [serverError, setServerError] = useState('');
 
   const runValidation = useCallback(() => {
     const e: FieldErrors = {
@@ -45,7 +45,6 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setServerError('');
     if (!runValidation()) return;
 
     setIsLoading(true);
@@ -71,7 +70,7 @@ export default function RegisterPage() {
     } catch (err: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const error = err as any;
-      setServerError(error?.response?.data?.message || '注册失败，请重试');
+      toast.error(error?.response?.data?.message || '注册失败，请重试');
     } finally {
       setIsLoading(false);
     }
@@ -85,12 +84,6 @@ export default function RegisterPage() {
     <>
       <h2 className="font-display text-2xl font-bold text-charcoal mb-2">创建账号</h2>
       <p className="text-stone mb-8">开启你的高效学习之旅</p>
-
-      {serverError && (
-        <div className="bg-red-50 text-red-600 text-sm rounded-xl px-4 py-3 mb-4">
-          {serverError}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-4 flex flex-col gap-4" noValidate>
         <FormField label="姓名" error={errors.name}>

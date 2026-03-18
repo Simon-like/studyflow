@@ -21,9 +21,11 @@ export const MAX_USER_TAGS = 3;
 
 // 番茄钟默认设置
 export const DEFAULT_FOCUS_DURATION = 25 * 60; // 25 分钟（秒）
-export const DEFAULT_SHORT_BREAK_DURATION = 5 * 60; // 5 分钟
-export const DEFAULT_LONG_BREAK_DURATION = 15 * 60; // 15 分钟
+export const DEFAULT_BREAK_DURATION = 5 * 60; // 休息时长 5 分钟（秒）
+export const DEFAULT_SHORT_BREAK_DURATION = 5 * 60; // 5 分钟（兼容旧代码）
+export const DEFAULT_LONG_BREAK_DURATION = 15 * 60; // 15 分钟（兼容旧代码）
 export const POMODOROS_BEFORE_LONG_BREAK = 4;
+export const REST_EXTEND_SECONDS = 5 * 60; // 休息延长 5 分钟
 
 // 存储键
 export const STORAGE_KEYS = {
@@ -83,6 +85,7 @@ export const API_ENDPOINTS = {
   POMODORO: {
     START: "/api/v1/pomodoros/start",
     STOP: (id: string) => `/api/v1/pomodoros/${id}/stop`,
+    ACTIVE: "/api/v1/pomodoros/active",
     HISTORY: "/api/v1/pomodoros/history",
     TODAY_STATS: "/api/v1/pomodoros/stats/today",
     WEEKLY_STATS: "/api/v1/pomodoros/stats/weekly",

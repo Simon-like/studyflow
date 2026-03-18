@@ -44,6 +44,8 @@ const createHttpClient = (baseURL: string): AxiosInstance => {
 
       // 不对 refresh / logout 请求做 401 重试，避免死循环
       const isAuthRequest =
+        requestUrl.includes("/auth/login") ||
+        requestUrl.includes("/auth/register") ||
         requestUrl.includes("/auth/refresh") ||
         requestUrl.includes("/auth/logout");
 

@@ -22,6 +22,9 @@ export function PomodoroTimer({
   onCompleteTask,
   onAbandonTask,
   onShowTaskDetail,
+  onExtendRest,
+  onEndRestEarly,
+  onCompleteTaskFromRest,
   className = '',
 }: PomodoroTimerProps) {
   const progress = (timeRemaining / totalTime) * (2 * Math.PI * 90);
@@ -32,13 +35,14 @@ export function PomodoroTimer({
         <TimerRing
           progress={progress}
           timeText={formatTime(timeRemaining)}
+          isResting={status === 'resting'}
         />
 
         <div className="flex-1">
           <TaskInfo
             title={taskTitle || '自由任务'}
-            subtitle={taskSubtitle || '专注当下，提升效率'}
-            progress={taskProgress || '自由模式'}
+            subtitle={status === 'resting' ? '休息中，放松一下' : (taskSubtitle || '专注当下，提升效率')}
+            progress={status === 'resting' ? '休息时间' : (taskProgress || '自由模式')}
             onShowDetail={onShowTaskDetail}
           />
 
@@ -48,6 +52,9 @@ export function PomodoroTimer({
             onToggleTimer={onToggleTimer}
             onCompleteTask={onCompleteTask}
             onAbandonTask={onAbandonTask}
+            onExtendRest={onExtendRest}
+            onEndRestEarly={onEndRestEarly}
+            onCompleteTaskFromRest={onCompleteTaskFromRest}
           />
         </div>
       </div>

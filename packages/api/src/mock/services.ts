@@ -505,6 +505,13 @@ export const mockPomodoroService = {
     return ok(paginate(pomodoroRecords, params));
   },
 
+  // 获取当前进行中的番茄钟
+  getActive: async (): Promise<ApiResponse<PomodoroRecord | null>> => {
+    await mockDelay(200);
+    const running = pomodoroRecords.find((r) => r.status === "running");
+    return ok(running || null);
+  },
+
   // 获取今日统计 (TodayStats 格式)
   getTodayStats: async (): Promise<ApiResponse<TodayStats>> => {
     await mockDelay(300);
@@ -689,6 +696,7 @@ import type {
 // 模拟用户设置存储
 let userSettings: PomodoroSettings = {
   focusDuration: 1500,
+  breakDuration: 300,
   shortBreakDuration: 300,
   longBreakDuration: 900,
   autoStartBreak: false,
@@ -736,6 +744,7 @@ export const mockUserService = {
       tags: userTags,
       avatar: user.avatar || getDefaultAvatar(user.nickname || user.username),
       focusDuration: userSettings.focusDuration,
+      breakDuration: userSettings.breakDuration,
       shortBreakDuration: userSettings.shortBreakDuration,
       longBreakDuration: userSettings.longBreakDuration,
       autoStartBreak: userSettings.autoStartBreak,

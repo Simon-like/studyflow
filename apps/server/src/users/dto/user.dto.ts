@@ -65,17 +65,25 @@ export class UpdatePomodoroSettingsDto {
   @Max(3600, { message: '专注时长最多 3600 秒' })
   focusDuration: number;
 
-  @ApiProperty({ description: '短休息时长（秒）', example: 300, minimum: 60, maximum: 1800 })
+  @ApiProperty({ description: '休息时长（秒）', example: 300, minimum: 60, maximum: 1800 })
+  @IsInt({ message: '休息时长必须是整数' })
+  @Min(60, { message: '休息时长至少 60 秒' })
+  @Max(1800, { message: '休息时长最多 1800 秒' })
+  breakDuration: number;
+
+  @ApiPropertyOptional({ description: '短休息时长（秒）— 兼容旧数据', example: 300 })
+  @IsOptional()
   @IsInt({ message: '短休息时长必须是整数' })
   @Min(60, { message: '短休息时长至少 60 秒' })
   @Max(1800, { message: '短休息时长最多 1800 秒' })
-  shortBreakDuration: number;
+  shortBreakDuration?: number;
 
-  @ApiProperty({ description: '长休息时长（秒）', example: 900, minimum: 60, maximum: 3600 })
+  @ApiPropertyOptional({ description: '长休息时长（秒）— 兼容旧数据', example: 900 })
+  @IsOptional()
   @IsInt({ message: '长休息时长必须是整数' })
   @Min(60, { message: '长休息时长至少 60 秒' })
   @Max(3600, { message: '长休息时长最多 3600 秒' })
-  longBreakDuration: number;
+  longBreakDuration?: number;
 
   @ApiPropertyOptional({ description: '是否自动开始休息', example: false })
   @IsOptional()

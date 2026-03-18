@@ -4,7 +4,6 @@ import type { StatsPeriod } from '@studyflow/shared';
 import {
   useOverviewStats,
   useDailyStats,
-  useSubjectStats,
   useRefreshStats,
 } from '@studyflow/api';
 
@@ -44,25 +43,27 @@ export function useStats() {
     endDate: dateRange.endDate,
   });
 
-  // 获取学科分布统计数据
-  const {
-    data: subjectStats,
-    isLoading: isSubjectLoading,
-    refetch: refetchSubjects,
-  } = useSubjectStats({ period: statsPeriod });
-
   // 刷新统计数据
   const { refreshAllStats } = useRefreshStats();
 
-  // 转换柱状图数据
+  // 转换柱状图数据：周=按天，月=按周聚合，年=按月聚合
   const chartData = useMemo(() => {
     if (!dailyStats) return [];
 
-    return dailyStats.map((item, index) => ({
-      day: formatChartDayLabel(item.date, period, index),
-      pomodoros: item.pomodoros,
-      hours: Math.round((item.focusMinutes / 60) * 10) / 10,
-    }));
+    if (period === 'week') {
+      return dailyStats.map((item, index) => ({
+        day: formatChartDayLabel(item.date, period, index),
+        pomodoros: item.pomodoros,
+        hours: Math.round((item.focusMinutes / 60) * 10) / 10,
+      }));
+    }
+
+    if (period === 'month') {
+      return aggregateByWeek(dailyStats);
+    }
+
+    // year
+    return aggregateByMonth(dailyStats);
   }, [dailyStats, period]);
 
   // 计算最大番茄数（用于柱状图高度计算）
@@ -71,33 +72,27 @@ export function useStats() {
     return Math.max(...chartData.map((d) => d.pomodoros), 1);
   }, [chartData]);
 
-  // 转换学科分布数据
-  const subjectData = useMemo(() => {
-    if (!subjectStats) return [];
-
-    const colors = ['bg-coral', 'bg-sage', 'bg-coral/60', 'bg-sage/60', 'bg-coral/40'];
-    return subjectStats.map((item, index) => ({
-      name: item.category,
-      hours: Math.round((item.focusMinutes / 60) * 10) / 10,
-      percent: Math.round(item.percentage),
-      color: colors[index % colors.length],
-    }));
-  }, [subjectStats]);
-
   // 基于真实 dailyStats 生成热力图数据（近365天）
+  // 打卡逻辑：当天有番茄钟记录或任务完成记录即视为打卡
   const heatmapData = useMemo(() => {
-    const dailyMap = new Map((dailyStats || []).map((item) => [item.date, item.focusMinutes]));
+    const dailyMap = new Map(
+      (dailyStats || []).map((item) => [item.date, item])
+    );
     const today = new Date();
 
     return Array.from({ length: 365 }, (_, i) => {
       const date = new Date(today);
       date.setDate(today.getDate() - (364 - i));
       const dateKey = formatDate(date);
-      const minutes = dailyMap.get(dateKey) || 0;
+      const dayData = dailyMap.get(dateKey);
+      const checkedIn = dayData
+        ? (dayData.pomodoros > 0 || dayData.focusMinutes > 0)
+        : false;
 
       return {
         day: i + 1,
-        value: toHeatLevel(minutes),
+        value: checkedIn ? 1 : 0,
+        label: checkedIn ? `${dateKey}: 已打卡` : `${dateKey}: 未打卡`,
       };
     });
   }, [dailyStats]);
@@ -110,10 +105,9 @@ export function useStats() {
     );
 
     const chartHasData = chartData.some((item) => item.pomodoros > 0 || item.hours > 0);
-    const subjectHasData = subjectData.length > 0;
 
-    return overviewHasData || chartHasData || subjectHasData;
-  }, [overviewStats, chartData, subjectData]);
+    return overviewHasData || chartHasData;
+  }, [overviewStats, chartData]);
 
   // 处理周期切换
   const handlePeriodChange = useCallback((key: string) => {
@@ -126,19 +120,17 @@ export function useStats() {
     await Promise.all([
       refetchOverview(),
       refetchDaily(),
-      refetchSubjects(),
     ]);
-  }, [refreshAllStats, refetchOverview, refetchDaily, refetchSubjects]);
+  }, [refreshAllStats, refetchOverview, refetchDaily]);
 
   // 是否正在加载
-  const isLoading = isOverviewLoading || isDailyLoading || isSubjectLoading;
+  const isLoading = isOverviewLoading || isDailyLoading;
 
   return {
     period,
     setPeriod: handlePeriodChange,
     chartData,
     maxPomodoros,
-    subjectData,
     heatmapData,
     overviewStats,
     isLoading,
@@ -167,8 +159,8 @@ export function useOverviewCards(overviewStats?: {
   return useMemo(() => {
     if (!overviewStats) {
       return [
-        { icon: 'Clock', label: '专注时长', value: '--', change: '--', isPositive: true },
-        { icon: 'Target', label: '番茄完成', value: '--', change: '--', isPositive: true },
+        { icon: 'Clock', label: '学习时长', value: '--', change: '--', isPositive: true },
+        { icon: 'Target', label: '日均学习', value: '--', change: '--', isPositive: true },
         { icon: 'CheckCircle', label: '完成任务', value: '--', change: '--', isPositive: true },
         { icon: 'Flame', label: '连续打卡', value: '--', change: '--', isPositive: true },
       ];
@@ -176,7 +168,6 @@ export function useOverviewCards(overviewStats?: {
 
     const {
       focusMinutes = 0,
-      completedPomodoros = 0,
       completedTasks = 0,
       streakDays = 0,
       compareLastPeriod = {},
@@ -184,19 +175,22 @@ export function useOverviewCards(overviewStats?: {
 
     // 将分钟转换为小时显示
     const hours = Math.round((focusMinutes / 60) * 10) / 10;
+    // 日均学习时长（基于打卡天数，避免除0）
+    const activeDays = streakDays || 1;
+    const avgHours = Math.round((hours / activeDays) * 10) / 10;
 
     return [
       {
         icon: 'Clock',
-        label: '专注时长',
+        label: '学习时长',
         value: `${hours}h`,
         change: compareLastPeriod.focusMinutes || '+0%',
         isPositive: (compareLastPeriod.focusMinutes || '').startsWith('+'),
       },
       {
         icon: 'Target',
-        label: '番茄完成',
-        value: String(completedPomodoros),
+        label: '日均学习',
+        value: `${avgHours}h`,
         change: compareLastPeriod.pomodoros || '+0%',
         isPositive: (compareLastPeriod.pomodoros || '').startsWith('+'),
       },
@@ -259,13 +253,61 @@ function formatChartDayLabel(dateText: string, period: Period, index: number): s
   return `${date.getMonth() + 1}月`;
 }
 
-function toHeatLevel(focusMinutes: number): number {
-  if (focusMinutes <= 0) return 0;
-  if (focusMinutes < 30) return 1;
-  if (focusMinutes < 60) return 2;
-  if (focusMinutes < 120) return 3;
-  if (focusMinutes < 180) return 4;
-  return 5;
+/** 月视图：按自然周聚合 dailyStats */
+function aggregateByWeek(dailyStats: { date: string; pomodoros: number; focusMinutes: number }[]) {
+  const weeks: Map<number, { pomodoros: number; minutes: number; startDate: string }> = new Map();
+
+  for (const item of dailyStats) {
+    const date = new Date(`${item.date}T00:00:00`);
+    const weekNum = getWeekOfMonth(date);
+    const existing = weeks.get(weekNum);
+    if (existing) {
+      existing.pomodoros += item.pomodoros;
+      existing.minutes += item.focusMinutes;
+    } else {
+      weeks.set(weekNum, { pomodoros: item.pomodoros, minutes: item.focusMinutes, startDate: item.date });
+    }
+  }
+
+  return Array.from(weeks.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([weekNum, data]) => ({
+      day: `第${weekNum}周`,
+      pomodoros: data.pomodoros,
+      hours: Math.round((data.minutes / 60) * 10) / 10,
+    }));
+}
+
+function getWeekOfMonth(date: Date): number {
+  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+  const dayOfWeek = firstDay.getDay() || 7; // Monday = 1
+  return Math.ceil((date.getDate() + dayOfWeek - 1) / 7);
+}
+
+/** 年视图：按月聚合 dailyStats */
+function aggregateByMonth(dailyStats: { date: string; pomodoros: number; focusMinutes: number }[]) {
+  const months: Map<number, { pomodoros: number; minutes: number }> = new Map();
+
+  for (const item of dailyStats) {
+    const date = new Date(`${item.date}T00:00:00`);
+    const month = date.getMonth();
+    const existing = months.get(month);
+    if (existing) {
+      existing.pomodoros += item.pomodoros;
+      existing.minutes += item.focusMinutes;
+    } else {
+      months.set(month, { pomodoros: item.pomodoros, minutes: item.focusMinutes });
+    }
+  }
+
+  const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+  return Array.from(months.entries())
+    .sort(([a], [b]) => a - b)
+    .map(([month, data]) => ({
+      day: monthNames[month],
+      pomodoros: data.pomodoros,
+      hours: Math.round((data.minutes / 60) * 10) / 10,
+    }));
 }
 
 function formatDate(date: Date): string {

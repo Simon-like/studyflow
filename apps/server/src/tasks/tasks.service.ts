@@ -65,13 +65,20 @@ export class TasksService {
   }
 
   async getTodayTasks(userId: string): Promise<Task[]> {
+    const todayStart = DateUtil.startOfDay(new Date());
+    const todayEnd = DateUtil.endOfDay(new Date());
+
     const tasks = await this.prisma.task.findMany({
       where: {
         userId,
         deletedAt: null,
         OR: [
           { isToday: true },
-          { status: { in: ['todo', 'in_progress'] } },
+          { status: 'in_progress' },
+          {
+            status: 'todo',
+            createdAt: { gte: todayStart, lte: todayEnd },
+          },
         ],
       },
       orderBy: [
@@ -331,14 +338,13 @@ export class TasksService {
     userId: string,
     action: 'create' | 'complete' | 'uncomplete',
   ): Promise<void> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayDate = DateUtil.localDateAsUTC();
 
     const existingStat = await this.prisma.taskDailyStat.findUnique({
       where: {
         userId_statDate: {
           userId,
-          statDate: today,
+          statDate: todayDate,
         },
       },
     });
@@ -359,7 +365,7 @@ export class TasksService {
       await this.prisma.taskDailyStat.create({
         data: {
           userId,
-          statDate: today,
+          statDate: todayDate,
           ...(action === 'create'
             ? { createdCount: 1, completedCount: 0 }
             : { createdCount: 0, completedCount: 1 }),

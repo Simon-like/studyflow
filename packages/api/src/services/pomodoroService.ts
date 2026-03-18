@@ -16,7 +16,7 @@ export interface StartPomodoroRequest {
 }
 
 export interface StopPomodoroRequest {
-  status: "completed" | "abandoned";
+  status: "completed" | "stopped";
   abandonReason?: string;
 }
 
@@ -34,6 +34,10 @@ export const pomodoroService = {
   // 停止番茄钟 (增强版，返回结算摘要)
   stop: (id: string, data: StopPomodoroRequest) =>
     http.post<ApiResponse<PomodoroSettlement>>(API_ENDPOINTS.POMODORO.STOP(id), data),
+
+  // 获取当前进行中的番茄钟
+  getActive: () =>
+    http.get<ApiResponse<PomodoroRecord | null>>(API_ENDPOINTS.POMODORO.ACTIVE),
 
   // 获取历史记录
   getHistory: (params?: PaginationParams) =>

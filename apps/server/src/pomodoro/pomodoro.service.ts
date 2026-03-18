@@ -173,14 +173,25 @@ export class PomodoroService {
     };
   }
 
+  async getActivePomodoro(userId: string): Promise<PomodoroRecord | null> {
+    await this.cleanupStalePomodoros(userId);
+
+    const running = await this.prisma.pomodoroRecord.findFirst({
+      where: { userId, status: 'running' },
+      include: { task: true },
+    });
+
+    return running ? this.mapToPomodoroRecord(running) : null;
+  }
+
   async getTodayStats(userId: string): Promise<TodayStats> {
-    const today = DateUtil.today();
+    const todayDate = DateUtil.localDateAsUTC();
 
     const stats = await this.prisma.pomodoroDailyStat.findUnique({
       where: {
         userId_statDate: {
           userId,
-          statDate: new Date(today),
+          statDate: todayDate,
         },
       },
     });
@@ -201,7 +212,9 @@ export class PomodoroService {
     });
 
     return {
-      focusMinutes: stats ? Math.floor(stats.totalFocusSeconds / 60) : 0,
+      focusMinutes: stats && stats.totalFocusSeconds > 0
+        ? Math.max(1, Math.round(stats.totalFocusSeconds / 60))
+        : 0,
       completedPomodoros: stats?.completedCount || 0,
       completedTasks: todayCompletedTasks,
       streakDays: streak?.currentStreak || 0,
@@ -210,8 +223,9 @@ export class PomodoroService {
 
   async getWeeklyStats(userId: string): Promise<{ dailyStats: DailyStat[] }> {
     const today = new Date();
-    const startOfWeek = DateUtil.startOfWeek(today);
-    const endOfWeek = DateUtil.endOfWeek(today);
+    // @db.Date 字段需要 UTC 午夜，避免时区偏移
+    const startOfWeek = DateUtil.localDateAsUTC(DateUtil.startOfWeek(today));
+    const endOfWeek = DateUtil.localDateAsUTC(DateUtil.endOfWeek(today));
 
     const stats = await this.prisma.pomodoroDailyStat.findMany({
       where: {
@@ -275,14 +289,13 @@ export class PomodoroService {
     focusSeconds: number,
     taskId?: string,
   ): Promise<void> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayDate = DateUtil.localDateAsUTC();
 
     const existingStat = await this.prisma.pomodoroDailyStat.findUnique({
       where: {
         userId_statDate: {
           userId,
-          statDate: today,
+          statDate: todayDate,
         },
       },
     });
@@ -300,7 +313,7 @@ export class PomodoroService {
       await this.prisma.pomodoroDailyStat.create({
         data: {
           userId,
-          statDate: today,
+          statDate: todayDate,
           completedCount: 1,
           totalFocusSeconds: focusSeconds,
           relatedTaskCount: taskId ? 1 : 0,
@@ -310,11 +323,7 @@ export class PomodoroService {
   }
 
   private async updateUserStreak(userId: string): Promise<void> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    const todayDate = DateUtil.localDateAsUTC();
 
     const streak = await this.prisma.userStreak.findUnique({
       where: { userId },
@@ -327,8 +336,8 @@ export class PomodoroService {
           userId,
           currentStreak: 1,
           longestStreak: 1,
-          lastStudyDate: today,
-          streakStartDate: today,
+          lastStudyDate: todayDate,
+          streakStartDate: todayDate,
         },
       });
       return;
@@ -342,10 +351,10 @@ export class PomodoroService {
       return;
     }
 
-    // 判断是否是连续学习
+    // 判断是否是连续学习（lastStudyDate 是前一天 → 连续）
     const isConsecutive =
       streak.lastStudyDate &&
-      DateUtil.isConsecutive(today, streak.lastStudyDate);
+      DateUtil.isConsecutive(streak.lastStudyDate, todayDate);
 
     const newCurrentStreak = isConsecutive
       ? streak.currentStreak + 1
@@ -356,8 +365,8 @@ export class PomodoroService {
       data: {
         currentStreak: newCurrentStreak,
         longestStreak: Math.max(streak.longestStreak, newCurrentStreak),
-        lastStudyDate: today,
-        ...(isConsecutive ? {} : { streakStartDate: today }),
+        lastStudyDate: todayDate,
+        ...(isConsecutive ? {} : { streakStartDate: todayDate }),
       },
     });
   }

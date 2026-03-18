@@ -10,11 +10,15 @@ import type { DashboardStats } from './types';
 // ==================== Dashboard 计时器 Hook ====================
 
 export function useDashboardTimer() {
-  const { status, timeRemaining, start, pause, resume, stop, tick } = usePomodoroStore();
+  const {
+    status, timeRemaining, focusDuration, breakDuration,
+    start, pause, resume, stop, tick,
+    startRest, extendRest, endRest,
+  } = usePomodoroStore();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (status === 'running') {
+    if (status === 'running' || status === 'resting') {
       intervalRef.current = setInterval(() => tick(), 1000);
     } else {
       if (intervalRef.current) {
@@ -30,19 +34,26 @@ export function useDashboardTimer() {
     };
   }, [status, tick]);
 
+  // totalTime 根据状态切换：专注用 focusDuration，休息用 breakDuration
+  const totalTime = status === 'resting' ? breakDuration : focusDuration;
+
   const progress = useMemo(
-    () => (timeRemaining / (25 * 60)) * (2 * Math.PI * 90),
-    [timeRemaining]
+    () => (timeRemaining / totalTime) * (2 * Math.PI * 90),
+    [timeRemaining, totalTime]
   );
 
   return {
     status,
     timeRemaining,
+    totalTime,
     progress,
     onStart: start,
     onPause: pause,
     onResume: resume,
     onStop: stop,
+    onStartRest: startRest,
+    onExtendRest: extendRest,
+    onEndRest: endRest,
   };
 }
 
@@ -72,17 +83,17 @@ export function useDashboardStats(): UseDashboardStatsReturn {
     return [
       {
         label: '今日专注',
-        value: `${todayStats.focusMinutes}`,
-        sub: `${todayStats.completedPomodoros} 个番茄`,
+        value: `${todayStats.focusMinutes}分钟`,
+        sub: `${todayStats.completedPomodoros}个番茄`,
       },
       {
         label: '完成任务',
-        value: `${todayStats.completedTasks}`,
+        value: `${todayStats.completedTasks}个`,
         sub: '今日任务',
       },
       {
         label: '连续天数',
-        value: `${todayStats.streakDays}`,
+        value: `${todayStats.streakDays}天`,
         sub: '天不间断',
       },
       {
@@ -137,11 +148,19 @@ export function useDashboardTasks(): UseDashboardTasksReturn {
   }, [fetchTasks]);
 
   const toggleTask = useCallback(async (id: string) => {
+    // 乐观更新：立即切换本地状态
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? { ...t, status: t.status === 'completed' ? 'todo' as const : 'completed' as const }
+          : t
+      )
+    );
+
     try {
       const response = await api.task.toggleStatus(id);
       const updatedTask = response.data;
-
-      // 立即更新本地状态
+      // 用服务器返回的真实数据覆盖
       setTasks((prev) =>
         prev.map((t) => (t.id === id ? updatedTask : t))
       );

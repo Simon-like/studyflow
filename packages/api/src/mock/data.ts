@@ -62,6 +62,7 @@ export const MOCK_USER_STATS: UserStats = {
 // 番茄钟设置
 export const MOCK_POMODORO_SETTINGS: PomodoroSettings = {
   focusDuration: 25 * 60,
+  breakDuration: 5 * 60,
   shortBreakDuration: 5 * 60,
   longBreakDuration: 15 * 60,
   autoStartBreak: false,
@@ -83,6 +84,7 @@ export const MOCK_USER_PROFILE: UserProfile = {
   ...MOCK_USER,
   tags: MOCK_USER_TAGS,
   focusDuration: MOCK_POMODORO_SETTINGS.focusDuration,
+  breakDuration: MOCK_POMODORO_SETTINGS.breakDuration,
   shortBreakDuration: MOCK_POMODORO_SETTINGS.shortBreakDuration,
   longBreakDuration: MOCK_POMODORO_SETTINGS.longBreakDuration,
   autoStartBreak: MOCK_POMODORO_SETTINGS.autoStartBreak,

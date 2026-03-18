@@ -33,8 +33,8 @@ export function StatsRow({ legacyStats }: StatsRowProps) {
   const streakDays = `${todayStats?.streakDays ?? legacyStats?.streakDays ?? '0'}天`;
 
   const statItems = [
-    { label: '今日番茄', value: String(todayPomodoros) },
-    { label: '完成任务', value: completedTasks },
+    { label: '今日番茄', value: `${todayPomodoros}个` },
+    { label: '完成任务', value: `${completedTasks}个` },
     { label: '连续天数', value: streakDays },
   ];
 
