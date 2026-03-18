@@ -20,7 +20,7 @@ import { Icon } from '../../components/ui/Icon';
 import { Badge } from '../../components/ui/Badge';
 import { useProfileData, useUpdateProfile, useUploadAvatar } from './hooks';
 import { colors, spacing, radius, fontSize, fontWeight, shadows } from '../../theme';
-import type { UpdateProfileRequest } from '@studyflow/shared';
+import type { UpdateProfileRequest, UserTag } from '@studyflow/shared';
 import { PRESET_USER_TAGS, MAX_USER_TAGS } from '@studyflow/shared';
 
 interface EditProfileScreenProps {
@@ -35,10 +35,6 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
   const [formData, setFormData] = useState<UpdateProfileRequest>({
     nickname: profile?.nickname || '',
     studyGoal: profile?.studyGoal || '',
-    email: profile?.email || '',
-    phone: profile?.phone || '',
-    pin: profile?.pin || '',
-    tags: profile?.tags?.map(t => t.id) || [],
   });
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showCustomTagModal, setShowCustomTagModal] = useState(false);
@@ -50,10 +46,6 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
       setFormData({
         nickname: profile.nickname || '',
         studyGoal: profile.studyGoal || '',
-        email: profile.email || '',
-        phone: profile.phone || '',
-        pin: profile.pin || '',
-        tags: profile.tags?.map(t => t.id) || [],
       });
       setSelectedTags(profile.tags?.map(t => t.id) || []);
     }
@@ -112,9 +104,26 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
   };
 
   const handleSubmit = async () => {
-    // 移除PIN字段，因为PIN不可更改
-    const { pin, ...updateData } = formData;
-    await updateProfile.mutateAsync({ ...updateData, tags: selectedTags });
+    // 将选中的标签ID转换为UserTag数组
+    const selectedUserTags: UserTag[] = selectedTags
+      .map(tagId => {
+        const presetTag = PRESET_USER_TAGS.find(t => t.id === tagId);
+        if (presetTag) {
+          return presetTag;
+        }
+        // 自定义标签
+        if (tagId.startsWith('custom_')) {
+          return {
+            id: tagId,
+            name: tagId.replace('custom_', ''),
+            type: 'custom' as const,
+          };
+        }
+        return null;
+      })
+      .filter((t): t is NonNullable<typeof t> => t !== null);
+    
+    await updateProfile.mutateAsync({ ...formData, tags: selectedUserTags });
     onBack();
   };
 
@@ -201,27 +210,24 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>手机号</Text>
             <TextInput
-              value={formData.phone}
-              onChangeText={(text) => handleInputChange('phone', text)}
-              placeholder="138xxxxxxxxx"
-              keyboardType="phone-pad"
-              style={styles.input}
+              value={profile?.phone || ''}
+              editable={false}
+              style={[styles.input, styles.readOnlyInput]}
               placeholderTextColor={colors.textMuted}
             />
+            <Text style={styles.helperText}>手机号不可修改</Text>
           </View>
 
-          {/* Email - 可选 */}
+          {/* Email - 只读 */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>邮箱（可选）</Text>
+            <Text style={styles.label}>邮箱</Text>
             <TextInput
-              value={formData.email}
-              onChangeText={(text) => handleInputChange('email', text)}
-              placeholder="example@email.com（可选）"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              style={styles.input}
+              value={profile?.email || ''}
+              editable={false}
+              style={[styles.input, styles.readOnlyInput]}
               placeholderTextColor={colors.textMuted}
             />
+            <Text style={styles.helperText}>邮箱暂不可修改</Text>
           </View>
 
           {/* Tags */}

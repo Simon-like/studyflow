@@ -32,6 +32,9 @@
       "bundler": "metro"
     },
     "plugins": [],
+    "experiments": {
+      "tsconfigPaths": true
+    },
     "extra": {
       "eas": {
         "projectId": "9423e226-7d93-4ed8-aee6-48ef1b96965e"

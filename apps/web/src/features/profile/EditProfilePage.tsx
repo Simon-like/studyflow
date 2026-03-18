@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Tag, Phone, Plus, Target } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -9,7 +9,7 @@ import { useDialog } from '@/providers/DialogProvider';
 import { Portal } from '@/components/Portal';
 import { useUser } from '@/hooks';
 import { useUpdateProfile, useUploadAvatar } from './hooks';
-import type { UpdateProfileRequest } from '@studyflow/shared';
+import type { UpdateProfileRequest, UserTag } from '@studyflow/shared';
 import { PRESET_USER_TAGS, MAX_USER_TAGS } from '@studyflow/shared';
 
 export default function EditProfilePage() {
@@ -46,7 +46,7 @@ export default function EditProfilePage() {
       const savedIds = profile.tags?.map((t) => t.id) || [];
       setSelectedTagIds(savedIds);
       // 从已保存的标签中还原出不在预设列表里的自定义标签
-      const presetIds = new Set(PRESET_USER_TAGS.map((t) => t.id));
+      const presetIds = new Set<string>(PRESET_USER_TAGS.map((t) => t.id));
       const savedCustom = (profile.tags || [])
         .filter((t) => !presetIds.has(t.id))
         .map((t) => ({ id: t.id, name: t.name, type: 'custom' as const }));
@@ -114,18 +114,18 @@ export default function EditProfilePage() {
     await uploadAvatar.mutateAsync(file);
   };
 
+  // 根据选中的 ID 生成完整的 UserTag 数组
+  const selectedTags: UserTag[] = useMemo(() => {
+    const allTags = [...PRESET_USER_TAGS, ...customTags];
+    return selectedTagIds
+      .map((id) => allTags.find((t) => t.id === id))
+      .filter((t): t is UserTag => t !== undefined);
+  }, [selectedTagIds, customTags]);
+
   const handleSave = async () => {
     try {
-      // 将选中的 ID 解析为完整的 UserTag 对象（含自定义标签的名称）
-      const allTags = [
-        ...PRESET_USER_TAGS.map((t) => ({ id: t.id, name: t.name, type: t.type })),
-        ...customTags,
-      ];
-      const resolvedTags = selectedTagIds
-        .map((id) => allTags.find((t) => t.id === id))
-        .filter((t): t is NonNullable<typeof t> => !!t);
-
-      await updateProfile.mutateAsync({ ...formData, tags: resolvedTags });
+      // 发送完整的标签对象数组
+      await updateProfile.mutateAsync({ ...formData, tags: selectedTags });
 
       // 显示保存成功提示
       dialog.confirm({
@@ -311,7 +311,7 @@ export default function EditProfilePage() {
                         ? 'bg-mist/30 text-stone/40 cursor-not-allowed'
                         : 'bg-warm text-stone hover:bg-coral/10 hover:text-coral'
                   }`}
-                  title={'description' in tag ? tag.description : undefined}
+                  title={tag.name}
                 >
                   {tag.name}
                 </button>

@@ -26,11 +26,28 @@ const STORAGE_KEYS = {
 // iOS 模拟器使用 localhost，Android 模拟器使用 10.0.2.2
 import { Platform } from 'react-native';
 
-const API_BASE_URL = __DEV__
-  ? Platform.OS === 'android'
-    ? 'http://10.0.2.2:3001'   // Android 模拟器访问本机
-    : 'http://localhost:3001'   // iOS 模拟器 / 真机（需改为局域网 IP）
-  : 'https://your-production-api.com'; // 生产环境地址
+/**
+ * API 基础 URL 配置
+ * 
+ * 开发环境 (__DEV__):
+ *   - Android 模拟器: 10.0.2.2 (访问本机 localhost)
+ *   - iOS 模拟器: localhost
+ *   - 真机调试: 需要改为电脑的局域网 IP (如 192.168.x.x)
+ * 
+ * 生产环境:
+ *   - 需要配置你的实际服务器地址
+ *   - 支持环境变量覆盖：process.env.EXPO_PUBLIC_API_URL
+ */
+const PRODUCTION_API_URL = 
+  process.env.EXPO_PUBLIC_API_URL || 
+  'https://your-production-api.com'; // ⚠️ 部署前修改为你的后端地址
+
+const DEV_API_URL = 
+  Platform.OS === 'android'
+    ? 'http://10.0.2.2:3001'   // Android 模拟器
+    : 'http://localhost:3001';  // iOS 模拟器
+
+const API_BASE_URL = __DEV__ ? DEV_API_URL : PRODUCTION_API_URL;
 
 // 创建 axios 实例
 const createHttpClient = (baseURL: string): AxiosInstance => {

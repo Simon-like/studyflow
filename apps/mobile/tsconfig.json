@@ -6,15 +6,18 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@studyflow/shared": ["../../packages/shared/src"],
+      "@studyflow/shared": ["../../packages/shared/src/index.ts"],
       "@studyflow/shared/*": ["../../packages/shared/src/*"],
-      "@studyflow/api": ["../../packages/api/src"],
+      "@studyflow/api": ["../../packages/api/src/index.ts"],
       "@studyflow/api/*": ["../../packages/api/src/*"],
-      "@studyflow/theme": ["../../packages/theme/src"],
+      "@studyflow/theme": ["../../packages/theme/src/index.ts"],
       "@studyflow/theme/*": ["../../packages/theme/src/*"]
     },
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "android", "ios", "metro.config.js"]
+  "exclude": ["node_modules", "android", "ios", "metro.config.js", "babel.config.js"]
 }

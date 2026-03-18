@@ -7,34 +7,27 @@ const config = getDefaultConfig(__dirname);
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, "../..");
 
-// ==================== 关键配置 1: 添加额外的 node_modules 路径 ====================
+// ==================== Monorepo 配置 (Expo SDK 55 官方推荐) ====================
+
+// 1. 监视 workspace packages 目录（开发热更新）
+config.watchFolders = [workspaceRoot];
+
+// 2. 配置 node_modules 解析路径
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(workspaceRoot, "node_modules"),
 ];
 
-// ==================== 关键配置 2: 配置 embedded packages 路径解析 ====================
-const embeddedPackagesDir = path.join(projectRoot, "embedded-packages");
-config.resolver.extraNodeModules = {
-  ...config.resolver.extraNodeModules,
-  "@studyflow/shared": path.join(embeddedPackagesDir, "shared"),
-  "@studyflow/api": path.join(embeddedPackagesDir, "api"),
-  "@studyflow/theme": path.join(embeddedPackagesDir, "theme"),
-};
-
-// ==================== 关键配置 3: 本地开发时监视 workspace packages ====================
-const fs = require("fs");
-if (fs.existsSync(path.resolve(workspaceRoot, "packages"))) {
-  config.watchFolders = [path.resolve(workspaceRoot, "packages")];
-}
-
-// ==================== 关键配置 4: 确保 Metro 能解析所有文件类型 ====================
+// 3. 确保 Metro 能解析所有文件类型
 config.resolver.sourceExts = ["ts", "tsx", "js", "jsx", "json", "cjs", "mjs"];
 
-// ==================== 关键配置 5: 启用 symlinks 支持 ====================
+// 4. 启用 symlinks 支持 (pnpm 必需)
 config.resolver.unstable_enableSymlinks = true;
 
-// ==================== 关键配置 6: 确保正确解析 monorepo 中的模块 ====================
+// 5. 禁用层级查找以避免重复模块问题
 config.resolver.disableHierarchicalLookup = false;
+
+// ==================== Reanimated 配置 ====================
+// Reanimated 插件在 babel.config.js 中配置，不需要在 metro 中额外配置
 
 module.exports = config;

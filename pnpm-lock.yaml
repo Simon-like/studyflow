@@ -28,14 +28,14 @@ importers:
         specifier: ~2.1.2
         version: 2.1.2(react-native@0.83.2(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.4))
       '@studyflow/api':
-        specifier: file:./embedded-packages/api
-        version: file:apps/mobile/embedded-packages/api
+        specifier: workspace:*
+        version: link:../../packages/api
       '@studyflow/shared':
-        specifier: file:./embedded-packages/shared
-        version: file:apps/mobile/embedded-packages/shared
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@studyflow/theme':
-        specifier: file:./embedded-packages/theme
-        version: file:apps/mobile/embedded-packages/theme
+        specifier: workspace:*
+        version: link:../../packages/theme
       '@tanstack/react-query':
         specifier: ^5.90.21
         version: 5.90.21(react@19.2.4)
@@ -2383,15 +2383,6 @@ packages:
 
   '@socket.io/component-emitter@3.1.2':
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
-
-  '@studyflow/api@file:apps/mobile/embedded-packages/api':
-    resolution: {directory: apps/mobile/embedded-packages/api, type: directory}
-
-  '@studyflow/shared@file:apps/mobile/embedded-packages/shared':
-    resolution: {directory: apps/mobile/embedded-packages/shared, type: directory}
-
-  '@studyflow/theme@file:apps/mobile/embedded-packages/theme':
-    resolution: {directory: apps/mobile/embedded-packages/theme, type: directory}
 
   '@surma/rollup-plugin-off-main-thread@2.2.3':
     resolution: {integrity: sha512-lR8q/9W7hZpMWweNiAKU7NQerBnzQQLvi8qnTDU/fxItPhtZVMbPV3lbCwjhIlNBe9Bbr5V+KHshvWmVSG9cxQ==}
@@ -9954,17 +9945,6 @@ snapshots:
       '@sinonjs/commons': 3.0.1
 
   '@socket.io/component-emitter@3.1.2': {}
-
-  '@studyflow/api@file:apps/mobile/embedded-packages/api':
-    dependencies:
-      '@studyflow/shared': file:apps/mobile/embedded-packages/shared
-      axios: 1.13.5
-    transitivePeerDependencies:
-      - debug
-
-  '@studyflow/shared@file:apps/mobile/embedded-packages/shared': {}
-
-  '@studyflow/theme@file:apps/mobile/embedded-packages/theme': {}
 
   '@surma/rollup-plugin-off-main-thread@2.2.3':
     dependencies:

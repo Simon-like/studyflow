@@ -80,14 +80,14 @@ export class StatsService {
     });
 
     // 创建映射
-    const pomodoroMap = new Map(
+    const pomodoroMap = new Map<string, { pomodoros: number; focusSeconds: number }>(
       pomodoroStats.map((s) => [
         DateUtil.format(s.statDate, 'YYYY-MM-DD'),
         { pomodoros: s.completedCount, focusSeconds: s.totalFocusSeconds },
       ]),
     );
 
-    const taskMap = new Map(
+    const taskMap = new Map<string, number>(
       taskStats.map((s) => [
         DateUtil.format(s.statDate, 'YYYY-MM-DD'),
         s.completedCount,
@@ -98,7 +98,7 @@ export class StatsService {
     const dateRange = DateUtil.getDateRange(startDate, endDate);
 
     return dateRange.map((date) => {
-      const pomodoro = pomodoroMap.get(date);
+      const pomodoro = pomodoroMap.get(date) ?? null;
       const tasks = taskMap.get(date) || 0;
 
       return {

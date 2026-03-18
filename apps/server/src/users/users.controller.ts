@@ -34,7 +34,7 @@ interface RequestWithUser {
  * 处理用户资料、设置相关的 HTTP 请求
  */
 @ApiTags('用户')
-@Controller('/api/v1/users')
+@Controller('users')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class UsersController {

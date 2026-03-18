@@ -5,7 +5,7 @@
  * 1. 自动刷新 access token
  * 2. 管理登录状态
  * 3. 提供登录/登出方法
- * 4. mock 模式支持
+
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -107,7 +107,7 @@ export function useAuthToken(): UseAuthTokenReturn {
    */
   const performRefresh = async (refreshToken: string): Promise<boolean> => {
     try {
-      // 使用 mock 服务刷新 token
+      // 使用真实服务刷新 token
       const response = await api.auth.refresh(refreshToken);
       
       if (response.data) {
@@ -205,7 +205,7 @@ export function useAuthToken(): UseAuthTokenReturn {
    */
   const logout = useCallback(async (): Promise<void> => {
     try {
-      // 调用登出 API（mock）
+      // 调用登出 API
       await api.auth.logout();
     } catch (error) {
       console.error('Logout API failed:', error);

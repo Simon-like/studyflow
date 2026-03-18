@@ -249,14 +249,14 @@ export class PomodoroService {
     });
 
     // 创建日期映射
-    const statsMap = new Map(
+    const statsMap = new Map<string, { pomodoros: number; focusSeconds: number }>(
       stats.map((s) => [
         DateUtil.format(s.statDate, 'YYYY-MM-DD'),
         { pomodoros: s.completedCount, focusSeconds: s.totalFocusSeconds },
       ]),
     );
 
-    const taskStatsMap = new Map(
+    const taskStatsMap = new Map<string, number>(
       taskStats.map((s) => [
         DateUtil.format(s.statDate, 'YYYY-MM-DD'),
         s.completedCount,
@@ -270,7 +270,7 @@ export class PomodoroService {
     );
 
     const dailyStats: DailyStat[] = dateRange.map((date) => {
-      const stat = statsMap.get(date);
+      const stat = statsMap.get(date) ?? null;
       const taskCount = taskStatsMap.get(date) || 0;
 
       return {

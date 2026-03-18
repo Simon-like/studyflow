@@ -12,7 +12,7 @@ export interface User {
   avatar?: string;
   nickname?: string;
   studyGoal?: string;
-  // 番茄钟设置（在基础类型中包含以便 mock 数据使用）
+  // 番茄钟设置（在基础类型中包含）
   focusDuration?: number; // 默认专注时长（秒）
   shortBreakDuration?: number; // 短休息时长（秒）
   longBreakDuration?: number; // 长休息时长（秒）
@@ -80,7 +80,7 @@ export interface UpdateProfileRequest {
   nickname?: string;
   avatar?: string;
   studyGoal?: string;
-  tags?: UserTag[];  // 完整标签对象（含自定义标签名称）
+  tags?: UserTag[];  // 标签列表
 }
 
 /**

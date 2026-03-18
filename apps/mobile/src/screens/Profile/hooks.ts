@@ -95,11 +95,7 @@ export function useUpdateProfile() {
         if (!old) return old;
         
         // 如果更新了tags，从variables中获取最新的tags数据
-        const updatedTags = variables.tags 
-          ? PRESET_USER_TAGS
-              .filter(tag => variables.tags?.includes(tag.id))
-              .map(tag => ({ ...tag, unlockedAt: new Date().toISOString() }))
-          : old.tags;
+        const updatedTags = variables.tags || old.tags;
         
         return { ...old, ...data, tags: updatedTags };
       });

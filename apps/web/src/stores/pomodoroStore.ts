@@ -183,13 +183,8 @@ export const usePomodoroStore = create<PomodoroState>()(
         totalFocusTime: state.totalFocusTime,
         activePomodoroId: state.activePomodoroId,
       }),
-      onRehydrateStorage: (state) => {
-        // 标记 hydration 完成，由组件调用 syncTimeRemaining 来同步
-        // 这样可以确保在组件中正确处理初始状态
-        if (state) {
-          usePomodoroStore.setState({ hasHydrated: true });
-        }
-      },
+      // 不使用 onRehydrateStorage，改为在组件中手动同步
+      // 这样可以避免初始化顺序问题
     },
   ),
 );

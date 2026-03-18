@@ -58,7 +58,7 @@ export class UsersService {
       avatar: user.avatarUrl || undefined,
       nickname: user.nickname || undefined,
       studyGoal: user.studyGoal || undefined,
-      tags: [],
+      tags: (user.tags as any[]) || [],
       focusDuration: user.focusDuration,
       breakDuration: user.breakDuration,
       shortBreakDuration: user.shortBreakDuration,
@@ -327,14 +327,14 @@ export class UsersService {
     });
 
     // 创建日期映射
-    const statsMap = new Map(
+    const statsMap = new Map<string, { pomodoros: number; focusSeconds: number }>(
       stats.map((s) => [
         DateUtil.format(s.statDate, 'YYYY-MM-DD'),
         { pomodoros: s.completedCount, focusSeconds: s.totalFocusSeconds },
       ]),
     );
 
-    const taskStatsMap = new Map(
+    const taskStatsMap = new Map<string, number>(
       taskStats.map((s) => [
         DateUtil.format(s.statDate, 'YYYY-MM-DD'),
         s.completedCount,
@@ -345,7 +345,7 @@ export class UsersService {
     const dateRange = DateUtil.getDateRange(startDate, endDate);
 
     return dateRange.map((date) => {
-      const stat = statsMap.get(date);
+      const stat = statsMap.get(date) ?? null;
       const taskCount = taskStatsMap.get(date) || 0;
 
       return {

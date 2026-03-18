@@ -26,7 +26,7 @@ export function useUserProfile() {
       const response = await api.user.getProfile();
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5分钟
+    staleTime: 60 * 1000, // 1分钟
   });
 }
 
@@ -56,12 +56,11 @@ export function useUpdateProfile() {
       const response = await api.user.updateProfile(data);
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       queryClient.setQueryData(USER_KEYS.profile(), (old: UserProfile | undefined) => {
         if (!old) return old;
-        // variables.tags 已经是完整的 UserTag[] 对象，直接使用
-        const updatedTags = variables.tags !== undefined ? variables.tags : old.tags;
-        return { ...old, ...data, tags: updatedTags };
+        // 使用后端返回的数据更新缓存
+        return { ...old, ...data };
       });
       // 同时使 profile 模块的 stats 缓存失效
       queryClient.invalidateQueries({ queryKey: PROFILE_KEYS.stats() });

@@ -33,9 +33,9 @@ export function useUser() {
       const response = await api.user.getProfile();
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5分钟
-    // 如果已有 authUser，将其作为初始数据
-    initialData: authUser as UserProfile | undefined,
+    staleTime: 60 * 1000, // 1分钟
+    // 使用 placeholderData 而不是 initialData，确保始终会发起请求获取最新数据
+    placeholderData: authUser as UserProfile | undefined,
   });
 
   // 当 profile 数据更新时，同步到 authStore

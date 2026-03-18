@@ -55,11 +55,10 @@ export class UpdateProfileDto {
   @MaxLength(20, { message: 'PIN最多20个字符' })
   pin?: string;
 
-  @ApiPropertyOptional({ description: '用户标签列表 [{id, name, type}]', example: [{ id: 'tag_kaoyan', name: '考研上岸', type: 'custom' }] })
+  @ApiPropertyOptional({ description: '用户标签列表', example: [{ id: 'tag_kaoyan', name: '考研上岸', type: 'custom' }] })
   @IsOptional()
   @IsArray({ message: 'tags 必须是数组' })
-  @IsObject({ each: true, message: 'tags 中每项必须是对象' })
-  tags?: { id: string; name: string; type: string }[];
+  tags?: Array<{ id: string; name: string; type: string }>;
 }
 
 /**

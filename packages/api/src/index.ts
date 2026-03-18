@@ -30,9 +30,6 @@ export {
   STATS_KEYS,
 } from "./hooks/useStats";
 
-// 社区模块 mock（后端暂未实现）
-export { mockCommunityService } from "./mock/services";
-
 // ==================== 统一 API 门面 ====================
 
 import { authService } from "./services/authService";
@@ -41,17 +38,15 @@ import { pomodoroService } from "./services/pomodoroService";
 import { chatService } from "./services/chatService";
 import { statsService } from "./services/statsService";
 import { userService } from "./services/userService";
-import { mockCommunityService } from "./mock/services";
 
 /**
- * 默认 API 实例 — 使用真实后端
+ * 默认 API 实例 — 全部使用真实后端
  */
 export const api = {
   auth: authService,
   task: taskService,
   pomodoro: pomodoroService,
   chat: chatService,
-  community: mockCommunityService, // 社区模块后端未实现，暂用 mock
   stats: statsService,
   user: userService,
 };

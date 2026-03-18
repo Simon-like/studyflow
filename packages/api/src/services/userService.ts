@@ -27,7 +27,7 @@ export const userService = {
    * PUT /api/v1/users/profile
    */
   updateProfile: (data: UpdateProfileRequest) =>
-    http.put<ApiResponse<User>>("/api/v1/users/profile", data),
+    http.put<ApiResponse<UserProfile>>("/api/v1/users/profile", data),
 
   /**
    * 上传头像（自动将 File 转为 Base64）

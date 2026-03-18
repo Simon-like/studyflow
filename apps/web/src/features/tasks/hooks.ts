@@ -12,7 +12,7 @@ export function useTasks() {
   const [filter, setFilter] = useState<TaskFilter>('all');
   const [search, setSearch] = useState('');
 
-  // 从 mock API 获取全部任务
+  // 从后端 API 获取全部任务
   const fetchTasks = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -56,7 +56,7 @@ export function useTasks() {
     [allTasks]
   );
 
-  // 添加任务 - 调用 mock API
+  // 添加任务 - 调用后端 API
   const addTask = useCallback(async (formData: TaskFormData) => {
     if (!formData.title.trim()) return;
 
@@ -73,7 +73,7 @@ export function useTasks() {
     }
   }, [fetchTasks]);
 
-  // 切换任务状态 - 调用 mock API
+  // 切换任务状态 - 调用后端 API
   const toggleStatus = useCallback(async (id: string) => {
     try {
       await api.task.toggleStatus(id);
@@ -84,7 +84,7 @@ export function useTasks() {
     }
   }, [fetchTasks]);
 
-  // 删除任务 - 调用 mock API
+  // 删除任务 - 调用后端 API
   const deleteTask = useCallback(async (id: string) => {
     try {
       await api.task.deleteTask(id);

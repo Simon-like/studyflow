@@ -6,7 +6,12 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "preInstallCommand": "bash eas-hooks/eas-build-pre-install.sh",
+      "onSuccessCommand": "bash eas-hooks/eas-build-on-success.sh"
     },
     "development-simulator": {
       "developmentClient": true,
@@ -15,16 +20,22 @@
       },
       "android": {
         "buildType": "apk"
-      }
+      },
+      "preInstallCommand": "bash eas-hooks/eas-build-pre-install.sh",
+      "onSuccessCommand": "bash eas-hooks/eas-build-on-success.sh"
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
-      }
+      },
+      "preInstallCommand": "bash eas-hooks/eas-build-pre-install.sh",
+      "onSuccessCommand": "bash eas-hooks/eas-build-on-success.sh"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "preInstallCommand": "bash eas-hooks/eas-build-pre-install.sh",
+      "onSuccessCommand": "bash eas-hooks/eas-build-on-success.sh"
     }
   },
   "submit": {
