@@ -2,6 +2,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '@/hooks';
 import { useTabTransition } from '@/hooks/useTabTransition';
 import { TabTransitionWrapper } from '@/components/PageRefresh';
+import { Avatar } from '@/components/ui';
 import {
   Home,
   MessageCircle,
@@ -24,25 +25,21 @@ const navItems = [
 ];
 
 export function MainLayout() {
-  const { user, displayName, logout } = useUser();
+  const { displayName, avatarUrl, logout } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Tab 切换动画管理
-  const { 
-    activeTab, 
-    isTransitioning,
-    getTabLoadingState, 
-    startTabTransition, 
-    endTabTransition 
+  const {
+    getTabLoadingState,
+    startTabTransition,
+    endTabTransition
   } = useTabTransition(location.pathname);
 
   const handleLogout = () => {
     logout();
     navigate('/auth/login');
   };
-
-  const avatarLetter = displayName[0]?.toUpperCase() || 'U';
 
   // 处理导航点击
   const handleNavClick = (to: string) => {
@@ -101,9 +98,12 @@ export function MainLayout() {
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-warm transition-all"
           >
-            <div className="w-8 h-8 bg-coral rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-              {avatarLetter}
-            </div>
+            <Avatar
+              name={displayName}
+              src={avatarUrl}
+              size="sm"
+              color="bg-coral"
+            />
             <div className="flex-1 min-w-0 text-left">
               <p className="text-sm font-medium text-charcoal truncate">{displayName}</p>
               <p className="text-xs text-stone">退出登录</p>

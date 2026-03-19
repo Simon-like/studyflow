@@ -6,6 +6,7 @@ import { useUser, USER_KEYS } from "@/hooks";
 import { usePomodoroStore } from "@/stores/pomodoroStore";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { DurationSelect } from "@/components/ui/DurationSelect";
 import {
   Bell,
   Moon,
@@ -291,48 +292,47 @@ export default function SettingsPage() {
           </div>
           <div className="space-y-4">
             {/* 专注时长 */}
-            <div className="flex justify-between items-center py-2 border-b border-mist/20">
+            <div className="flex justify-between items-center py-3 border-b border-mist/20">
               <span className="text-stone">专注时长</span>
-              <select
+              <DurationSelect
                 value={Math.floor(
                   (localPomodoroSettings?.focusDuration || 1500) / 60,
                 )}
-                onChange={(e) =>
-                  handlePomodoroChange(
-                    "focusDuration",
-                    parseInt(e.target.value) * 60,
-                  )
+                options={[
+                  { value: 15, label: "15分钟" },
+                  { value: 20, label: "20分钟" },
+                  { value: 25, label: "25分钟" },
+                  { value: 30, label: "30分钟" },
+                  { value: 35, label: "35分钟" },
+                  { value: 40, label: "40分钟" },
+                  { value: 45, label: "45分钟" },
+                  { value: 50, label: "50分钟" },
+                  { value: 55, label: "55分钟" },
+                  { value: 60, label: "60分钟" },
+                ]}
+                onChange={(value) =>
+                  handlePomodoroChange("focusDuration", value * 60)
                 }
-                className="bg-warm rounded-lg px-3 py-1.5 text-charcoal text-sm focus:ring-2 focus:ring-coral/30 outline-none"
-              >
-                {[15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((min) => (
-                  <option key={min} value={min}>
-                    {min}分钟
-                  </option>
-                ))}
-              </select>
+              />
             </div>
             {/* 休息时长 */}
-            <div className="flex justify-between items-center py-2">
+            <div className="flex justify-between items-center py-3">
               <span className="text-stone">休息时长</span>
-              <select
+              <DurationSelect
                 value={Math.floor(
                   (localPomodoroSettings?.breakDuration || 300) / 60,
                 )}
-                onChange={(e) =>
-                  handlePomodoroChange(
-                    "breakDuration",
-                    parseInt(e.target.value) * 60,
-                  )
+                options={[
+                  { value: 3, label: "3分钟" },
+                  { value: 5, label: "5分钟" },
+                  { value: 10, label: "10分钟" },
+                  { value: 15, label: "15分钟" },
+                  { value: 20, label: "20分钟" },
+                ]}
+                onChange={(value) =>
+                  handlePomodoroChange("breakDuration", value * 60)
                 }
-                className="bg-warm rounded-lg px-3 py-1.5 text-charcoal text-sm focus:ring-2 focus:ring-coral/30 outline-none"
-              >
-                {[3, 5, 10, 15, 20].map((min) => (
-                  <option key={min} value={min}>
-                    {min}分钟
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           </div>
         </Card>

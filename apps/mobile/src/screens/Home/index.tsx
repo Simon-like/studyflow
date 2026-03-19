@@ -1,7 +1,7 @@
 /**
  * Home 页面
  * 番茄钟 + 任务管理
- * 与 Web Dashboard 数据架构保持一致
+ * 参照 web Dashboard 实现完整的专注-休息流程
  */
 
 import React, { useState, useCallback } from 'react';
@@ -14,7 +14,6 @@ import { PomodoroTimer } from '../../components/business/PomodoroTimer';
 import { WelcomeHeader, StatsRow, SortableTaskList } from './components';
 import { useHomeScreen } from './hooks';
 import { colors, spacing, radius, fontWeight } from '../../theme';
-import { POMODORO_CONFIG } from '../../constants';
 
 const PRIORITY_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   high: { label: '高', color: colors.error, bg: colors.error + '15' },
@@ -22,7 +21,11 @@ const PRIORITY_LABELS: Record<string, { label: string; color: string; bg: string
   low: { label: '低', color: colors.success, bg: colors.success + '15' },
 };
 
-export default function HomeScreen() {
+interface HomeScreenProps {
+  onNavigate?: (screen: string) => void;
+}
+
+export default function HomeScreen({ onNavigate }: HomeScreenProps) {
   const {
     tasks,
     selectedTask,
@@ -39,15 +42,23 @@ export default function HomeScreen() {
     addTask,
     viewStats,
     refresh,
+    navigateTo,
+    clearNavigation,
   } = useHomeScreen();
+
+  // 处理导航请求
+  React.useEffect(() => {
+    if (navigateTo && onNavigate) {
+      onNavigate(navigateTo);
+      clearNavigation();
+    }
+  }, [navigateTo, onNavigate, clearNavigation]);
 
   // 任务详情弹窗
   const [showTaskDetail, setShowTaskDetail] = useState(false);
 
   const handleShowTaskDetail = useCallback(() => {
-    if (displayTask) {
-      setShowTaskDetail(true);
-    }
+    if (displayTask) setShowTaskDetail(true);
   }, [displayTask]);
 
   return (
@@ -64,14 +75,12 @@ export default function HomeScreen() {
               <Text style={styles.detailLabel}>任务名称</Text>
               <Text style={styles.detailTitle}>{displayTask.title}</Text>
             </View>
-
             {displayTask.description ? (
               <View style={styles.detailSection}>
                 <Text style={styles.detailLabel}>任务描述</Text>
                 <Text style={styles.detailDesc}>{displayTask.description}</Text>
               </View>
             ) : null}
-
             <View style={styles.detailRow}>
               <View style={styles.detailSection}>
                 <Text style={styles.detailLabel}>优先级</Text>
@@ -88,23 +97,24 @@ export default function HomeScreen() {
                 </View>
               </View>
             </View>
-
             <View style={styles.detailSection}>
               <Text style={styles.detailLabel}>状态</Text>
               <View style={[styles.detailBadge, {
                 backgroundColor: pomodoro.status === 'running' ? colors.primary + '15' :
                   pomodoro.status === 'paused' ? colors.warning + '15' :
-                  selectedTask?.id === displayTask.id ? colors.warm : colors.warm,
+                  pomodoro.status === 'resting' ? colors.success + '15' :
+                  colors.warm,
               }]}>
                 <Text style={[styles.detailBadgeText, {
                   color: pomodoro.status === 'running' ? colors.primary :
                     pomodoro.status === 'paused' ? colors.warning :
+                    pomodoro.status === 'resting' ? colors.success :
                     colors.text,
                 }]}>
                   {pomodoro.status === 'running' ? '进行中' :
                    pomodoro.status === 'paused' ? '已暂停' :
-                   selectedTask?.id === displayTask.id ? '已选中' :
-                   '待开始'}
+                   pomodoro.status === 'resting' ? '休息中' :
+                   '已选中'}
                 </Text>
               </View>
             </View>
@@ -121,14 +131,14 @@ export default function HomeScreen() {
           <SectionHeader
             title="今日专注"
             right={
-              <Text style={styles.link} onPress={viewStats}>
+              <Text style={styles.link} onPress={() => onNavigate?.('stats')}>
                 查看统计
               </Text>
             }
           />
           <PomodoroTimer
             timeLeft={pomodoro.timeLeft}
-            totalTime={POMODORO_CONFIG.DEFAULT_DURATION}
+            totalTime={pomodoro.totalTime}
             status={pomodoro.status}
             taskTitle={taskStatus.title}
             taskSubtitle={taskStatus.subtitle}
@@ -139,6 +149,9 @@ export default function HomeScreen() {
             onCompleteTask={pomodoro.completeTask}
             onAbandonTask={pomodoro.abandonTask}
             onShowTaskDetail={displayTask ? handleShowTaskDetail : undefined}
+            onExtendRest={pomodoro.extendRest}
+            onEndRestEarly={pomodoro.endRestEarly}
+            onCompleteTaskFromRest={pomodoro.completeTaskFromRest}
           />
         </Card>
       </View>
@@ -176,7 +189,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '600',
   },
-  // 任务详情
   detailContent: {
     flexShrink: 1,
   },
@@ -199,10 +211,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text,
     lineHeight: 20,
-  },
-  detailText: {
-    fontSize: 14,
-    color: colors.text,
   },
   detailRow: {
     flexDirection: 'row',

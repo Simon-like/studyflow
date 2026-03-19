@@ -1,4 +1,4 @@
-export type TimerStatus = 'idle' | 'running' | 'paused' | 'completed';
+export type TimerStatus = 'idle' | 'running' | 'paused' | 'completed' | 'resting';
 
 export interface PomodoroTimerProps {
   timeLeft: number;
@@ -8,10 +8,14 @@ export interface PomodoroTimerProps {
   taskSubtitle?: string;
   taskEmoji?: string;
   pomodoroCount?: string;
-  isTaskBound?: boolean; // 是否绑定任务（自由模式为false）
-  // 三个操作
-  onToggleTimer: () => void;  // 开始/暂停（合一）
-  onCompleteTask: () => void; // 提前完成任务
-  onAbandonTask: () => void;  // 放弃任务（转为自由模式）
-  onShowTaskDetail?: () => void; // 查看任务详情
+  isTaskBound?: boolean;
+  // 专注模式操作
+  onToggleTimer: () => void;
+  onCompleteTask: () => void;
+  onAbandonTask: () => void;
+  onShowTaskDetail?: () => void;
+  // 休息模式操作
+  onExtendRest?: () => void;
+  onEndRestEarly?: () => void;
+  onCompleteTaskFromRest?: () => void;
 }

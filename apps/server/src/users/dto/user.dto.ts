@@ -6,14 +6,34 @@ import {
   IsBoolean,
   IsArray,
   IsObject,
+  IsNotEmpty,
   Min,
   Max,
   MinLength,
   MaxLength,
   Matches,
   IsIn,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+/**
+ * 标签项 DTO
+ */
+export class TagItemDto {
+  @IsString()
+  @IsNotEmpty({ message: '标签 id 不能为空' })
+  id: string;
+
+  @IsString()
+  @IsNotEmpty({ message: '标签名称不能为空' })
+  name: string;
+
+  @IsString()
+  @IsNotEmpty({ message: '标签类型不能为空' })
+  type: string;
+}
 
 /**
  * 更新用户资料 DTO
@@ -58,7 +78,9 @@ export class UpdateProfileDto {
   @ApiPropertyOptional({ description: '用户标签列表', example: [{ id: 'tag_kaoyan', name: '考研上岸', type: 'custom' }] })
   @IsOptional()
   @IsArray({ message: 'tags 必须是数组' })
-  tags?: Array<{ id: string; name: string; type: string }>;
+  @ValidateNested({ each: true })
+  @Type(() => TagItemDto)
+  tags?: TagItemDto[];
 }
 
 /**

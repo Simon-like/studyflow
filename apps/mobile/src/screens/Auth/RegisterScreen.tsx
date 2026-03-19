@@ -108,7 +108,7 @@ export function RegisterScreen({ onGoLogin }: RegisterScreenProps) {
           </Text>
 
           <FormInput
-            label="昵称（可选）"
+            label="昵称"
             placeholder="设置一个昵称"
             value={nickname}
             onChangeText={setNickname}

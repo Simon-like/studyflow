@@ -19,3 +19,6 @@ export type { EmptyStateProps } from './EmptyState';
 
 export { Tabs } from './Tabs';
 export type { TabsProps, TabItem } from './Tabs';
+
+export { DurationSelect } from './DurationSelect';
+export type { DurationOption, DurationSelectProps } from './DurationSelect';

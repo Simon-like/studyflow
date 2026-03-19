@@ -14,7 +14,7 @@ interface FieldErrors {
 
 function FormField({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
-    <div>
+    <div className="space-y-1.5 sm:space-y-2">
       <label className="text-sm text-stone font-medium">{label}</label>
       {children}
       {error && <p className="text-xs text-red-500 mt-1 ml-1">{error}</p>}
@@ -123,16 +123,16 @@ export default function RegisterPage() {
     }
   };
 
-  const inputBase = 'w-full mt-2 px-4 py-3 bg-warm rounded-xl text-charcoal placeholder-mist focus:outline-none focus:ring-2 focus:ring-coral/40 border-[1.5px]';
+  const inputBase = 'w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-warm rounded-xl text-charcoal placeholder-mist focus:outline-none focus:ring-2 focus:ring-coral/40 border-[1.5px] text-sm sm:text-base';
   const inputNormal = `${inputBase} border-transparent`;
   const inputError = `${inputBase} border-red-400`;
 
   return (
     <>
-      <h2 className="font-display text-2xl font-bold text-charcoal mb-2">创建账号</h2>
-      <p className="text-stone mb-8">开启你的高效学习之旅</p>
+      <h2 className="font-display text-xl sm:text-2xl font-bold text-charcoal mb-1 sm:mb-2">创建账号</h2>
+      <p className="text-stone text-sm sm:text-base mb-6 sm:mb-8">开启你的高效学习之旅</p>
 
-      <form onSubmit={handleSubmit} className="space-y-4 flex flex-col gap-4" noValidate>
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 flex flex-col gap-4" noValidate>
         <FormField label="昵称" error={errors.nickname}>
           <input
             type="text"
@@ -181,19 +181,19 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-coral text-white font-semibold py-3 rounded-xl shadow-lg hover:bg-coral-600 transition-colors disabled:opacity-50"
+          className="w-full bg-coral text-white font-semibold py-2.5 sm:py-3 rounded-xl shadow-lg hover:bg-coral-600 transition-colors disabled:opacity-50 text-sm sm:text-base mt-2"
         >
           {isLoading ? '注册中...' : '注册'}
         </button>
       </form>
 
-      <p className="text-xs text-stone text-center mt-4">
-        注册即表示同意<span className="text-coral cursor-pointer">《服务条款》</span>和<span className="text-coral cursor-pointer">《隐私政策》</span>
+      <p className="text-xs text-stone text-center mt-3 sm:mt-4 px-2">
+        注册即表示同意<span className="text-coral cursor-pointer hover:underline">《服务条款》</span>和<span className="text-coral cursor-pointer hover:underline">《隐私政策》</span>
       </p>
 
-      <p className="text-center text-stone text-sm mt-6">
+      <p className="text-center text-stone text-sm mt-4 sm:mt-6">
         已有账号？
-        <Link to="/auth/login" className="text-coral font-semibold cursor-pointer">立即登录</Link>
+        <Link to="/auth/login" className="text-coral font-semibold cursor-pointer hover:underline">立即登录</Link>
       </p>
     </>
   );

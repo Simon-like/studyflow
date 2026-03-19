@@ -7,11 +7,14 @@ import { colors, typography } from '../../../../theme';
 interface TimerRingProps {
   progress: number; // 0-1
   timeDisplay: string;
+  isResting?: boolean;
 }
 
-export function TimerRing({ progress, timeDisplay }: TimerRingProps) {
+export function TimerRing({ progress, timeDisplay, isResting = false }: TimerRingProps) {
   const strokeDashoffset = CIRCUMFERENCE - progress * CIRCUMFERENCE;
-  
+  const strokeColor = isResting ? colors.success : colors.primary;
+  const bgColor = isResting ? colors.success + '20' : colors.primaryLight;
+
   return (
     <View style={styles.container}>
       <Svg width={TIMER_SIZE} height={TIMER_SIZE}>
@@ -20,7 +23,7 @@ export function TimerRing({ progress, timeDisplay }: TimerRingProps) {
           cx={CENTER}
           cy={CENTER}
           r={RADIUS}
-          stroke={colors.primaryLight}
+          stroke={bgColor}
           strokeWidth={8}
           fill="none"
         />
@@ -29,7 +32,7 @@ export function TimerRing({ progress, timeDisplay }: TimerRingProps) {
           cx={CENTER}
           cy={CENTER}
           r={RADIUS}
-          stroke={colors.primary}
+          stroke={strokeColor}
           strokeWidth={8}
           fill="none"
           strokeDasharray={CIRCUMFERENCE}
@@ -41,7 +44,7 @@ export function TimerRing({ progress, timeDisplay }: TimerRingProps) {
       </Svg>
       <View style={styles.timeContainer}>
         <Text style={styles.timeText}>{timeDisplay}</Text>
-        <Text style={styles.labelText}>剩余时间</Text>
+        <Text style={styles.labelText}>{isResting ? '休息中' : '剩余时间'}</Text>
       </View>
     </View>
   );

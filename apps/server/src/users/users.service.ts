@@ -58,7 +58,7 @@ export class UsersService {
       avatar: user.avatarUrl || undefined,
       nickname: user.nickname || undefined,
       studyGoal: user.studyGoal || undefined,
-      tags: (user.tags as any[]) || [],
+      tags: ((user.tags as any[]) || []).filter(t => t && t.id && t.name),
       focusDuration: user.focusDuration,
       breakDuration: user.breakDuration,
       shortBreakDuration: user.shortBreakDuration,
@@ -114,16 +114,18 @@ export class UsersService {
       }
     }
 
-    const updateData: Record<string, unknown> = {
-      nickname: dto.nickname,
-      avatarUrl: dto.avatar,
-      studyGoal: dto.studyGoal,
-      email: dto.email,
-      phone: dto.phone,
-    };
+    const updateData: Record<string, unknown> = {};
 
+    if (dto.nickname !== undefined) updateData.nickname = dto.nickname;
+    if (dto.avatar !== undefined) updateData.avatarUrl = dto.avatar;
+    if (dto.studyGoal !== undefined) updateData.studyGoal = dto.studyGoal;
+    if (dto.email !== undefined) updateData.email = dto.email;
+    if (dto.phone !== undefined) updateData.phone = dto.phone;
     if (dto.tags !== undefined) {
-      updateData.tags = dto.tags;
+      // 过滤无效标签，序列化为纯 JSON 数组，确保 Prisma 正确持久化 JSONB
+      updateData.tags = dto.tags
+        .filter(t => t && t.id && t.name && t.type)
+        .map(t => ({ id: t.id, name: t.name, type: t.type }));
     }
 
     await this.prisma.user.update({

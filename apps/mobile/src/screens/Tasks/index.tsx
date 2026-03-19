@@ -31,14 +31,20 @@ export default function TasksScreen() {
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState<TaskPriority>('medium');
 
-  const [newTaskCategory, setNewTaskCategory] = useState('');
-
   // 获取任务列表
   const fetchTasks = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await api.task.getTasks();
-      setTasks(response.data.list);
+      // 过滤掉过期且未完成的任务
+      const now = new Date();
+      const activeTasks = response.data.list.filter((task: Task) => {
+        if (task.dueDate && task.status !== 'completed') {
+          return new Date(task.dueDate) >= now;
+        }
+        return true;
+      });
+      setTasks(activeTasks);
     } catch (err) {
       console.error('Failed to fetch tasks:', err);
     } finally {
@@ -60,20 +66,16 @@ export default function TasksScreen() {
         title: newTaskTitle.trim(),
         description: newTaskDescription.trim() || undefined,
         priority: newTaskPriority,
-
-        category: newTaskCategory.trim() || undefined,
       });
       setTasks((prev) => [response.data, ...prev]);
       setNewTaskTitle('');
       setNewTaskDescription('');
       setNewTaskPriority('medium');
-
-      setNewTaskCategory('');
       setShowAddModal(false);
     } catch (err) {
       console.error('Failed to add task:', err);
     }
-  }, [newTaskTitle, newTaskCategory]);
+  }, [newTaskTitle, newTaskDescription, newTaskPriority]);
 
   // 切换任务状态
   const handleToggleTask = useCallback(async (taskId: string) => {
@@ -162,7 +164,7 @@ export default function TasksScreen() {
               key={task.id}
               id={task.id}
               title={task.title}
-              subtitle={'未分类'}
+              subtitle={task.description || ''}
               status={
                 task.status === 'completed'
                   ? 'completed'
@@ -184,8 +186,6 @@ export default function TasksScreen() {
           setNewTaskTitle('');
           setNewTaskDescription('');
           setNewTaskPriority('medium');
-    
-          setNewTaskCategory('');
         }}
         title="新建任务"
         footer={
@@ -197,8 +197,6 @@ export default function TasksScreen() {
                 setNewTaskTitle('');
                 setNewTaskDescription('');
                 setNewTaskPriority('medium');
-          
-                setNewTaskCategory('');
               }}
             >
               <Text style={styles.modalButtonCancelText}>取消</Text>
@@ -261,15 +259,6 @@ export default function TasksScreen() {
               </TouchableOpacity>
             ))}
           </View>
-          <Text style={[styles.inputLabel, { marginTop: spacing.md }]}>分类 (可选)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="如：高等数学"
-            placeholderTextColor={colors.textMuted}
-            value={newTaskCategory}
-            onChangeText={setNewTaskCategory}
-            returnKeyType="done"
-          />
         </View>
       </AppModal>
     </ScreenContainer>

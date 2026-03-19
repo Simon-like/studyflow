@@ -25,8 +25,7 @@ const PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: string; bgCo
 };
 
 function formatTaskSubtitle(task: Task): string {
-  // 只显示分类，不再显示番茄数
-  return '未分类';
+  return task.description || PRIORITY_CONFIG[task.priority]?.label || '';
 }
 
 // ==================== 任务卡片 ====================
@@ -136,7 +135,6 @@ export function SortableTaskList({
   const [newDescription, setNewDescription] = useState('');
   const [newPriority, setNewPriority] = useState<TaskPriority>('medium');
 
-  const [newCategory, setNewCategory] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
   // 同步外部 tasks
@@ -190,8 +188,6 @@ export function SortableTaskList({
     setNewTitle('');
     setNewDescription('');
     setNewPriority('medium');
-
-    setNewCategory('');
     setShowAddModal(true);
   }, []);
 
@@ -200,8 +196,6 @@ export function SortableTaskList({
     setNewTitle('');
     setNewDescription('');
     setNewPriority('medium');
-
-    setNewCategory('');
   }, []);
 
   const handleAddTask = useCallback(async () => {
@@ -212,8 +206,6 @@ export function SortableTaskList({
         title: newTitle.trim(),
         description: newDescription.trim() || undefined,
         priority: newPriority,
-
-        category: newCategory.trim() || undefined,
       });
       handleCloseAdd();
       onRefresh?.();
@@ -222,7 +214,7 @@ export function SortableTaskList({
     } finally {
       setIsAdding(false);
     }
-  }, [newTitle, newCategory, handleCloseAdd, onRefresh]);
+  }, [newTitle, newDescription, newPriority, handleCloseAdd, onRefresh]);
 
   // ===== 加载/错误状态 =====
   if (isLoading) {
@@ -322,16 +314,6 @@ export function SortableTaskList({
               </TouchableOpacity>
             ))}
           </View>
-          <Text style={[styles.inputLabel, { marginTop: spacing.md }]}>分类 (可选)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="如：高等数学"
-            placeholderTextColor={colors.textMuted}
-            value={newCategory}
-            onChangeText={setNewCategory}
-            returnKeyType="done"
-            onSubmitEditing={handleAddTask}
-          />
         </View>
       </Modal>
 

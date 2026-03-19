@@ -86,8 +86,12 @@ export class OSSService {
         },
       });
 
-      // 返回完整的访问 URL
-      return result.url;
+      // 返回完整的访问 URL（确保 HTTPS）
+      let url = result.url;
+      if (url.startsWith('http://')) {
+        url = url.replace('http://', 'https://');
+      }
+      return url;
     } catch (error) {
       console.error('OSS 上传失败:', error);
       throw new InternalServerErrorException('头像上传失败，请稍后重试');

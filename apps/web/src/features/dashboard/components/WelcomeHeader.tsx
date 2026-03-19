@@ -3,9 +3,10 @@ import { Avatar } from '@/components/ui';
 
 interface WelcomeHeaderProps {
   displayName: string;
+  avatarUrl?: string;
 }
 
-export function WelcomeHeader({ displayName }: WelcomeHeaderProps) {
+export function WelcomeHeader({ displayName, avatarUrl }: WelcomeHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-10">
       <div>
@@ -15,7 +16,13 @@ export function WelcomeHeader({ displayName }: WelcomeHeaderProps) {
         </h1>
       </div>
       <Link to="/profile">
-        <Avatar name={displayName} size="lg" color="bg-coral" className="shadow-coral" />
+        <Avatar
+          name={displayName}
+          src={avatarUrl}
+          size="lg"
+          color="bg-coral"
+          className="shadow-coral"
+        />
       </Link>
     </div>
   );

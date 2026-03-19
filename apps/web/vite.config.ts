@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      port: 5173,
+      port: 5180,
       proxy: {
         // 开发时代理 API 请求到后端
         "/api": {

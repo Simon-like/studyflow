@@ -1,23 +1,51 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Card } from '../../../components/ui/Card';
 import { SectionHeader } from '../../../components/layout/SectionHeader';
 import { colors, radius, spacing, fontWeight, fontSize, alpha } from '../../../theme';
-import { ACHIEVEMENTS } from '../constants';
+import type { UserStats } from '@studyflow/shared';
 
-const UNLOCKED_COUNT = ACHIEVEMENTS.filter(a => a.unlocked).length;
+interface AchievementDef {
+  id: string;
+  icon: string;
+  title: string;
+  desc: string;
+  check: (stats: UserStats) => boolean;
+}
 
-export function Achievements() {
+const ACHIEVEMENT_DEFS: AchievementDef[] = [
+  { id: '1', icon: '⚡', title: '专注达人', desc: '累计专注超过1小时', check: (s) => s.totalFocusMinutes >= 60 },
+  { id: '2', icon: '🎯', title: '任务完成者', desc: '完成10个任务', check: (s) => s.completedTasks >= 10 },
+  { id: '3', icon: '🔥', title: '连续打卡', desc: '连续7天打卡', check: (s) => s.longestStreak >= 7 },
+  { id: '4', icon: '📚', title: '知识探索者', desc: '累计学习100小时', check: (s) => s.totalFocusMinutes >= 6000 },
+  { id: '5', icon: '🏆', title: '番茄大师', desc: '累计完成100个番茄', check: (s) => s.totalPomodoros >= 100 },
+  { id: '6', icon: '🌟', title: '坚持之星', desc: '累计学习30天', check: (s) => s.studyDays >= 30 },
+];
+
+interface AchievementsProps {
+  userStats?: UserStats;
+}
+
+export function Achievements({ userStats }: AchievementsProps) {
+  const achievements = useMemo(() => {
+    return ACHIEVEMENT_DEFS.map(def => ({
+      ...def,
+      unlocked: userStats ? def.check(userStats) : false,
+    }));
+  }, [userStats]);
+
+  const unlockedCount = achievements.filter(a => a.unlocked).length;
+
   return (
     <Card>
       <SectionHeader
         title="成就徽章"
-        right={<Text style={styles.progress}>{UNLOCKED_COUNT}/{ACHIEVEMENTS.length} 已解锁</Text>}
+        right={<Text style={styles.progress}>{unlockedCount}/{achievements.length} 已解锁</Text>}
       />
       <View style={styles.grid}>
-        {ACHIEVEMENTS.map(achievement => (
+        {achievements.map(achievement => (
           <View
-            key={achievement.title}
+            key={achievement.id}
             style={[
               styles.item,
               !achievement.unlocked && styles.locked,

@@ -9,6 +9,9 @@ interface TimerControlsProps {
   onToggleTimer: () => void;
   onCompleteTask: () => void;
   onAbandonTask: () => void;
+  onExtendRest?: () => void;
+  onEndRestEarly?: () => void;
+  onCompleteTaskFromRest?: () => void;
 }
 
 export function TimerControls({
@@ -17,20 +20,73 @@ export function TimerControls({
   onToggleTimer,
   onCompleteTask,
   onAbandonTask,
+  onExtendRest,
+  onEndRestEarly,
+  onCompleteTaskFromRest,
 }: TimerControlsProps) {
+  const isResting = status === 'resting';
+
+  // 休息状态的操作区域
+  if (isResting) {
+    return (
+      <View style={styles.container}>
+        {/* 延长休息 5 分钟（主按钮） */}
+        <TouchableOpacity
+          style={[styles.primaryButton, styles.restButton]}
+          onPress={onExtendRest}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.primaryButtonText}>延长5min</Text>
+        </TouchableOpacity>
+
+        {/* 次要操作 */}
+        <View style={styles.secondaryRow}>
+          {isTaskBound ? (
+            <>
+              {/* 任务模式：完成任务 + 结束休息 */}
+              <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={onCompleteTaskFromRest}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.secondaryIcon}>✓</Text>
+                <Text style={styles.secondaryText}>完成任务</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.secondaryButton}
+                onPress={onEndRestEarly}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.secondaryIcon}>■</Text>
+                <Text style={styles.secondaryText}>结束休息</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            /* 自由模式：仅结束休息 */
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={onEndRestEarly}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.secondaryIcon}>■</Text>
+              <Text style={styles.secondaryText}>结束休息</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
+  }
+
+  // 专注状态的操作区域
   const isRunning = status === 'running';
   const isPaused = status === 'paused';
   const isIdle = status === 'idle';
-
-  const showPlay = !isRunning;
-  // 完成按钮禁用条件：未绑定任务且计时器未运行（自由模式下必须开始计时后才能完成）
   const isCompleteDisabled = !isTaskBound && isIdle;
 
   return (
     <View style={styles.container}>
       {/* 第一行：完成、放弃任务 */}
       <View style={styles.secondaryRow}>
-        {/* 提前完成任务 */}
         <TouchableOpacity
           style={[styles.secondaryButton, isCompleteDisabled && styles.secondaryButtonDisabled]}
           onPress={onCompleteTask}
@@ -41,7 +97,6 @@ export function TimerControls({
           <Text style={[styles.secondaryText, isCompleteDisabled && styles.secondaryTextDisabled]}>完成</Text>
         </TouchableOpacity>
 
-        {/* 放弃任务（始终可用） */}
         <TouchableOpacity
           style={styles.secondaryButton}
           onPress={onAbandonTask}
@@ -53,12 +108,12 @@ export function TimerControls({
       </View>
 
       {/* 主操作：开始/暂停 */}
-      <TouchableOpacity 
-        style={[styles.primaryButton, isRunning && styles.primaryButtonPaused]} 
+      <TouchableOpacity
+        style={[styles.primaryButton, isRunning && styles.primaryButtonPaused]}
         onPress={onToggleTimer}
         activeOpacity={0.8}
       >
-        {showPlay ? (
+        {!isRunning ? (
           <View style={styles.playIcon} />
         ) : (
           <View style={styles.pauseContainer}>
@@ -79,7 +134,6 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: spacing.md,
   },
-  // 次要操作行
   secondaryRow: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -112,7 +166,6 @@ const styles = StyleSheet.create({
   secondaryTextDisabled: {
     color: colors.textMuted,
   },
-  // 主操作按钮
   primaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -132,6 +185,10 @@ const styles = StyleSheet.create({
   primaryButtonPaused: {
     backgroundColor: colors.warning,
     shadowColor: colors.warning,
+  },
+  restButton: {
+    backgroundColor: colors.success,
+    shadowColor: colors.success,
   },
   primaryButtonText: {
     fontSize: 16,

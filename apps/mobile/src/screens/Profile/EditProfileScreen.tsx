@@ -14,12 +14,12 @@ import {
   Alert,
   Modal,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { Button } from '../../components/ui/Button';
 import { Icon } from '../../components/ui/Icon';
-import { Badge } from '../../components/ui/Badge';
 import { useProfileData, useUpdateProfile, useUploadAvatar } from './hooks';
-import { colors, spacing, radius, fontSize, fontWeight, shadows } from '../../theme';
+import { colors, spacing, radius, fontSize, fontWeight } from '../../theme';
 import type { UpdateProfileRequest, UserTag } from '@studyflow/shared';
 import { PRESET_USER_TAGS, MAX_USER_TAGS } from '@studyflow/shared';
 
@@ -37,6 +37,7 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
     studyGoal: profile?.studyGoal || '',
   });
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [customTags, setCustomTags] = useState<{ id: string; name: string; type: 'custom' }[]>([]);
   const [showCustomTagModal, setShowCustomTagModal] = useState(false);
   const [customTagName, setCustomTagName] = useState('');
 
@@ -47,7 +48,14 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
         nickname: profile.nickname || '',
         studyGoal: profile.studyGoal || '',
       });
-      setSelectedTags(profile.tags?.map(t => t.id) || []);
+      const validTags = (profile.tags || []).filter(t => t?.id && t?.name);
+      setSelectedTags(validTags.map(t => t.id));
+      // 从已保存的标签中还原出不在预设列表里的自定义标签
+      const presetIds = new Set(PRESET_USER_TAGS.map(t => t.id));
+      const savedCustom = validTags
+        .filter(t => !presetIds.has(t.id))
+        .map(t => ({ id: t.id, name: t.name, type: 'custom' as const }));
+      setCustomTags(savedCustom);
     }
   }, [profile]);
 
@@ -70,59 +78,62 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
 
   const handleAddCustomTag = () => {
     if (!customTagName.trim()) return;
-    
+
     if (selectedTags.length >= MAX_USER_TAGS) {
       Alert.alert('提示', `最多只能添加${MAX_USER_TAGS}个标签，请先删除一些标签再添加。`);
       return;
     }
 
     const customTagId = `custom_${Date.now()}`;
-    const newTag = {
-      id: customTagId,
-      name: customTagName.trim(),
-      type: 'custom' as const,
-      description: '用户自定义标签'
-    };
-
-    // 添加到预设标签列表（临时）
-    (PRESET_USER_TAGS as any).push(newTag);
-    
-    // 添加到选中的标签
+    setCustomTags(prev => [...prev, { id: customTagId, name: customTagName.trim(), type: 'custom' }]);
     setSelectedTags(prev => [...prev, customTagId]);
-    
     setCustomTagName('');
     setShowCustomTagModal(false);
   };
 
+  const pickImage = async (useCamera: boolean) => {
+    const permissionResult = useCamera
+      ? await ImagePicker.requestCameraPermissionsAsync()
+      : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      Alert.alert('提示', useCamera ? '需要相机权限才能拍照' : '需要相册权限才能选择图片');
+      return;
+    }
+
+    const result = useCamera
+      ? await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [1, 1], quality: 0.8 })
+      : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
+
+    if (result.canceled || !result.assets?.[0]) return;
+
+    const asset = result.assets[0];
+    const uri = asset.uri;
+    const name = uri.split('/').pop() || 'avatar.jpg';
+    const type = asset.mimeType || 'image/jpeg';
+
+    try {
+      await uploadAvatar.mutateAsync({ uri, name, type });
+    } catch {
+      Alert.alert('提示', '头像上传失败，请稍后重试');
+    }
+  };
+
   const handleAvatarPress = () => {
-    // 在React Native中使用ImagePicker
     Alert.alert('更换头像', '选择图片来源', [
-      { text: '拍照', onPress: () => console.log('Camera') },
-      { text: '从相册选择', onPress: () => console.log('Gallery') },
+      { text: '拍照', onPress: () => pickImage(true) },
+      { text: '从相册选择', onPress: () => pickImage(false) },
       { text: '取消', style: 'cancel' },
     ]);
   };
 
   const handleSubmit = async () => {
     // 将选中的标签ID转换为UserTag数组
+    const allTags = [...PRESET_USER_TAGS, ...customTags];
     const selectedUserTags: UserTag[] = selectedTags
-      .map(tagId => {
-        const presetTag = PRESET_USER_TAGS.find(t => t.id === tagId);
-        if (presetTag) {
-          return presetTag;
-        }
-        // 自定义标签
-        if (tagId.startsWith('custom_')) {
-          return {
-            id: tagId,
-            name: tagId.replace('custom_', ''),
-            type: 'custom' as const,
-          };
-        }
-        return null;
-      })
-      .filter((t): t is NonNullable<typeof t> => t !== null);
-    
+      .map(tagId => allTags.find(t => t.id === tagId))
+      .filter((t): t is UserTag => t !== undefined);
+
     await updateProfile.mutateAsync({ ...formData, tags: selectedUserTags });
     onBack();
   };
@@ -218,25 +229,13 @@ export function EditProfileScreen({ onBack }: EditProfileScreenProps) {
             <Text style={styles.helperText}>手机号不可修改</Text>
           </View>
 
-          {/* Email - 只读 */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>邮箱</Text>
-            <TextInput
-              value={profile?.email || ''}
-              editable={false}
-              style={[styles.input, styles.readOnlyInput]}
-              placeholderTextColor={colors.textMuted}
-            />
-            <Text style={styles.helperText}>邮箱暂不可修改</Text>
-          </View>
-
           {/* Tags */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>
               个人标签 (最多{MAX_USER_TAGS}个)
             </Text>
             <View style={styles.tagsContainer}>
-              {PRESET_USER_TAGS.map((tag) => (
+              {[...PRESET_USER_TAGS, ...customTags].map((tag) => (
                 <TouchableOpacity
                   key={tag.id}
                   onPress={() => handleTagToggle(tag.id)}
@@ -540,8 +539,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   readOnlyInput: {
-    backgroundColor: colors.border,
-    color: colors.textMuted,
+    backgroundColor: colors.background,
+    color: colors.text,
+    borderColor: colors.border,
   },
   modalButtons: {
     flexDirection: 'row',

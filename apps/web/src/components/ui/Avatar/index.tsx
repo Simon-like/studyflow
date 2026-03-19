@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { AvatarProps } from './types';
 import { AVATAR_SIZES, AVATAR_COLORS, AVATAR_BASE_CLASSES } from './constants';
 
@@ -13,6 +14,12 @@ export function Avatar({
   color,
   className = '',
 }: AvatarProps) {
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [src]);
+
   const classes = [
     AVATAR_BASE_CLASSES,
     AVATAR_SIZES[size],
@@ -21,12 +28,14 @@ export function Avatar({
   ].join(' ');
 
   const initial = name[0]?.toUpperCase() || '?';
+  const hasValidImage = Boolean(src) && !imageError;
 
-  if (src) {
+  if (hasValidImage) {
     return (
       <img
         src={src}
         alt={name}
+        onError={() => setImageError(true)}
         className={`${AVATAR_SIZES[size]} rounded-full object-cover ${className}`}
       />
     );

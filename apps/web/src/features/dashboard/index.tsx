@@ -20,6 +20,7 @@ import { getApiErrorMessage } from '@/lib/utils';
 export default function DashboardPage() {
   const {
     displayName,
+    avatarUrl,
     todayTasks,
     weeklyStats,
     isLoading,
@@ -490,7 +491,7 @@ export default function DashboardPage() {
         </Portal>
       )}
 
-      <WelcomeHeader displayName={displayName} />
+      <WelcomeHeader displayName={displayName} avatarUrl={avatarUrl} />
       <StatsStrip stats={weeklyStats} isLoading={isLoading} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

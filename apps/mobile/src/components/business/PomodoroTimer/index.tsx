@@ -21,19 +21,23 @@ export function PomodoroTimer({
   onCompleteTask,
   onAbandonTask,
   onShowTaskDetail,
+  onExtendRest,
+  onEndRestEarly,
+  onCompleteTaskFromRest,
 }: PomodoroTimerProps) {
-  const progress = (totalTime - timeLeft) / totalTime;
+  const isResting = status === 'resting';
+  const progress = totalTime > 0 ? (totalTime - timeLeft) / totalTime : 0;
   const timeDisplay = formatTime(timeLeft);
 
   return (
     <View style={styles.container}>
-      <TimerRing progress={progress} timeDisplay={timeDisplay} />
+      <TimerRing progress={progress} timeDisplay={timeDisplay} isResting={isResting} />
       <TaskInfo
-        title={taskTitle}
-        subtitle={taskSubtitle}
-        emoji={taskEmoji}
-        pomodoroCount={pomodoroCount}
-        onShowDetail={onShowTaskDetail}
+        title={isResting ? '休息时间' : taskTitle}
+        subtitle={isResting ? '放松一下，准备下一轮' : taskSubtitle}
+        emoji={isResting ? '☕' : taskEmoji}
+        pomodoroCount={isResting ? '休息中' : pomodoroCount}
+        onShowDetail={isResting ? undefined : onShowTaskDetail}
       />
       <TimerControls
         status={status}
@@ -41,6 +45,9 @@ export function PomodoroTimer({
         onToggleTimer={onToggleTimer}
         onCompleteTask={onCompleteTask}
         onAbandonTask={onAbandonTask}
+        onExtendRest={onExtendRest}
+        onEndRestEarly={onEndRestEarly}
+        onCompleteTaskFromRest={onCompleteTaskFromRest}
       />
     </View>
   );

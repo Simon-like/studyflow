@@ -43,11 +43,12 @@ export default function EditProfilePage() {
         nickname: profile.nickname || '',
         studyGoal: profile.studyGoal || '',
       });
-      const savedIds = profile.tags?.map((t) => t.id) || [];
+      const validTags = (profile.tags || []).filter((t) => t?.id && t?.name);
+      const savedIds = validTags.map((t) => t.id);
       setSelectedTagIds(savedIds);
       // 从已保存的标签中还原出不在预设列表里的自定义标签
       const presetIds = new Set<string>(PRESET_USER_TAGS.map((t) => t.id));
-      const savedCustom = (profile.tags || [])
+      const savedCustom = validTags
         .filter((t) => !presetIds.has(t.id))
         .map((t) => ({ id: t.id, name: t.name, type: 'custom' as const }));
       setCustomTags(savedCustom);
@@ -58,7 +59,7 @@ export default function EditProfilePage() {
   // 检测表单是否被修改
   useEffect(() => {
     if (!profile) return;
-    const initialIds = (profile.tags || []).map((t) => t.id).sort().join(',');
+    const initialIds = (profile.tags || []).filter((t) => t?.id && t?.name).map((t) => t.id).sort().join(',');
     const currentIds = [...selectedTagIds].sort().join(',');
     const hasChanges =
       formData.nickname !== (profile.nickname || '') ||

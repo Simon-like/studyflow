@@ -48,8 +48,8 @@ export function ProfileHeader({
             {studyGoal} · <span className="text-coral">坚持学习中</span>
           </p>
           <div className="flex gap-2 mt-3 flex-wrap">
-            {tags && tags.length > 0 ? (
-              tags.map((tag) => (
+            {tags && tags.filter(t => t?.id && t?.name).length > 0 ? (
+              tags.filter(t => t?.id && t?.name).map((tag) => (
                 <Badge
                   key={tag.id}
                   variant={tag.type === 'achievement' ? 'primary' : tag.type === 'system' ? 'success' : 'default'}

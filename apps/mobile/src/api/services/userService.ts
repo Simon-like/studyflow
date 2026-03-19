@@ -31,11 +31,9 @@ export const userService = {
   updateProfile: (data: UpdateProfileRequest) =>
     http.put<ApiResponse<UserProfile>>(API_ENDPOINTS.USER.PROFILE, data),
 
-  // 上传头像
-  uploadAvatar: (formData: FormData) =>
-    http.post<ApiResponse<{ avatar: string }>>(API_ENDPOINTS.USER.AVATAR, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
+  // 上传头像（base64 JSON 格式）
+  uploadAvatar: (data: { avatar: string }) =>
+    http.post<ApiResponse<{ avatarUrl: string }>>(API_ENDPOINTS.USER.AVATAR, data),
 
   // 获取番茄钟设置
   getPomodoroSettings: () =>

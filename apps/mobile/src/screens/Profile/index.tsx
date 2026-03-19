@@ -11,7 +11,6 @@ import {
   StatsCard,
   WeeklyChart,
   Achievements,
-  // StudyGoals, // 功能搁置
   MenuList,
   LogoutButton,
 } from './components';
@@ -34,14 +33,10 @@ export default function ProfileScreen() {
       case '学习统计':
         setScreenState('stats');
         break;
-      case '成就中心':
-        // 导航到成就页面
-        break;
       case '设置':
         setScreenState('settings');
         break;
       case '帮助与反馈':
-        // 导航到帮助页面
         break;
       default:
         break;
@@ -59,59 +54,44 @@ export default function ProfileScreen() {
     );
   }
 
-  // 编辑资料页面
   if (screenState === 'edit') {
     return <EditProfileScreen onBack={() => setScreenState('main')} />;
   }
 
-  // 设置页面
   if (screenState === 'settings') {
     return <SettingsScreen onBack={() => setScreenState('main')} />;
   }
 
-  // 统计页面
   if (screenState === 'stats') {
     return <StatsScreen onBack={() => setScreenState('main')} />;
   }
 
-  // 主页面
   return (
     <ScreenContainer>
-      {/* 个人资料头部 */}
-      <ProfileHeader 
-        onEditPress={() => setScreenState('edit')} 
+      <ProfileHeader
+        onEditPress={() => setScreenState('edit')}
         displayName={displayName}
         avatarUrl={avatarUrl}
         subtitle={subtitle}
         tags={tags}
       />
-      
-      {/* 统计数据卡片 */}
+
       <StatsCard stats={stats} />
-      
-      {/* 本周学习时长 */}
+
       <View style={styles.section}>
         <WeeklyChart />
       </View>
-      
-      {/* 成就徽章 */}
+
       <View style={styles.section}>
-        <Achievements />
+        <Achievements userStats={stats} />
       </View>
-      
-      {/* 学习目标 - 功能搁置 */}
-      {/* <View style={styles.section}>
-        <StudyGoals />
-      </View> */}
-      
-      {/* 菜单列表 */}
+
       <View style={styles.section}>
         <MenuList onItemPress={handleMenuPress} />
       </View>
-      
-      {/* 退出登录 */}
+
       <LogoutButton onPress={handleLogout} />
-      
+
       <View style={styles.bottomPadding} />
     </ScreenContainer>
   );

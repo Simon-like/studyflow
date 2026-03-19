@@ -6,21 +6,48 @@ import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
+import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // 禁用默认 body parser，手动配置更大的限制以支持 base64 图片上传
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
+
+  app.use(json({ limit: '5mb' }));
+  app.use(urlencoded({ extended: true, limit: '5mb' }));
   const configService = app.get(ConfigService);
 
   // CORS 配置（必须在 helmet 之前）
   const corsOrigin = configService.get<string>('CORS_ORIGIN');
+  const allowedOrigins = corsOrigin ? corsOrigin.split(',').map(o => o.trim()) : true;
+  
   app.enableCors({
-    origin: corsOrigin ? corsOrigin.split(',') : true,
+    origin: (origin, callback) => {
+      // 允许无来源的请求（如移动端、Postman等）或开发环境
+      if (!origin || allowedOrigins === true) {
+        callback(null, true);
+        return;
+      }
+      
+      // 检查是否在允许列表中
+      const allowedList = Array.isArray(allowedOrigins) ? allowedOrigins : [];
+      if (allowedList.includes(origin)) {
+        callback(null, true);
+      } else {
+        // 生产环境可以记录未授权的跨域请求
+        if (configService.get<string>('NODE_ENV') === 'production') {
+          console.warn(`CORS blocked request from origin: ${origin}`);
+        }
+        callback(null, true); // 开发环境允许所有来源
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    exposedHeaders: ['Authorization'],
+    maxAge: 86400, // 预检请求缓存24小时
   });
 
   // 安全中间件

@@ -12,7 +12,6 @@ import { useStatsScreen, getPeriodText } from './hooks';
 import { PeriodSelector } from './components/PeriodSelector';
 import { OverviewGrid } from './components/OverviewGrid';
 import { WeeklyChart } from './components/WeeklyChart';
-import { SubjectDistribution } from './components/SubjectDistribution';
 
 // 使用 SVG 代替 lucide-react-native 避免依赖问题
 const RefreshIcon = () => (
@@ -31,8 +30,7 @@ export default function StatsScreen({ onBack }: StatsScreenProps) {
   const {
     period,
     setPeriod,
-    weeklyData,
-    subjectDistribution,
+    chartData,
     overviewData,
     userStats,
     isLoading,
@@ -84,15 +82,11 @@ export default function StatsScreen({ onBack }: StatsScreenProps) {
           isLoading={isLoading}
         />
 
-        {/* 本周学习柱状图 */}
+        {/* 学习柱状图 */}
         <View style={styles.section}>
-          <WeeklyChart data={weeklyData} isLoading={isLoading} />
-        </View>
-
-        {/* 学科分布 */}
-        <View style={styles.section}>
-          <SubjectDistribution 
-            data={subjectDistribution} 
+          <WeeklyChart
+            data={chartData}
+            title={`${getPeriodText(period)}学习时长`}
             isLoading={isLoading}
           />
         </View>

@@ -27,15 +27,11 @@ import TasksScreen from '../screens/Tasks';
 import CompanionScreen from '../screens/Companion';
 import CommunityScreen from '../screens/Community';
 import ProfileScreen from '../screens/Profile';
+import StatsScreen from '../screens/Stats';
 import AuthModule from '../screens/Auth';
 
-const SCREENS: Record<TabKey, React.ComponentType> = {
-  home: HomeScreen,
-  tasks: TasksScreen,
-  companion: CompanionScreen,
-  community: CommunityScreen,
-  profile: ProfileScreen,
-};
+// 可叠加的全屏页面
+type OverlayScreen = 'stats' | null;
 
 /**
  * 内部导航组件（使用 AuthContext）
@@ -43,7 +39,8 @@ const SCREENS: Record<TabKey, React.ComponentType> = {
 function NavigationContent() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>('home');
-  
+  const [overlay, setOverlay] = useState<OverlayScreen>(null);
+
   // Tab 切换动画管理
   const {
     getTabLoadingState,
@@ -52,25 +49,27 @@ function NavigationContent() {
     setTabLoading,
   } = useTabTransition('home');
 
-  const ActiveScreen = SCREENS[activeTab];
-
   // 处理 Tab 切换
   const handleTabPress = useCallback((tabKey: TabKey) => {
     if (tabKey === activeTab) return;
-    
-    // 开始 Tab 切换动画
+
     startTabTransition(tabKey);
     setActiveTab(tabKey);
-    
-    // 模拟加载过程（实际应用中这里应该等待数据加载完成）
-    // 这里设置 loading 状态，Screen 组件内部应该在数据加载完成后调用 setTabLoading(tabKey, false)
     setTabLoading(tabKey, true);
-    
-    // 模拟数据加载完成（实际应用中应该在数据获取后调用）
     setTimeout(() => {
       setTabLoading(tabKey, false);
     }, 600);
   }, [activeTab, startTabTransition, setTabLoading]);
+
+  // 跨页面导航（子页面调用）
+  const handleNavigate = useCallback((screen: string) => {
+    const tabKeys: Record<string, TabKey> = { home: 'home', tasks: 'tasks', companion: 'companion', community: 'community', profile: 'profile' };
+    if (tabKeys[screen]) {
+      handleTabPress(tabKeys[screen]);
+    } else if (screen === 'stats') {
+      setOverlay('stats');
+    }
+  }, [handleTabPress]);
 
   // 加载中显示空白（或可以添加 Loading 组件）
   if (authLoading) {
@@ -95,6 +94,32 @@ function NavigationContent() {
   // Android底部安全区内边距
   const bottomPadding = Platform.OS === 'android' ? ANDROID_NAV_BAR_HEIGHT : 0;
 
+  // 叠加页面（全屏覆盖 tabs）
+  if (overlay === 'stats') {
+    return (
+      <View style={styles.container}>
+        <StatusBar style="dark" />
+        <StatsScreen onBack={() => setOverlay(null)} />
+      </View>
+    );
+  }
+
+  // 渲染当前 tab 页面
+  const renderScreen = () => {
+    switch (activeTab) {
+      case 'home':
+        return <HomeScreen onNavigate={handleNavigate} />;
+      case 'tasks':
+        return <TasksScreen />;
+      case 'companion':
+        return <CompanionScreen />;
+      case 'community':
+        return <CommunityScreen />;
+      case 'profile':
+        return <ProfileScreen />;
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
@@ -106,7 +131,7 @@ function NavigationContent() {
           isLoading={getTabLoadingState(activeTab).isLoading}
           onTransitionEnd={endTabTransition}
         >
-          <ActiveScreen />
+          {renderScreen()}
         </TabTransitionWrapper>
       </View>
 

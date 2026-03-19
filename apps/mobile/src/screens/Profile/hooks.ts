@@ -112,21 +112,27 @@ export function useUpdateProfile() {
 }
 
 /**
- * 上传头像 - 使统一的用户资料缓存失效
+ * 上传头像 - 将图片转为 base64 后上传
  */
 export function useUploadAvatar() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (file: { uri: string; name: string; type: string }) => {
-      // React Native 中使用 FormData
-      const formData = new FormData();
-      formData.append('avatar', file as any);
-      const response = await api.user.uploadAvatar(formData as any);
-      return response.data;
+      // 读取图片文件并转为 base64
+      const response = await fetch(file.uri);
+      const blob = await response.blob();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      const result = await api.user.uploadAvatar({ avatar: base64 });
+      return result.data;
     },
     onSuccess: () => {
-      // 使用统一的 USER_KEYS 使缓存失效
       queryClient.invalidateQueries({ queryKey: USER_KEYS.profile() });
       toast.success('头像上传成功');
     },

@@ -259,7 +259,7 @@ export function useDashboardSummary(): UseDashboardSummaryReturn {
 // ==================== Dashboard 主数据 Hook ====================
 
 export function useDashboardData() {
-  const { displayName } = useUser();
+  const { displayName, avatarUrl } = useUser();
 
   const { stats, todayStats, isLoading: statsLoading, refetch: refetchStats } = useDashboardStats();
   const { tasks, isLoading: tasksLoading, error, toggleTask: rawToggleTask, reorderTasks, refetch: refetchTasks } = useDashboardTasks();
@@ -282,6 +282,7 @@ export function useDashboardData() {
 
   return {
     displayName,
+    avatarUrl,
     todayTasks: tasks,
     weeklyStats: stats,
     todayStats,

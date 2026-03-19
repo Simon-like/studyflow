@@ -3,21 +3,21 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Card } from '../../../components/ui/Card';
 import { SectionHeader } from '../../../components/layout/SectionHeader';
 import { colors, radius, spacing, fontSize } from '../../../theme';
+import type { ChartItem } from '../hooks';
 
 interface WeeklyChartProps {
-  data: number[];
+  data: ChartItem[];
+  title?: string;
   isLoading?: boolean;
 }
 
-const WEEK_DAYS = ['一', '二', '三', '四', '五', '六', '日'];
-
-export function WeeklyChart({ data, isLoading }: WeeklyChartProps) {
-  const maxValue = Math.max(...(data.length > 0 ? data : [1]), 1);
+export function WeeklyChart({ data, title = '学习时长', isLoading }: WeeklyChartProps) {
+  const maxValue = Math.max(...(data.length > 0 ? data.map((d) => d.hours) : [1]), 0.1);
 
   if (isLoading) {
     return (
       <Card style={styles.container}>
-        <SectionHeader title="本周学习时长" />
+        <SectionHeader title={title} />
         <View style={styles.chart}>
           {Array.from({ length: 7 }).map((_, i) => (
             <View key={i} style={styles.barItem}>
@@ -34,7 +34,7 @@ export function WeeklyChart({ data, isLoading }: WeeklyChartProps) {
   if (data.length === 0) {
     return (
       <Card style={styles.container}>
-        <SectionHeader title="本周学习时长" />
+        <SectionHeader title={title} />
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>暂无数据</Text>
         </View>
@@ -44,20 +44,20 @@ export function WeeklyChart({ data, isLoading }: WeeklyChartProps) {
 
   return (
     <Card style={styles.container}>
-      <SectionHeader title="本周学习时长" />
+      <SectionHeader title={title} />
       <View style={styles.chart}>
-        {data.map((value, index) => (
+        {data.map((item, index) => (
           <View key={index} style={styles.barItem}>
-            <Text style={styles.value}>{value.toFixed(1)}h</Text>
+            <Text style={styles.value}>{item.hours.toFixed(1)}h</Text>
             <View style={styles.track}>
               <View
                 style={[
                   styles.fill,
-                  { height: `${Math.max((value / maxValue) * 100, 5)}%` },
+                  { height: `${Math.max((item.hours / maxValue) * 100, 5)}%` },
                 ]}
               />
             </View>
-            <Text style={styles.day}>{WEEK_DAYS[index]}</Text>
+            <Text style={styles.day}>{item.label}</Text>
           </View>
         ))}
       </View>

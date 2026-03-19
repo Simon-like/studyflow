@@ -50,10 +50,10 @@ export function ProfileHeader({
         <Text style={styles.subtitle}>{subtitle}</Text>
         
         <View style={styles.badges}>
-          {tags && tags.length > 0 ? (
-            tags.map((tag) => (
-              <Badge 
-                key={tag.id} 
+          {tags && tags.filter(t => t?.id && t?.name).length > 0 ? (
+            tags.filter(t => t?.id && t?.name).map((tag) => (
+              <Badge
+                key={tag.id}
                 variant={tag.type === 'achievement' ? 'primary' : tag.type === 'system' ? 'success' : 'secondary'}
               >
                 {tag.name}

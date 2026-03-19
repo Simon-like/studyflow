@@ -27,6 +27,13 @@ const withSuspense = (Component: React.ComponentType) => (
   </Suspense>
 );
 
+// 包装组件，无 loading 动画（用于登录注册等简单页面）
+const withSuspenseNoLoading = (Component: React.ComponentType) => (
+  <Suspense fallback={null}>
+    <Component />
+  </Suspense>
+);
+
 export const router: ReturnType<typeof createBrowserRouter> = createBrowserRouter([
   // 认证路由
   {
@@ -35,11 +42,11 @@ export const router: ReturnType<typeof createBrowserRouter> = createBrowserRoute
     children: [
       {
         path: 'login',
-        element: withSuspense(LoginPage),
+        element: withSuspenseNoLoading(LoginPage),
       },
       {
         path: 'register',
-        element: withSuspense(RegisterPage),
+        element: withSuspenseNoLoading(RegisterPage),
       },
     ],
   },

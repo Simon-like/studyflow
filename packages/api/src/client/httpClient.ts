@@ -21,6 +21,7 @@ const createHttpClient = (baseURL: string): AxiosInstance => {
     headers: {
       "Content-Type": "application/json",
     },
+    withCredentials: true, // 启用跨域凭证支持
   });
 
   // 请求拦截器
