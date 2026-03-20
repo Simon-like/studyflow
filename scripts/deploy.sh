@@ -1,80 +1,47 @@
 #!/bin/bash
 
-# StudyFlow Web 部署脚本
-# 用法: ./scripts/deploy.sh [user@host] [deploy_path]
+# ==========================================
+# StudyFlow 生产环境部署脚本
+# ==========================================
 
 set -e
 
-# 默认配置
-DEFAULT_USER="root"
-DEFAULT_HOST=""
-DEFAULT_PATH="/var/www/studyflow-web"
+echo "🚀 开始部署 StudyFlow..."
 
-# 解析参数
-TARGET=${1:-"${DEFAULT_USER}@${DEFAULT_HOST}"}
-DEPLOY_PATH=${2:-"$DEFAULT_PATH"}
+# 颜色输出
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
-if [ -z "$TARGET" ] || [ "$TARGET" = "${DEFAULT_USER}@" ]; then
-    echo "❌ 错误: 请提供服务器地址"
-    echo "用法: $0 [user@host] [deploy_path]"
-    echo "示例: $0 root@192.168.1.100 /var/www/studyflow-web"
+# 检查 .env 文件
+if [ ! -f .env ]; then
+    echo -e "${RED}❌ 错误: 未找到 .env 文件${NC}"
+    echo "请复制 .env.example 为 .env 并配置"
     exit 1
 fi
 
-echo "🚀 开始部署 StudyFlow Web..."
-echo "   目标服务器: $TARGET"
-echo "   部署路径: $DEPLOY_PATH"
+# 加载环境变量
+export $(grep -v '^#' .env | xargs)
+
+echo -e "${YELLOW}📦 步骤 1/5: 拉取最新代码...${NC}"
+git pull origin main
+
+echo -e "${YELLOW}🐳 步骤 2/5: 构建并启动服务...${NC}"
+docker-compose -f docker-compose.prod.yml down
+docker-compose -f docker-compose.prod.yml build --no-cache
+docker-compose -f docker-compose.prod.yml up -d
+
+echo -e "${YELLOW}⏳ 步骤 3/5: 等待数据库就绪...${NC}"
+sleep 10
+
+echo -e "${YELLOW}🔄 步骤 4/5: 执行数据库迁移...${NC}"
+docker-compose -f docker-compose.prod.yml exec -T server npx prisma migrate deploy
+
+echo -e "${YELLOW}🧹 步骤 5/5: 清理旧镜像...${NC}"
+docker image prune -f
+
+echo -e "${GREEN}✅ 部署完成！${NC}"
 echo ""
-
-# 检查本地构建
-echo "📦 检查构建产物..."
-if [ ! -d "apps/web/dist" ]; then
-    echo "   未找到构建产物，开始构建..."
-    pnpm install --frozen-lockfile
-    pnpm --filter "./packages/*" build
-    pnpm --filter @studyflow/web build
-fi
-
-if [ ! -d "apps/web/dist" ]; then
-    echo "❌ 构建失败，请检查错误日志"
-    exit 1
-fi
-
-echo "   ✅ 构建产物已就绪"
-echo ""
-
-# 创建远程目录
-echo "📁 创建远程目录..."
-ssh "$TARGET" "mkdir -p $DEPLOY_PATH"
-echo "   ✅ 目录就绪"
-echo ""
-
-# 同步文件
-echo "📤 同步文件到服务器..."
-rsync -avz --delete \
-    --exclude="*.map" \
-    apps/web/dist/ \
-    "$TARGET:$DEPLOY_PATH/"
-echo "   ✅ 文件同步完成"
-echo ""
-
-# 检查 Nginx 配置
-echo "🔧 检查 Nginx 配置..."
-if ssh "$TARGET" "which nginx" > /dev/null 2>&1; then
-    echo "   发现 Nginx，检查配置..."
-    ssh "$TARGET" "sudo nginx -t" && echo "   ✅ Nginx 配置正常"
-    
-    # 询问是否重载
-    read -p "   是否重载 Nginx? (y/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        ssh "$TARGET" "sudo systemctl reload nginx"
-        echo "   ✅ Nginx 已重载"
-    fi
-else
-    echo "   ⚠️ 未检测到 Nginx，请手动配置 Web 服务器"
-fi
-
-echo ""
-echo "🎉 部署完成！"
-echo "   网站路径: $DEPLOY_PATH"
+echo "📊 服务状态:"
+docker-compose -f docker-compose.prod.yml ps

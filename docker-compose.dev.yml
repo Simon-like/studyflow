@@ -1,0 +1,45 @@
+# ==========================================
+# StudyFlow 开发环境 Docker Compose 配置
+# 用于在 Windows 上快速启动 PostgreSQL 和 Redis
+# ==========================================
+
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:16-alpine
+    container_name: studyflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: studyflow
+      POSTGRES_PASSWORD: studyflow_password
+      POSTGRES_DB: studyflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U studyflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: studyflow-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

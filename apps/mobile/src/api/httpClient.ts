@@ -28,26 +28,45 @@ import { Platform } from 'react-native';
 
 /**
  * API 基础 URL 配置
- * 
+ *
  * 开发环境 (__DEV__):
  *   - Android 模拟器: 10.0.2.2 (访问本机 localhost)
  *   - iOS 模拟器: localhost
  *   - 真机调试: 需要改为电脑的局域网 IP (如 192.168.x.x)
- * 
+ *
  * 生产环境:
  *   - 需要配置你的实际服务器地址
- *   - 支持环境变量覆盖：process.env.EXPO_PUBLIC_API_URL
+ *   - 修改下面的 PRODUCTION_API_URL 为你的后端地址
  */
-const PRODUCTION_API_URL = 
-  process.env.EXPO_PUBLIC_API_URL || 
-  'https://your-production-api.com'; // ⚠️ 部署前修改为你的后端地址
 
-const DEV_API_URL = 
-  Platform.OS === 'android'
+// ⚠️ 部署前必须修改为你的实际后端地址！
+// 例如: 'https://api.yourdomain.com' 或 'http://your-server-ip:3001'
+const PRODUCTION_API_URL = 'https://api.studyflow.com';
+
+// 开发环境配置
+const getDevApiUrl = (): string => {
+  // 真机调试时修改为电脑的局域网 IP
+  // 例如: 'http://192.168.1.100:3001'
+  const LOCAL_IP = null; // 设置为你的电脑 IP，如 '192.168.1.100'
+
+  if (LOCAL_IP) {
+    return `http://${LOCAL_IP}:3001`;
+  }
+
+  return Platform.OS === 'android'
     ? 'http://10.0.2.2:3001'   // Android 模拟器
     : 'http://localhost:3001';  // iOS 模拟器
+};
 
+const DEV_API_URL = getDevApiUrl();
+
+// 根据环境选择 API 地址
 const API_BASE_URL = __DEV__ ? DEV_API_URL : PRODUCTION_API_URL;
+
+// 调试日志
+if (__DEV__) {
+  console.log('📡 API Base URL:', API_BASE_URL);
+}
 
 // 创建 axios 实例
 const createHttpClient = (baseURL: string): AxiosInstance => {

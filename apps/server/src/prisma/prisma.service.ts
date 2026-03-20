@@ -24,7 +24,7 @@ export class PrismaService
 
     // 监听查询日志（仅在开发环境）
     if (process.env.NODE_ENV === 'development') {
-      // @ts-expect-error - Prisma query event type mismatch
+      // @ts-ignore - Prisma v5 类型定义问题
       this.$on('query', (e: { query: string; params: string; duration: number }) => {
         this.logger.debug(`Query: ${e.query} (${e.duration}ms)`);
       });

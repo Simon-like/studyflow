@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:16-alpine
+    container_name: studyflow-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-studyflow}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-studyflow_password}
+      POSTGRES_DB: ${DB_NAME:-studyflow}
+    ports:
+      - "127.0.0.1:5432:5432"  # 仅本地访问，更安全
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-studyflow} -d ${DB_NAME:-studyflow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: studyflow-redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_password}
+    ports:
+      - "127.0.0.1:6379:6379"  # 仅本地访问
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_password}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NestJS 后端服务
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    container_name: studyflow-server
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: "postgresql://${DB_USER:-studyflow}:${DB_PASSWORD:-studyflow_password}@postgres:5432/${DB_NAME:-studyflow}?schema=public"
+      REDIS_URL: "redis://:${REDIS_PASSWORD:-redis_password}@redis:6379"
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-2h}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-7d}
+      BCRYPT_ROUNDS: "12"
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
+    ports:
+      - "127.0.0.1:3001:3001"  # 仅本地访问，通过 Nginx 反向代理
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - server_uploads:/app/uploads
+
+  # Web 前端 + Nginx 反向代理
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: studyflow-web
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+
+volumes:
+  postgres_data:
+  redis_data:
+  server_uploads:
