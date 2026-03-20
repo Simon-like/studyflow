@@ -327,7 +327,7 @@ export function usePomodoroSettlement(options?: UsePomodoroSettlementOptions) {
       const response = await pomodoroService.stop(id, { status, abandonReason });
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: { todayStats: TodayStats }) => {
       // 更新今日统计数据
       queryClient.setQueryData(STATS_KEYS.today(), data.todayStats);
       

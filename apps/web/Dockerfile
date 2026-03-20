@@ -6,14 +6,14 @@ WORKDIR /app
 # 安装 pnpm
 RUN npm install -g pnpm
 
-# 复制 workspace 配置
+# 复制所有 workspace 配置和 package.json
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/api/package.json ./packages/api/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/theme/package.json ./packages/theme/
 
-# 安装依赖
+# 安装所有依赖（包括 workspace 依赖）
 RUN pnpm install --frozen-lockfile
 
 # 复制源代码

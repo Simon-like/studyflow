@@ -51,7 +51,7 @@ export function useStats() {
     if (!dailyStats) return [];
 
     if (period === 'week') {
-      return dailyStats.map((item, index) => ({
+      return dailyStats.map((item: { date: string; pomodoros: number; focusMinutes: number }, index: number) => ({
         day: formatChartDayLabel(item.date, period, index),
         pomodoros: item.pomodoros,
         hours: Math.round((item.focusMinutes / 60) * 10) / 10,
@@ -69,14 +69,14 @@ export function useStats() {
   // 计算最大番茄数（用于柱状图高度计算）
   const maxPomodoros = useMemo(() => {
     if (chartData.length === 0) return 1;
-    return Math.max(...chartData.map((d) => d.pomodoros), 1);
+    return Math.max(...chartData.map((d: { pomodoros: number }) => d.pomodoros), 1);
   }, [chartData]);
 
   // 基于真实 dailyStats 生成热力图数据（近365天）
   // 打卡逻辑：当天有番茄钟记录或任务完成记录即视为打卡
   const heatmapData = useMemo(() => {
     const dailyMap = new Map(
-      (dailyStats || []).map((item) => [item.date, item])
+      (dailyStats || []).map((item: { date: string; pomodoros: number; focusMinutes: number }) => [item.date, item])
     );
     const today = new Date();
 
@@ -84,7 +84,7 @@ export function useStats() {
       const date = new Date(today);
       date.setDate(today.getDate() - (364 - i));
       const dateKey = formatDate(date);
-      const dayData = dailyMap.get(dateKey);
+      const dayData = dailyMap.get(dateKey) as { pomodoros: number; focusMinutes: number } | undefined;
       const checkedIn = dayData
         ? (dayData.pomodoros > 0 || dayData.focusMinutes > 0)
         : false;
@@ -104,7 +104,7 @@ export function useStats() {
       overviewStats.completedTasks > 0
     );
 
-    const chartHasData = chartData.some((item) => item.pomodoros > 0 || item.hours > 0);
+    const chartHasData = chartData.some((item: { pomodoros: number; hours: number }) => item.pomodoros > 0 || item.hours > 0);
 
     return overviewHasData || chartHasData;
   }, [overviewStats, chartData]);
