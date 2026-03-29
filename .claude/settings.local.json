@@ -12,7 +12,20 @@
       "Bash(psql postgresql://studyflow:studyflow_password@localhost:5432/studyflow -c \"ALTER TABLE \"\"users\"\" ADD COLUMN IF NOT EXISTS \"\"tags\"\" JSONB;\")",
       "Bash(npm run:*)",
       "Bash(docker --version)",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(npx prisma:*)",
+      "Bash(pnpm remove:*)",
+      "Bash(rm -rf .expo node_modules/.cache)",
+      "Bash(pnpm expo:*)",
+      "Bash(lsof -ti:8081)",
+      "Bash(xargs kill:*)",
+      "Bash(netstat -ano)",
+      "Read(//d/Development/Frontend/studyflow/**)",
+      "Bash(xargs -I {} taskkill /F /PID {})",
+      "Bash(taskkill /F /PID 46116)",
+      "Bash(cmd //c \"taskkill /F /PID 46116\")",
+      "Bash(ipconfig)",
+      "Bash(pnpm add:*)"
     ]
   }
 }

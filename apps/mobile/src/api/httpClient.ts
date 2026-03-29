@@ -47,7 +47,7 @@ const PRODUCTION_API_URL = 'https://api.studyflow.com';
 const getDevApiUrl = (): string => {
   // 真机调试时修改为电脑的局域网 IP
   // 例如: 'http://192.168.1.100:3001'
-  const LOCAL_IP = null; // 设置为你的电脑 IP，如 '192.168.1.100'
+  const LOCAL_IP = '192.168.18.158'; // 设置为你的电脑 IP，如 '192.168.1.100'
 
   if (LOCAL_IP) {
     return `http://${LOCAL_IP}:3001`;
