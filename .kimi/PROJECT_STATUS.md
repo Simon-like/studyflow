@@ -15,7 +15,7 @@
 [✅] Phase 1.5: NestJS → Spring Boot 后端迁移（代码层面完成）
 [🔄] Phase 1.6: Spring Boot 后端全功能测试（当前进行中）
 [⏳] Phase 2: AI 数字人模块开发
-[⏳] Phase 3: 学习社区模块开发
+[🔄] Phase 3: 学习社区模块开发（Phase 1 类型契约已完成）
 [⏳] Phase 4: 论文写作与答辩准备
 [⏳] Phase 5: 部署与优化
 ```
@@ -145,6 +145,9 @@
 - Mobile 端统计 NaN/undefined：前端增加安全解析和空值保护
 - 番茄钟完成后统计不刷新：前端 TanStack Query 缓存失效策略已完善
 - 设置修改后其他设备不同步：后端已通过 WebSocket 广播 DATA_CHANGED
+- 番茄钟设置跨设备不同步：Web 休息时长只更新 breakDuration 未同步 shortBreakDuration，已修复
+- Mobile 端 TanStack Query 缺少 focusManager 适配：app 回前台不会自动 refetch，已集成 AppState 监听
+- Web Dashboard 番茄钟不读取服务端设置：Zustand store 未从后端初始化，已添加 server sync
 
 ---
 
@@ -229,7 +232,7 @@
 
 - [ ] 启动 AI 数字人模块后端开发（会话管理 + LLM 对接）
 - [ ] 前端 companion 页面接入真实 API
-- [ ] 启动社区模块后端开发（帖子 CRUD + Feeds）
+- [ ] 启动社区模块后端开发（帖子 CRUD + Feeds）← Phase 2 下一步
 - [ ] 论文第 1-3 章、第 5-6 章启动写作
 
 ---

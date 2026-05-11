@@ -23,7 +23,10 @@ export type {
   CreateCommentRequest,
   CreateGroupRequest,
   LikeResponse,
+  PostsParams,
+  GroupsParams,
   PostsResponse,
+  CommentsResponse,
   GroupsResponse,
 } from "@studyflow/shared";
 

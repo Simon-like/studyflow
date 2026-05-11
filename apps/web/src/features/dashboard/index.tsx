@@ -11,8 +11,8 @@ import { WeeklySummary } from './components/WeeklySummary';
 import { SortableTaskList } from './components/SortableTaskList';
 import { WEEKLY_STATS } from './constants';
 import { api, STATS_KEYS } from '@studyflow/api';
-import { useQueryClient } from '@tanstack/react-query';
-import type { Task } from '@studyflow/shared';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { Task, PomodoroSettings } from '@studyflow/shared';
 import toast from 'react-hot-toast';
 import { useDialog } from '@/providers/DialogProvider';
 import { getApiErrorMessage } from '@/lib/utils';
@@ -60,17 +60,34 @@ export default function DashboardPage() {
     onEndRest,
   } = useDashboardTimer();
 
-  // 同步 timeRemaining 到 focusDuration（解决页面刷新后显示不正确的问题）
+  // 从服务器同步番茄钟设置到 Zustand store（确保跨设备修改能被感知）
+  const updateStoreSettings = usePomodoroStore(s => s.updateSettings);
+  const { data: serverPomodoroSettings } = useQuery({
+    queryKey: ['settings', 'pomodoro'] as const,
+    queryFn: async () => {
+      const res = await api.user.getPomodoroSettings();
+      return res.data as PomodoroSettings;
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+
   const syncTimeRemaining = usePomodoroStore(s => s.syncTimeRemaining);
-  const syncAttemptedRef = useRef(false);
-  
+  const serverSyncRef = useRef(false);
+
   useEffect(() => {
-    // 组件挂载后执行一次同步，确保 timeRemaining 与 focusDuration 一致
-    if (!syncAttemptedRef.current && status === 'idle') {
-      syncAttemptedRef.current = true;
-      syncTimeRemaining();
+    if (serverPomodoroSettings && status === 'idle') {
+      updateStoreSettings({
+        focusDuration: serverPomodoroSettings.focusDuration,
+        breakDuration: serverPomodoroSettings.breakDuration,
+        shortBreakDuration: serverPomodoroSettings.shortBreakDuration,
+        longBreakDuration: serverPomodoroSettings.longBreakDuration,
+      });
+      if (!serverSyncRef.current) {
+        serverSyncRef.current = true;
+        syncTimeRemaining();
+      }
     }
-  }, [status, syncTimeRemaining]);
+  }, [serverPomodoroSettings, status, updateStoreSettings, syncTimeRemaining]);
 
   // 恢复：组件挂载时检查后端是否有活跃的番茄钟，如有则恢复计时状态
   const recoveryAttemptedRef = useRef(false);

@@ -1,5 +1,6 @@
 /**
  * Community 页面类型定义
+ * @deprecated: Mock 阶段临时定义，将在 Phase 5 统一替换为 @studyflow/shared 中的正式类型
  */
 
 export interface Post {

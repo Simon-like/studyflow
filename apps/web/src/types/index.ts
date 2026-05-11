@@ -68,7 +68,8 @@ export interface StudyGoal {
   done: string;
 }
 
-// 社区相关
+// @deprecated: 以下社区类型为 Mock 阶段临时定义，将在 Phase 4 统一替换为 @studyflow/shared 中的正式类型
+// 当前保留以避免编译失败，正式对接 API 后移除
 export interface Post {
   id: string;
   author: string;

@@ -164,10 +164,16 @@ export default function SettingsPage() {
   const [localSystemSettings, setLocalSystemSettings] =
     useState<SystemSettings | null>(null);
 
-  // 同步服务器数据到本地状态
+  // 同步服务器数据到本地状态和 Zustand store
   useEffect(() => {
     if (pomodoroSettings) {
       setLocalPomodoroSettings(pomodoroSettings);
+      pomodoroStore.updateSettings({
+        focusDuration: pomodoroSettings.focusDuration,
+        breakDuration: pomodoroSettings.breakDuration,
+        shortBreakDuration: pomodoroSettings.shortBreakDuration,
+        longBreakDuration: pomodoroSettings.longBreakDuration,
+      });
     }
   }, [pomodoroSettings]);
 
@@ -329,9 +335,13 @@ export default function SettingsPage() {
                   { value: 15, label: "15分钟" },
                   { value: 20, label: "20分钟" },
                 ]}
-                onChange={(value) =>
-                  handlePomodoroChange("breakDuration", value * 60)
-                }
+                onChange={(value) => {
+                  if (!localPomodoroSettings) return;
+                  const seconds = value * 60;
+                  const newSettings = { ...localPomodoroSettings, breakDuration: seconds, shortBreakDuration: seconds };
+                  setLocalPomodoroSettings(newSettings);
+                  updatePomodoroMutation.mutate(newSettings);
+                }}
               />
             </div>
           </div>

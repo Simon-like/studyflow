@@ -3,7 +3,7 @@
 > **版本**：v1.0  
 > **更新日期**：2026-05-11  
 > **用途**：学习社区模块（Community）的开发蓝图。包含数据库设计、API 定义、业务逻辑、Feeds 流设计和前端交互规范。  
-> **状态**：⏳ 待开发（后端 API + 前端真实对接）  
+> **状态**：🔄 Phase 1 已完成（统一共享类型契约 + 后端 DTO 契约文档）→ 待 Phase 2（后端核心实现）  
 > **当前现状**：Web 和 Mobile 的 community 页面已有 UI 壳子和 Mock 数据
 
 ---
@@ -730,8 +730,9 @@ public class ContentCheckUtil {
 
 ### 7.2 前端开发
 
-- [ ] packages/shared 补充 Community 相关类型
-- [ ] packages/api 创建 communityService
+- [x] packages/shared 补充 Community 相关类型（`packages/shared/src/types/community.ts`）
+- [x] packages/api 对齐 communityService 类型契约（从 `@studyflow/shared` 导入）
+- [x] Mobile API 层对齐共享类型契约
 - [ ] Web community 页面接入真实 API（Feeds / 发布 / 点赞 / 评论）
 - [ ] Mobile community 页面接入真实 API
 - [ ] 图片上传集成（复用已有 OSS 上传能力）
@@ -745,6 +746,7 @@ public class ContentCheckUtil {
 | 日期 | 版本 | 变更内容 | 变更者 |
 |------|------|----------|--------|
 | 2026-05-11 | v1.0 | 初始创建，整合论文第 4.3 章设计和当前 UI 现状 | Kimi Code CLI |
+| 2026-05-11 | v1.1 | Phase 1：统一共享类型契约，创建 `community.ts` 类型真相源；更新 API 层对齐；创建后端 Java DTO 契约文档 | Kimi Code CLI |
 
 ---
 
