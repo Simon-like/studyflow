@@ -5,6 +5,9 @@ import path from "path";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, path.resolve(__dirname), "VITE_");
+  // 代理目标：dev 环境读 VITE_PROXY_TARGET，默认本地后端
+  const proxyTarget = env.VITE_PROXY_TARGET || "http://localhost:8080";
+
   return {
     plugins: [
       react(),
@@ -42,11 +45,18 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5180,
       proxy: {
-        // 开发时代理 API 请求到后端
-        "/api": {
-          target: "http://localhost:3001",
-          changeOrigin: true,
-        },
+        // 反向代理所有后端 API 路径，绕过浏览器 CORS 限制
+        // 目标地址由 .env 中的 VITE_PROXY_TARGET 控制
+        "/auth": { target: proxyTarget, changeOrigin: true },
+        "/users": { target: proxyTarget, changeOrigin: true },
+        "/tasks": { target: proxyTarget, changeOrigin: true },
+        "/pomodoros": { target: proxyTarget, changeOrigin: true },
+        "/stats": { target: proxyTarget, changeOrigin: true },
+        "/companion": { target: proxyTarget, changeOrigin: true },
+        "/community": { target: proxyTarget, changeOrigin: true },
+        "/health": { target: proxyTarget, changeOrigin: true },
+        "/docs": { target: proxyTarget, changeOrigin: true },
+        "/api-docs": { target: proxyTarget, changeOrigin: true },
       },
     },
     define: {

@@ -129,7 +129,7 @@ export function useUploadAvatar() {
         reader.readAsDataURL(blob);
       });
 
-      const result = await api.user.uploadAvatar({ avatar: base64 });
+      const result = await api.user.uploadAvatar({ base64Image: base64 });
       return result.data;
     },
     onSuccess: () => {
@@ -138,6 +138,25 @@ export function useUploadAvatar() {
     },
     onError: () => {
       toast.error('头像上传失败');
+    },
+  });
+}
+
+/**
+ * 注销账号 - 不可逆操作，注销后清除登录态
+ */
+export function useDeleteAccount() {
+  const { logout } = useAuth();
+
+  return useMutation({
+    mutationFn: async () => {
+      await api.user.deleteAccount();
+    },
+    onSuccess: async () => {
+      await logout();
+    },
+    onError: () => {
+      toast.error('注销失败，请稍后重试');
     },
   });
 }

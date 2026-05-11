@@ -1,13 +1,11 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env.*local", ".env"],
+  "globalDependencies": ["**/.env.*local", "**/.env.*", ".env"],
   "globalEnv": [
     "NODE_ENV",
     "VITE_API_URL",
-    "DATABASE_URL",
-    "REDIS_URL",
-    "JWT_SECRET",
-    "PORT"
+    "VITE_API_BASE_URL",
+    "VITE_PROXY_TARGET"
   ],
   "pipeline": {
     "build": {
@@ -19,7 +17,15 @@
         "storybook-static/**"
       ]
     },
+    "build:dev": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
     "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "dev:prod": {
       "cache": false,
       "persistent": true
     },
@@ -34,12 +40,6 @@
       "dependsOn": ["^build"]
     },
     "clean": {
-      "cache": false
-    },
-    "db:generate": {
-      "cache": false
-    },
-    "db:migrate": {
       "cache": false
     }
   }

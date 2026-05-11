@@ -31,8 +31,8 @@ export const userService = {
   updateProfile: (data: UpdateProfileRequest) =>
     http.put<ApiResponse<UserProfile>>(API_ENDPOINTS.USER.PROFILE, data),
 
-  // 上传头像（base64 JSON 格式）
-  uploadAvatar: (data: { avatar: string }) =>
+  // 上传头像（base64 JSON 格式，后端字段名为 base64Image）
+  uploadAvatar: (data: { base64Image: string }) =>
     http.post<ApiResponse<{ avatarUrl: string }>>(API_ENDPOINTS.USER.AVATAR, data),
 
   // 获取番茄钟设置

@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"D:/Development/Frontend/studyflow\" worktree remove .claude/worktrees/trusting-banach-661ecf --force)",
+      "Bash(git -C \"D:/Development/Frontend/studyflow\" branch -D claude/confident-poincare-7f9e22 claude/laughing-nash-e6f7c8 claude/trusting-banach-661ecf)",
+      "Bash(grep -r \"getDashboardSummary\\\\|communityService\\\\|getHistory\\\\|uploadAvatar\" D:/Development/Frontend/studyflow/apps/mobile/src/screens --include=\"*.ts\" --include=\"*.tsx\" -n 2>&1 | head -40)",
+      "Bash(grep -r \"api/v1\\\\|localhost:3001\\\\|10.0.2.2:3001\" D:/Development/Frontend/studyflow/apps/mobile/src --include=\"*.ts\" --include=\"*.tsx\" 2>&1)",
+      "Bash(grep -r \"api/v1\" D:/Development/Frontend/studyflow/packages/shared/src --include=\"*.ts\" 2>&1)",
+      "Bash(grep -r \"api/v1\\\\|localhost:3001\" D:/Development/Frontend/studyflow/packages/api/src D:/Development/Frontend/studyflow/apps/web/src D:/Development/Frontend/studyflow/apps/web/.env.development --include=\"*.ts\" --include=\"*.tsx\" --include=\".env*\" 2>&1 | grep -v \"^Binary\\\\|注释\\\\|comment\\\\| // \" | grep \"api/v1\\\\|3001\")",
+      "Bash(grep -r \"@studyflow/server\" D:/Development/Frontend/studyflow/apps/web/package.json D:/Development/Frontend/studyflow/apps/mobile/package.json D:/Development/Frontend/studyflow/packages/*/package.json 2>/dev/null)",
+      "Bash(ls \"D:/Development/Frontend/studyflow/apps/server/\" | head -20)",
+      "Bash(rm -rf \"D:/Development/Frontend/studyflow/apps/server\")",
+      "Bash(ls \"D:/Development/Frontend/studyflow/apps/\")",
+      "Bash(Get-ChildItem -Path \"D:\\\\Development\\\\Frontend\\\\studyflow\\\\packages\\\\shared\\\\src\" -Recurse -Filter \"*.ts\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Development\\\\Backend\\\\studyflow_server\\\\src\\\\main\\\\java\" -Recurse -Filter \"*Controller.java\")",
+      "Bash(Select-Object FullName)",
+      "Bash(find \"D:\\\\Development\\\\Backend\\\\studyflow_server\\\\src\\\\main\\\\java\" -name \"*Dashboard*\" -o -name \"*dashboard*\" 2>/dev/null)",
+      "Bash(npx tsc *)",
+      "Bash(find \"D:\\\\Development\\\\Backend\\\\studyflow_server\" -type f -name \"*.java\" | grep -E \"\\(GlobalExceptionHandler|ApiResponse|Application|Config|Filter\\)\" | head -20)",
+      "Bash(xargs grep -l \"CurrentUser\")"
+    ]
+  }
+}

@@ -15,7 +15,7 @@ import {
 import { ScreenContainer } from '../../components/layout/ScreenContainer';
 import { Icon, type IconName } from '../../components/ui/Icon';
 import { useAuth } from '../../contexts/AuthContext';
-import { usePomodoroSettings, useChangePassword } from './hooks';
+import { usePomodoroSettings, useChangePassword, useDeleteAccount } from './hooks';
 import { colors, spacing, radius, fontSize, fontWeight, alpha, shadows } from '../../theme';
 import type { PomodoroSettings } from '@studyflow/shared';
 
@@ -30,6 +30,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const { logout } = useAuth();
   const { settings: pomodoroSettings, updateSettings: updatePomodoro } = usePomodoroSettings();
   const changePassword = useChangePassword();
+  const deleteAccount = useDeleteAccount();
 
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordData, setPasswordData] = useState({
@@ -187,6 +188,31 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         >
           <Icon name="log-out" size={20} color={colors.error} />
           <Text style={styles.logoutText}>退出登录</Text>
+        </TouchableOpacity>
+
+        {/* 注销账号 */}
+        <TouchableOpacity
+          style={styles.deleteAccountButton}
+          onPress={() => {
+            Alert.alert(
+              '注销账号',
+              '此操作不可撤销，账号内所有数据（任务、记录、统计）将被永久删除。\n\n确定要注销吗？',
+              [
+                { text: '取消', style: 'cancel' },
+                {
+                  text: '确认注销',
+                  style: 'destructive',
+                  onPress: () => deleteAccount.mutate(),
+                },
+              ]
+            );
+          }}
+          disabled={deleteAccount.isPending}
+        >
+          <Icon name="trash-2" size={18} color={colors.textMuted} />
+          <Text style={styles.deleteAccountText}>
+            {deleteAccount.isPending ? '注销中...' : '注销账号'}
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.bottomPadding} />
@@ -351,6 +377,22 @@ const styles = StyleSheet.create({
     fontSize: fontSize.base,
     fontWeight: fontWeight.medium,
     color: colors.error,
+  },
+  deleteAccountButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    marginHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: 'transparent',
+  },
+  deleteAccountText: {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
+    textDecorationLine: 'underline',
   },
   bottomPadding: {
     height: spacing.xl * 2,

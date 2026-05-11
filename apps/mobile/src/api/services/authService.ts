@@ -1,4 +1,5 @@
 import { http } from "../httpClient";
+import { API_ENDPOINTS } from "@studyflow/shared";
 import type {
   ApiResponse,
   User,
@@ -8,29 +9,21 @@ import type {
 } from "@studyflow/shared";
 
 export const authService = {
-  // 登录（仅使用手机号）
+  // 登录
   login: (data: LoginRequest) =>
-    http.post<ApiResponse<TokenResponse & { user: User }>>("/api/v1/auth/login", data),
+    http.post<ApiResponse<TokenResponse & { user: User }>>(API_ENDPOINTS.AUTH.LOGIN, data),
 
-  // 注册（手机号必填，自动生成账号和PIN）
+  // 注册
   register: (data: RegisterRequest) =>
-    http.post<ApiResponse<TokenResponse & { user: User }>>("/api/v1/auth/register", data),
+    http.post<ApiResponse<TokenResponse & { user: User }>>(API_ENDPOINTS.AUTH.REGISTER, data),
 
-  // 刷新 Token
+  // 刷新 Token（Spring Boot 读 body.refreshToken）
   refresh: (refreshToken: string) =>
-    http.post<ApiResponse<TokenResponse>>(
-      "/api/v1/auth/refresh",
-      {},
-      {
-        headers: {
-          "X-Refresh-Token": refreshToken,
-        },
-      },
-    ),
+    http.post<ApiResponse<TokenResponse>>(API_ENDPOINTS.AUTH.REFRESH, { refreshToken }),
 
-  // 登出
-  logout: () => http.post<ApiResponse<void>>("/api/v1/auth/logout"),
+  // 登出（将 token 加入 Redis 黑名单）
+  logout: () => http.post<ApiResponse<void>>(API_ENDPOINTS.AUTH.LOGOUT),
 
-  // 获取当前用户
-  getCurrentUser: () => http.get<ApiResponse<User>>("/api/v1/user/profile"),
+  // 获取当前用户信息
+  getCurrentUser: () => http.get<ApiResponse<User>>(API_ENDPOINTS.USER.PROFILE),
 };

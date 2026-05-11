@@ -8,12 +8,14 @@ export { pomodoroService } from "./services/pomodoroService";
 export { chatService } from "./services/chatService";
 export { statsService } from "./services/statsService";
 export { userService } from "./services/userService";
+export { communityService } from "./services/communityService";
 export type { StudyCalendarData } from "./services/userService";
 
 // 导出服务类型
 export type { CreateTaskRequest, UpdateTaskRequest } from "./services/taskService";
 export type { StartPomodoroRequest, StopPomodoroRequest, WeeklyDailyStat } from "./services/pomodoroService";
-export type { SendMessageRequest, GeneratePlanRequest } from "./services/chatService";
+export type { SendMessageRequest, GeneratePlanRequest, ChatSession } from "./services/chatService";
+export type { Post, Comment, StudyGroup, CreatePostRequest, CreateCommentRequest, CreateGroupRequest } from "./services/communityService";
 
 // 导出统计 Hooks
 export {
@@ -38,9 +40,10 @@ import { pomodoroService } from "./services/pomodoroService";
 import { chatService } from "./services/chatService";
 import { statsService } from "./services/statsService";
 import { userService } from "./services/userService";
+import { communityService } from "./services/communityService";
 
 /**
- * 默认 API 实例 — 全部使用真实后端
+ * 默认 API 实例 — 全部使用 Spring Boot 后端（端口 8080）
  */
 export const api = {
   auth: authService,
@@ -49,4 +52,5 @@ export const api = {
   chat: chatService,
   stats: statsService,
   user: userService,
+  community: communityService,
 };

@@ -133,7 +133,7 @@ export function useDashboardTasks(): UseDashboardTasksReturn {
       setIsLoading(true);
       setError(null);
       const response = await api.task.getTodayTasks();
-      setTasks(response.data);
+      setTasks(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch tasks'));
       console.error('Failed to fetch today tasks:', err);

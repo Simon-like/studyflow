@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { api } from '@studyflow/api';
 import { useAuthStore } from '@/stores/authStore';
 import { USER_KEYS } from '@/hooks';
@@ -97,6 +98,28 @@ export function useUploadAvatar() {
     },
     onError: (err) => {
       toast.error(getApiErrorMessage(err, '头像上传失败'));
+    },
+  });
+}
+
+/**
+ * 注销账号 - 删除账号并清除登录态
+ */
+export function useDeleteAccount() {
+  const { logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationFn: async () => {
+      await api.user.deleteAccount();
+    },
+    onSuccess: () => {
+      logout();
+      navigate('/auth/login', { replace: true });
+      toast.success('账号已注销');
+    },
+    onError: (err) => {
+      toast.error(getApiErrorMessage(err, '注销失败，请稍后重试'));
     },
   });
 }

@@ -16,7 +16,7 @@ export interface StartPomodoroRequest {
 }
 
 export interface StopPomodoroRequest {
-  status: "completed" | "abandoned";
+  status: "completed" | "stopped";
   abandonReason?: string;
 }
 
@@ -24,6 +24,26 @@ export interface WeeklyDailyStat {
   date: string;
   pomodoros: number;
   focusTime: number;
+}
+
+/**
+ * 将 Spring Boot 的 Page 格式转换为前端 PaginatedData 格式
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizePage<T>(data: any): PaginatedData<T> {
+  if (data && data.content !== undefined) {
+    return {
+      list: data.content,
+      total: data.totalElements ?? 0,
+      page: data.number ?? 0,
+      size: data.size ?? 20,
+      totalPages: data.totalPages ?? 1,
+    };
+  }
+  if (Array.isArray(data)) {
+    return { list: data, total: data.length, page: 0, size: data.length, totalPages: 1 };
+  }
+  return data;
 }
 
 export const pomodoroService = {
@@ -35,12 +55,19 @@ export const pomodoroService = {
   stop: (id: string, data: StopPomodoroRequest) =>
     http.post<ApiResponse<PomodoroSettlement>>(API_ENDPOINTS.POMODORO.STOP(id), data),
 
-  // 获取历史记录
-  getHistory: (params?: PaginationParams) =>
-    http.get<ApiResponse<PaginatedData<PomodoroRecord>>>(
+  // 获取当前进行中的番茄钟
+  getActive: () =>
+    http.get<ApiResponse<PomodoroRecord | null>>(API_ENDPOINTS.POMODORO.ACTIVE),
+
+  // 获取历史记录（兼容 Spring Boot Page 格式）
+  getHistory: async (params?: PaginationParams): Promise<ApiResponse<PaginatedData<PomodoroRecord>>> => {
+    const res = await http.get<ApiResponse<PaginatedData<PomodoroRecord>>>(
       API_ENDPOINTS.POMODORO.HISTORY,
       { params }
-    ),
+    );
+    res.data = normalizePage<PomodoroRecord>(res.data);
+    return res;
+  },
 
   // 获取今日统计 (用于 Dashboard StatsStrip)
   getTodayStats: () =>

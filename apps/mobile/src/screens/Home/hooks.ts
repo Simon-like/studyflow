@@ -35,7 +35,7 @@ export function useHomeScreen() {
   const fetchTodayTasks = useCallback(async () => {
     try {
       const response = await api.task.getTodayTasks();
-      setTasks(response.data);
+      setTasks(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error('Failed to fetch today tasks:', err);
       throw err;
@@ -46,10 +46,17 @@ export function useHomeScreen() {
   const fetchTodayStats = useCallback(async () => {
     try {
       const response = await api.pomodoro.getTodayStats();
-      setTodayStats(response.data);
+      const data = response.data;
+      setTodayStats(data ? {
+        focusMinutes: data.focusMinutes ?? 0,
+        completedPomodoros: data.completedPomodoros ?? 0,
+        completedTasks: data.completedTasks ?? 0,
+        streakDays: data.streakDays ?? 0,
+      } : { focusMinutes: 0, completedPomodoros: 0, completedTasks: 0, streakDays: 0 });
     } catch (err) {
       console.error('Failed to fetch today stats:', err);
-      throw err;
+      // 统计失败不应阻断整体加载
+      setTodayStats({ focusMinutes: 0, completedPomodoros: 0, completedTasks: 0, streakDays: 0 });
     }
   }, []);
 
@@ -58,24 +65,26 @@ export function useHomeScreen() {
     try {
       const response = await api.stats.getOverview('week');
       const data = response.data;
-      setWeeklyStats({
-        totalPomodoros: data.completedPomodoros,
-        totalFocusHours: Math.floor(data.focusMinutes / 60),
-        completionRate: parseInt(data.compareLastPeriod.focusMinutes) || 0,
-        streakDays: data.streakDays,
-      });
+      if (data) {
+        setWeeklyStats({
+          totalPomodoros: data.completedPomodoros ?? 0,
+          totalFocusHours: Math.floor((data.focusMinutes ?? 0) / 60),
+          completionRate: parseInt(data.compareLastPeriod?.focusMinutes) || 0,
+          streakDays: data.streakDays ?? 0,
+        });
+      }
     } catch (err) {
       console.error('Failed to fetch weekly stats:', err);
-      throw err;
+      // 周统计失败不阻断加载
     }
   }, []);
 
-  // 初始化数据加载
+  // 初始化数据加载（各项独立，不相互阻断）
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      await Promise.all([
+      await Promise.allSettled([
         fetchTodayTasks(),
         fetchTodayStats(),
         fetchWeeklyStats(),
@@ -95,7 +104,7 @@ export function useHomeScreen() {
   const pomodoro = usePomodoro({});
 
   // ========== 结算番茄钟 ==========
-  const settlePomodoro = useCallback(async (status: 'completed' | 'abandoned') => {
+  const settlePomodoro = useCallback(async (status: 'completed' | 'stopped') => {
     if (!activePomodoroId) return false;
     try {
       await api.pomodoro.stop(activePomodoroId, { status });
@@ -299,7 +308,7 @@ export function useHomeScreen() {
       confirmText: '确认放弃',
       cancelText: '继续',
       onConfirm: async () => {
-        await settlePomodoro('abandoned');
+        await settlePomodoro('stopped');
         setSelectedTask(null);
         pomodoro.stop();
       },
@@ -351,7 +360,7 @@ export function useHomeScreen() {
         confirmText: '确认更换',
         cancelText: '继续当前任务',
         onConfirm: async () => {
-          await settlePomodoro('abandoned');
+          await settlePomodoro('stopped');
           pomodoro.stop();
           setSelectedTask(task);
         },

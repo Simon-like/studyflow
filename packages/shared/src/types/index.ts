@@ -187,21 +187,6 @@ export interface Achievement {
   unlockedAt: string;
 }
 
-// 社区动态类型
-export interface SocialPost {
-  id: string;
-  userId: string;
-  user?: User;
-  content: string;
-  images?: string[];
-  tags?: string[];
-  likeCount: number;
-  commentCount: number;
-  isLiked?: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
 // API 响应类型
 export interface ApiResponse<T> {
   code: number;
@@ -327,3 +312,8 @@ export interface TaskOrderItem {
 export interface ReorderTasksRequest {
   taskOrders: TaskOrderItem[];
 }
+
+// ==================== 社区模块类型 ====================
+
+export * from "./community";
+

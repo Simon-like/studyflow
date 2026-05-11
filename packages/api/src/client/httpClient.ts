@@ -61,7 +61,7 @@ const createHttpClient = (baseURL: string): AxiosInstance => {
         if (refreshToken) {
           try {
             const response = await axios.post(
-              `${baseURL}/api/v1/auth/refresh`,
+              `${baseURL}/auth/refresh`,
               { refreshToken },
             );
 
@@ -94,19 +94,19 @@ const createHttpClient = (baseURL: string): AxiosInstance => {
   return client;
 };
 
-// 默认 API 地址
-// Vite 项目通过 define 注入 process.env.VITE_API_BASE_URL
-// React Native 通过 babel 的 transform-inline-environment-variables 或直接使用默认值
+// API 地址策略：
+// Web (Vite):  VITE_API_BASE_URL 为空 → baseURL="" → 请求到自身 → Vite proxy 转发到本地/线上后端
+//              VITE_API_BASE_URL 有值 → 直连该地址（生产构建时使用）
+// 其他环境:    走 DEFAULT_BASE_URL
 const DEFAULT_BASE_URL = "http://localhost:8080";
 
-// 默认客户端
 const getBaseUrl = () => {
   try {
-    if (typeof process !== "undefined" && process.env?.VITE_API_BASE_URL) {
-      return process.env.VITE_API_BASE_URL;
+    if (typeof process !== "undefined" && process.env?.VITE_API_BASE_URL !== undefined) {
+      return process.env.VITE_API_BASE_URL; // Web 端：空字符串 = 走 proxy，有值 = 直连
     }
   } catch {
-    // 在浏览器环境中 process 可能不存在
+    // 非 Vite 环境
   }
   return DEFAULT_BASE_URL;
 };

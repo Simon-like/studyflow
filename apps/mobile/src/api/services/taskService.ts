@@ -24,14 +24,37 @@ export interface UpdateTaskRequest extends Partial<CreateTaskRequest> {
   status?: "todo" | "in_progress" | "completed" | "abandoned";
 }
 
+/**
+ * Spring Boot Page → 前端 PaginatedData 格式转换
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function normalizePage<T>(data: any): PaginatedData<T> {
+  if (data && data.content !== undefined) {
+    return {
+      list: data.content,
+      total: data.totalElements ?? 0,
+      page: data.number ?? 0,
+      size: data.size ?? 20,
+      totalPages: data.totalPages ?? 1,
+    };
+  }
+  if (Array.isArray(data)) {
+    return { list: data, total: data.length, page: 0, size: data.length, totalPages: 1 };
+  }
+  return data;
+}
+
 export const taskService = {
-  // 获取任务列表
-  getTasks: (params?: PaginationParams & {
+  // 获取任务列表（兼容 Spring Boot Page 格式）
+  getTasks: async (params?: PaginationParams & {
     status?: string;
     priority?: string;
     keyword?: string;
-  }) =>
-    http.get<ApiResponse<PaginatedData<Task>>>(API_ENDPOINTS.TASK.LIST, { params }),
+  }): Promise<ApiResponse<PaginatedData<Task>>> => {
+    const res = await http.get<ApiResponse<PaginatedData<Task>>>(API_ENDPOINTS.TASK.LIST, { params });
+    res.data = normalizePage<Task>(res.data);
+    return res;
+  },
 
   // 获取今日任务 (Dashboard 专用)
   getTodayTasks: () =>
@@ -69,5 +92,5 @@ export const taskService = {
 
   // 更新任务排序
   reorderTasks: (data: ReorderTasksRequest) =>
-    http.post<ApiResponse<Task[]>>(API_ENDPOINTS.TASK.REORDER, data),
+    http.post<ApiResponse<void>>(API_ENDPOINTS.TASK.REORDER, data),
 };

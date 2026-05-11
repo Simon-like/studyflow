@@ -58,7 +58,13 @@ export function useTodayStats(options?: UseTodayStatsOptions) {
     queryKey: STATS_KEYS.today(),
     queryFn: async () => {
       const response = await pomodoroService.getTodayStats();
-      return response.data;
+      const data = response.data;
+      return {
+        focusMinutes: data?.focusMinutes ?? 0,
+        completedPomodoros: data?.completedPomodoros ?? 0,
+        completedTasks: data?.completedTasks ?? 0,
+        streakDays: data?.streakDays ?? 0,
+      };
     },
     enabled: options?.enabled !== false,
     refetchInterval: options?.refetchInterval,
