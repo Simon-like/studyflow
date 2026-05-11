@@ -1,17 +1,9 @@
-export interface Post {
-  id: string;
-  author: string;
-  avatar: string;
-  time: string;
-  group: string;
-  content: string;
-  tags: string[];
-  likes: number;
-  comments: number;
-  liked: boolean;
-}
+import type { Post } from "@studyflow/shared";
 
-export interface PostCardProps extends Post {
+export type { Post };
+
+export interface PostCardProps {
+  post: Post;
   onLike: (id: string) => void;
   onComment?: (id: string) => void;
   onShare?: (id: string) => void;

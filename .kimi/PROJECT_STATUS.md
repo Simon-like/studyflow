@@ -175,26 +175,32 @@
 
 ### 4.2 学习社区模块（P1 优先级）
 
-**当前状态**：UI 已搭建，使用 Mock 数据展示  
-**后端状态**：Entity 已设计（Post、Comment、Like、StudyGroup、GroupMember），接口未实现  
-**前端状态**：Web 和 Mobile 都有 community 页面，Feeds/小组/帖子卡片 UI 齐全
+**当前状态**：后端 API 已完成，Web 前端已对接真实 API  
+**后端状态**：Entity + Repository + Service + Controller + DTOs 全部完成，编译通过  
+**前端状态**：Web 端已对接真实 API（Feeds/发帖/点赞/评论/小组），Mobile 端待对接
 
-| 子功能 | 后端 | 前端 | 预计工时 | 阻塞项 |
-|--------|------|------|----------|--------|
-| 帖子发布（文字+图片） | ⏳ | ⏳ | 2-3 天 | OSS 图片上传已具备 |
-| 帖子列表 / Feeds 流 | ⏳ | ⏳ | 2 天 | 需设计分页和缓存策略 |
-| 帖子详情 | ⏳ | ⏳ | 1-2 天 | |
-| 评论系统（二级回复） | ⏳ | ⏳ | 2-3 天 | |
-| 点赞功能 | ⏳ | ⏳ | 1 天 | 需考虑高并发 |
-| 学习小组 CRUD | ⏳ | ⏳ | 3-4 天 | |
-| 小组加入/退出 | ⏳ | ⏳ | 1 天 | |
-| 动态 Feeds | ⏳ | ⏳ | 2-3 天 | |
+| 子功能 | 后端 | 前端(Web) | 前端(Mobile) | 说明 |
+|--------|------|-----------|-------------|------|
+| 帖子发布（文字+标签） | ✅ | ✅ | ⏳ | 图片上传待集成 OSS |
+| 帖子列表 / Feeds 流 | ✅ | ✅ | ⏳ | 分页+作者信息+点赞状态 |
+| 帖子详情 | ✅ | ✅ | ⏳ | 含评论+学习数据展示 |
+| 评论系统（二级回复） | ✅ | ✅ | ⏳ | 一级评论+前3条回复预加载 |
+| 点赞功能 | ✅ | ✅ | ⏳ | 返回 liked+likeCount |
+| 学习小组列表 | ✅ | ✅ | ⏳ | 分页+分类筛选+isJoined |
+| 小组加入/退出 | ✅ | ✅ | ⏳ | |
+| 创建小组 | ✅ | ⏳ UI占位 | ⏳ | 需要创建小组表单页 |
 
-**技术方案预研**（参考 `docs/毕业论文_第一版_大纲与详细内容.md` 第 4.3 章）：
-- Feeds 流：Redis Sorted Set 缓存 + 推拉结合策略
-- 点赞：Redis 原子计数 + 异步同步数据库
-- 评论：嵌套查询限制层级，@BatchSize 优化 N+1
-- 内容审核：预留敏感词过滤接口，可接入内容审核 API
+**已完成的后端改造**：
+- 新增 6 个 Response DTO（PostDto, CommentDto, StudyGroupDto, LikeResponseDto, PostAuthorDto, PaginatedResponse）
+- CommunityService 重构：返回 DTO 而非原始 Entity，包含作者信息、点赞状态、分页格式
+- CreatePostRequest 改为接受 `List<String>` 的 images/tags（前端 JSON 数组）
+- 使用 ErrorCode 枚举替代硬编码异常
+
+**已完成的前端改造**：
+- 新增 TanStack Query hooks（usePosts, usePostDetail, useToggleLike, useComments, useGroups 等）
+- PostCard/GroupCard 组件重构为接受真实 API 数据类型
+- 新增发帖页面（/community/create）和帖子详情页（/community/post/:id）
+- 社区首页 Mock 数据已替换为真实 API 调用
 
 ---
 

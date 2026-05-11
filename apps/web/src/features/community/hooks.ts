@@ -1,38 +1,77 @@
-import { useState, useCallback } from 'react';
-import type { Post, StudyGroup } from '@/types';
-import type { CommunityTab } from './types';
-import { INITIAL_POSTS, GROUPS } from './constants';
+import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  usePosts,
+  useGroups,
+  useToggleLike,
+  useJoinGroup,
+  useLeaveGroup,
+} from "@studyflow/api";
+import type { CommunityTab } from "./types";
 
 export function useCommunity() {
-  const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
-  const [activeTab, setActiveTab] = useState<CommunityTab>('feed');
-  const groups = GROUPS;
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<CommunityTab>("feed");
+
+  // Posts
+  const {
+    data: postsData,
+    isLoading: postsLoading,
+  } = usePosts(0, 20);
+
+  // Groups
+  const {
+    data: groupsData,
+    isLoading: groupsLoading,
+  } = useGroups(0, 20);
+
+  // Mutations
+  const toggleLikeMutation = useToggleLike();
+  const joinGroupMutation = useJoinGroup();
+  const leaveGroupMutation = useLeaveGroup();
 
   const handleTabChange = useCallback((key: string) => {
     setActiveTab(key as CommunityTab);
   }, []);
 
-  const toggleLike = useCallback((id: string) => {
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 }
-          : p
-      )
-    );
-  }, []);
+  const toggleLike = useCallback(
+    (id: string) => {
+      toggleLikeMutation.mutate(id);
+    },
+    [toggleLikeMutation],
+  );
 
-  const joinGroup = useCallback((id: string) => {
-    // TODO: Implement join group
-    console.log('Join group:', id);
-  }, []);
+  const joinGroup = useCallback(
+    (id: string) => {
+      joinGroupMutation.mutate(id);
+    },
+    [joinGroupMutation],
+  );
+
+  const leaveGroup = useCallback(
+    (id: string) => {
+      leaveGroupMutation.mutate(id);
+    },
+    [leaveGroupMutation],
+  );
+
+  const goToPost = useCallback(
+    (id: string) => {
+      navigate(`/community/post/${id}`);
+    },
+    [navigate],
+  );
 
   return {
-    posts,
-    groups,
+    posts: postsData?.list ?? [],
+    groups: groupsData?.list ?? [],
     activeTab,
     setActiveTab: handleTabChange,
     toggleLike,
     joinGroup,
+    leaveGroup,
+    goToPost,
+    postsLoading,
+    groupsLoading,
   };
 }

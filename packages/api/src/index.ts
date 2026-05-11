@@ -15,7 +15,17 @@ export type { StudyCalendarData } from "./services/userService";
 export type { CreateTaskRequest, UpdateTaskRequest } from "./services/taskService";
 export type { StartPomodoroRequest, StopPomodoroRequest, WeeklyDailyStat } from "./services/pomodoroService";
 export type { SendMessageRequest, GeneratePlanRequest, ChatSession } from "./services/chatService";
-export type { Post, Comment, StudyGroup, CreatePostRequest, CreateCommentRequest, CreateGroupRequest } from "./services/communityService";
+export type {
+  Post,
+  Comment,
+  StudyGroup,
+  CreatePostRequest,
+  CreateCommentRequest,
+  CreateGroupRequest,
+  LikeResponse,
+  PostsResponse,
+  GroupsResponse,
+} from "@studyflow/shared";
 
 // 导出统计 Hooks
 export {
@@ -31,6 +41,22 @@ export {
   usePomodoroSettlement,
   STATS_KEYS,
 } from "./hooks/useStats";
+
+// 导出社区 Hooks
+export {
+  usePosts,
+  usePostsInfinite,
+  usePostDetail,
+  useCreatePost,
+  useDeletePost,
+  useToggleLike,
+  useComments,
+  useCreateComment,
+  useGroups,
+  useJoinGroup,
+  useLeaveGroup,
+  COMMUNITY_KEYS,
+} from "./hooks/useCommunity";
 
 // ==================== 统一 API 门面 ====================
 

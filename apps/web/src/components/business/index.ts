@@ -11,10 +11,10 @@ export { StatCard } from './StatCard';
 export type { StatCardProps } from './StatCard';
 
 export { PostCard } from './PostCard';
-export type { PostCardProps, Post } from './PostCard';
+export type { PostCardProps } from './PostCard';
 
 export { GroupCard } from './GroupCard';
-export type { GroupCardProps, Group } from './GroupCard';
+export type { GroupCardProps } from './GroupCard';
 
 export { MessageBubble } from './MessageBubble';
 export type { MessageBubbleProps, Message, Suggestion } from './MessageBubble';

@@ -1,11 +1,9 @@
-export interface Group {
-  id: string;
-  name: string;
-  members: number;
-  goal: string;
-  color: 'coral' | 'sage';
-}
+import type { StudyGroup } from "@studyflow/shared";
 
-export interface GroupCardProps extends Group {
+export type { StudyGroup };
+
+export interface GroupCardProps {
+  group: StudyGroup;
   onJoin?: (id: string) => void;
+  onLeave?: (id: string) => void;
 }

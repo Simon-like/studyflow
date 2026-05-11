@@ -6,8 +6,18 @@ import { GroupsTab } from "./components/GroupsTab";
 import { TAB_ITEMS } from "./constants";
 
 export default function CommunityPage() {
-  const { posts, groups, activeTab, setActiveTab, toggleLike, joinGroup } =
-    useCommunity();
+  const {
+    posts,
+    groups,
+    activeTab,
+    setActiveTab,
+    toggleLike,
+    joinGroup,
+    leaveGroup,
+    goToPost,
+    postsLoading,
+    groupsLoading,
+  } = useCommunity();
 
   const tabItems = TAB_ITEMS.map((tab) => ({
     key: tab.key,
@@ -25,9 +35,19 @@ export default function CommunityPage() {
       />
 
       {activeTab === "feed" ? (
-        <FeedTab posts={posts} onLike={toggleLike} />
+        <FeedTab
+          posts={posts}
+          onLike={toggleLike}
+          onComment={goToPost}
+          isLoading={postsLoading}
+        />
       ) : (
-        <GroupsTab groups={groups} onJoin={joinGroup} />
+        <GroupsTab
+          groups={groups}
+          onJoin={joinGroup}
+          onLeave={leaveGroup}
+          isLoading={groupsLoading}
+        />
       )}
     </div>
   );

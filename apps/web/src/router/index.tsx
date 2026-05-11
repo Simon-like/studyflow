@@ -14,6 +14,8 @@ const TasksPage = lazy(() => import('@/features/tasks'));
 const StatsPage = lazy(() => import('@/features/stats'));
 const CompanionPage = lazy(() => import('@/features/companion'));
 const CommunityPage = lazy(() => import('@/features/community'));
+const CreatePostPage = lazy(() => import('@/features/community/CreatePost'));
+const PostDetailPage = lazy(() => import('@/features/community/PostDetail'));
 const ProfilePage = lazy(() => import('@/features/profile'));
 const EditProfilePage = lazy(() => import('@/features/profile/EditProfilePage'));
 
@@ -82,6 +84,14 @@ export const router: ReturnType<typeof createBrowserRouter> = createBrowserRoute
       {
         path: 'community',
         element: withSuspense(CommunityPage),
+      },
+      {
+        path: 'community/create',
+        element: withSuspense(CreatePostPage),
+      },
+      {
+        path: 'community/post/:id',
+        element: withSuspense(PostDetailPage),
       },
       {
         path: 'profile',
