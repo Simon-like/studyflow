@@ -10,6 +10,7 @@
     "dev": "turbo run dev --parallel",
     "dev:web": "turbo run dev --filter=@studyflow/web",
     "dev:mobile": "turbo run dev --filter=@studyflow/mobile",
+    "dev:landing": "turbo run dev --filter=@studyflow/landing",
     "prod:web": "turbo run dev:prod --filter=@studyflow/web",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint -- --fix",
